@@ -1,5 +1,7 @@
 ﻿#pragma once
 
-struct Integer {
+#include "statement.h"
+
+struct Integer : public Statement {
     int val;
 };

@@ -8,6 +8,6 @@
 
 struct LogicOp : public Statement {
     std::string op;
-    Var var;
-    Integer value;
+    std::unique_ptr<Statement> lhs;
+    std::unique_ptr<Statement> rhs;
 };

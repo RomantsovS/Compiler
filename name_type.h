@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "types.h"
+#include "type.h"
 
 struct NameType {
     std::string name;

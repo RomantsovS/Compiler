@@ -8,7 +8,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_executable (compiler "main.cpp"  "function.h" "print.h" "return.h"
                          "assign.h" "while.h" "if_then_else.h" "arithmetic_op.h" "logic_op.h"
-                         "integer.h" "boolean.h" "string.h" "var.h" "fun_call.h" "statement.h" "types.h")
+                         "integer.h" "boolean.h" "string.h" "var.h" "fun_call.h" "statement.h" "type.h")
 
 if (MSVC)
     set(MY_COMLILE_OPTIONS /W4 /WX)

@@ -5,12 +5,14 @@
 #include <unordered_set>
 
 #include "arithmetic_op.h"
+#include "assign.h"
 #include "fun_call.h"
 #include "function.h"
 #include "if_then_else.h"
 #include "integer.h"
 #include "logic_op.h"
 #include "print.h"
+#include "type.h"
 #include "var.h"
 
 void visit(Statement* node, std::stack<std::string>& result_stack,
@@ -59,16 +61,44 @@ int main() {
     sum_fun->return_type = Type::INT;
 
     {
+        auto var = std::make_unique<VarDef>();
+        var->name = "z";
+        var->type = Type::INT;
+        sum_fun->body.push_back(std::move(var));
+
+        auto ass = std::make_unique<Assign>();
+        ass->var = "z";
+        auto three = std::make_unique<Integer>();
+        three->val = 3;
+        ass->st = std::move(three);
+        sum_fun->body.push_back(std::move(ass));
+
+        auto ass2 = std::make_unique<Assign>();
+        ass2->var = "z";
+
         auto st2 = std::make_unique<ArithOp>();
         st2->op = "+";
         auto lhs = std::make_unique<Var>();
-        lhs->name = "x";
+        lhs->name = "z";
         st2->lhs = std::move(lhs);
-        auto rhs = std::make_unique<Var>();
-        rhs->name = "y";
-        st2->rhs = std::move(rhs);
+        {
+            auto st3 = std::make_unique<ArithOp>();
+            st3->op = "+";
+            auto lhs2 = std::make_unique<Var>();
+            lhs2->name = "x";
+            st3->lhs = std::move(lhs2);
+            auto rhs = std::make_unique<Var>();
+            rhs->name = "y";
+            st3->rhs = std::move(rhs);
+            st2->rhs = std::move(st3);
+        }
+        ass2->st = std::move(st2);
+        sum_fun->body.push_back(std::move(ass2));
+
         auto ret = std::make_unique<Return>();
-        ret->statement = std::move(st2);
+        auto v = std::make_unique<Var>();
+        v->name = "z";
+        ret->statement = std::move(v);
         sum_fun->body.push_back(std::move(ret));
     }
 
@@ -153,10 +183,17 @@ int main() {
                     node = arith_op->rhs.get();
                 else
                     node = nullptr;
+            } else if (auto var_def = dynamic_cast<VarDef*>(node); var_def) {
+                node = nullptr;
             } else if (auto var = dynamic_cast<Var*>(node); var) {
                 node = nullptr;
             } else if (auto integer = dynamic_cast<Integer*>(node); integer) {
                 node = nullptr;
+            } else if (auto ass = dynamic_cast<Assign*>(node); ass) {
+                if (!set.count(ass->st.get()))
+                    node = ass->st.get();
+                else
+                    node = nullptr;
             } else {
                 throw std::logic_error("err");
             }
@@ -166,6 +203,7 @@ int main() {
             if (auto f = dynamic_cast<Function*>(cur); f) {
                 for (auto& s : f->body) {
                     if (!set.count(s.get())) {
+                        st.push(cur);
                         node = s.get();
                         break;
                     }
@@ -230,10 +268,16 @@ int main() {
                     visit(cur, result_stack, result_queue);
                     set.insert(cur);
                 }
+            } else if (auto var_def = dynamic_cast<VarDef*>(cur); var_def) {
+                visit(cur, result_stack, result_queue);
+                set.insert(cur);
             } else if (auto var = dynamic_cast<Var*>(cur); var) {
                 visit(cur, result_stack, result_queue);
                 set.insert(cur);
             } else if (auto integer = dynamic_cast<Integer*>(cur); integer) {
+                visit(cur, result_stack, result_queue);
+                set.insert(cur);
+            } else if (auto ass = dynamic_cast<Assign*>(cur); ass) {
                 visit(cur, result_stack, result_queue);
                 set.insert(cur);
             } else {
@@ -242,16 +286,13 @@ int main() {
         }
     }
 
+    assert(result_stack.empty());
+
     std::cout << "#include <iostream>\n\n";
 
     while (!result_queue.empty()) {
         std::cout << result_queue.front() << "\n\n";
         result_queue.pop();
-    }
-
-    while (!result_stack.empty()) {
-        std::cout << result_stack.top() << "\n\n";
-        result_stack.pop();
     }
 
     return 0;
@@ -260,15 +301,24 @@ int main() {
 void visit(Statement* node, std::stack<std::string>& result_stack,
            std::queue<std::string>& result_queue) {
     if (auto f = dynamic_cast<Function*>(node); f) {
-        assert(!result_stack.empty());
-        auto a = result_stack.top();
-        result_stack.pop();
         auto str = to_string(f->return_type) + " " + f->name + "(";
         for (int i = 0; i < f->args.size(); ++i) {
             if (i > 0) str += ", ";
             str += to_string(f->args[i].type) + " " + f->args[i].name;
         }
-        str += ") {\n" + a + "\n}";
+        str += ") {\n";
+        assert(result_stack.size() >= f->body.size());
+        std::stack<std::string> temp_st;
+        for (int i = 0; i < f->body.size(); ++i) {
+            temp_st.push(result_stack.top());
+            result_stack.pop();
+        }
+        for (int i = 0; i < f->body.size(); ++i) {
+            if (i > 0) str += "\n";
+            str += temp_st.top();
+            temp_st.pop();
+        }
+        str += "\n}";
         result_queue.push(str);
     } else if (auto pr = dynamic_cast<Print*>(node); pr) {
         assert(!result_stack.empty());
@@ -318,11 +368,18 @@ void visit(Statement* node, std::stack<std::string>& result_stack,
         result_stack.pop();
         auto b = result_stack.top();
         result_stack.pop();
-        result_stack.push(b + " " + arith_op->op + " " + a);
+        result_stack.push("(" + b + ") " + arith_op->op + " (" + a + ")");
+    } else if (auto var_def = dynamic_cast<VarDef*>(node); var_def) {
+        result_stack.push(to_string(var_def->type) + " " + var_def->name + ";");
     } else if (auto var = dynamic_cast<Var*>(node); var) {
         result_stack.push(var->name);
     } else if (auto integer = dynamic_cast<Integer*>(node); integer) {
         result_stack.push(std::to_string(integer->val));
+    } else if (auto ass = dynamic_cast<Assign*>(node); ass) {
+        assert(result_stack.size() >= 1);
+        auto a = result_stack.top();
+        result_stack.pop();
+        result_stack.push(ass->var + " = " + a + ";");
     } else {
         throw std::logic_error("err");
     }

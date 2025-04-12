@@ -1,15 +1,11 @@
 ﻿#pragma once
 
 #include <string>
-#include <vector>
+#include <memory>
 
-#include "name_type.h"
+#include "statement.h"
 
-class Function {
-   private:
-    std::string name_;
-    std::vector<NameType> args;
-    std::vector<NameType> vars;
-    Function* fun;
-    std::string body;
+struct Assign : public Statement {
+    std::string var;
+    std::unique_ptr<Statement> st;
 };

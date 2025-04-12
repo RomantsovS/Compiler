@@ -6,7 +6,7 @@
 
 #include "name_type.h"
 #include "statement.h"
-#include "types.h"
+#include "type.h"
 
 struct Function : public Statement {
     std::string name;

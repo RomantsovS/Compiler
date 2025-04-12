@@ -14,6 +14,7 @@
 #include "print.h"
 #include "type.h"
 #include "var.h"
+#include "while.h"
 
 void visit(Statement* node, std::stack<std::string>& result_stack,
            std::queue<std::string>& result_queue);
@@ -73,6 +74,19 @@ int main() {
         ass->st = std::move(three);
         sum_fun->body.push_back(std::move(ass));
 
+        auto whil = std::make_unique<While>();
+        {
+            auto st4 = std::make_unique<LogicOp>();
+            st4->op = "<";
+            auto lhs = std::make_unique<Var>();
+            lhs->name = "z";
+            st4->lhs = std::move(lhs);
+            auto rhs = std::make_unique<Integer>();
+            rhs->val = 20;
+            st4->rhs = std::move(rhs);
+            whil->condition = std::move(st4);
+        }
+
         auto ass2 = std::make_unique<Assign>();
         ass2->var = "z";
 
@@ -93,7 +107,10 @@ int main() {
             st2->rhs = std::move(st3);
         }
         ass2->st = std::move(st2);
-        sum_fun->body.push_back(std::move(ass2));
+
+        whil->body.push_back(std::move(ass2));
+
+        sum_fun->body.push_back(std::move(whil));
 
         auto ret = std::make_unique<Return>();
         auto v = std::make_unique<Var>();
@@ -194,6 +211,20 @@ int main() {
                     node = ass->st.get();
                 else
                     node = nullptr;
+            } else if (auto whil = dynamic_cast<While*>(node); whil) {
+                for (auto& s : whil->body) {
+                    if (!set.count(s.get())) {
+                        node = s.get();
+                        break;
+                    }
+                }
+                if (node == whil) {
+                    if (!set.count(whil->condition.get())) {
+                        node = whil->condition.get();
+                    } else {
+                        node = nullptr;
+                    }
+                }
             } else {
                 throw std::logic_error("err");
             }
@@ -280,6 +311,21 @@ int main() {
             } else if (auto ass = dynamic_cast<Assign*>(cur); ass) {
                 visit(cur, result_stack, result_queue);
                 set.insert(cur);
+            } else if (auto whil = dynamic_cast<While*>(cur); whil) {
+                for (auto& s : whil->body) {
+                    if (!set.count(s.get())) {
+                        node = s.get();
+                        break;
+                    }
+                }
+                if (!node) {
+                    if (!set.count(whil->condition.get())) {
+                        node = whil->condition.get();
+                    } else {
+                        visit(cur, result_stack, result_queue);
+                        set.insert(cur);
+                    }
+                }
             } else {
                 throw std::logic_error("err");
             }
@@ -380,6 +426,23 @@ void visit(Statement* node, std::stack<std::string>& result_stack,
         auto a = result_stack.top();
         result_stack.pop();
         result_stack.push(ass->var + " = " + a + ";");
+    } else if (auto whil = dynamic_cast<While*>(node); whil) {
+        assert(result_stack.size() >= whil->body.size() + 1);
+        auto cond = result_stack.top();
+        result_stack.pop();
+        std::stack<std::string> temp_st;
+        for (int i = 0; i < whil->body.size(); ++i) {
+            temp_st.push(result_stack.top());
+            result_stack.pop();
+        }
+        auto str = "while (" + cond + ") {\n";
+        for (int i = 0; i < whil->body.size(); ++i) {
+            if (i > 0) str += "\n";
+            str += temp_st.top();
+            temp_st.pop();
+        }
+        str += "\n}\n";
+        result_stack.push(str);
     } else {
         throw std::logic_error("err");
     }

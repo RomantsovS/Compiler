@@ -18,7 +18,7 @@ int main() {
     auto abs_fun = std::make_unique<Function>();
     abs_fun->name = "abs";
 
-    abs_fun->args = {{"x", "int"}};
+    abs_fun->args = {{"x", Type::INT}};
 
     {
         auto st = std::make_unique<IfThenElse>();
@@ -50,7 +50,7 @@ int main() {
         }
         abs_fun->body.push_back(std::move(st));
     }
-    abs_fun->return_type = "int";
+    abs_fun->return_type = Type::INT;
 
     Function main_fun;
     main_fun.name = "main";
@@ -76,7 +76,7 @@ int main() {
     main_fun.fun.push_back(std::move(abs_fun));
 
     main_fun.body.push_back(std::move(print));
-    main_fun.return_type = "int";
+    main_fun.return_type = Type::VOID;
 
     std::stack<Statement*> st;
     Statement* node = &main_fun;
@@ -232,10 +232,10 @@ void visit(Statement* node, std::stack<std::string>& result_stack) {
         assert(!result_stack.empty());
         auto a = result_stack.top();
         result_stack.pop();
-        auto str = f->return_type + " " + f->name + "(";
+        auto str = to_string(f->return_type) + " " + f->name + "(";
         for (int i = 0; i < f->args.size(); ++i) {
             if (i > 0) str += ", ";
-            str += f->args[i].type + " " + f->args[i].name;
+            str += to_string(f->args[i].type) + " " + f->args[i].name;
         }
         str += ") {\n" + a + "\n}";
         result_stack.push(str);

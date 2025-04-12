@@ -6,6 +6,7 @@
 
 #include "name_type.h"
 #include "statement.h"
+#include "types.h"
 
 struct Function : public Statement {
     std::string name;
@@ -13,5 +14,5 @@ struct Function : public Statement {
     std::vector<NameType> vars;
     std::vector<std::unique_ptr<Function>> fun;
     std::vector<std::unique_ptr<Statement>> body;
-    std::string return_type;
+    Type return_type;
 };

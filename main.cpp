@@ -1,5 +1,6 @@
 ﻿#include <cassert>
 #include <iostream>
+#include <queue>
 #include <stack>
 #include <unordered_set>
 
@@ -12,12 +13,12 @@
 #include "print.h"
 #include "var.h"
 
-void visit(Statement* node, std::stack<std::string>& result_stack);
+void visit(Statement* node, std::stack<std::string>& result_stack,
+           std::queue<std::string>& result_queue);
 
 int main() {
     auto abs_fun = std::make_unique<Function>();
     abs_fun->name = "abs";
-
     abs_fun->args = {{"x", Type::INT}};
 
     {
@@ -52,11 +53,30 @@ int main() {
     }
     abs_fun->return_type = Type::INT;
 
+    auto sum_fun = std::make_unique<Function>();
+    sum_fun->name = "sum";
+    sum_fun->args = {{"x", Type::INT}, {"y", Type::INT}};
+    sum_fun->return_type = Type::INT;
+
+    {
+        auto st2 = std::make_unique<ArithOp>();
+        st2->op = "+";
+        auto lhs = std::make_unique<Var>();
+        lhs->name = "x";
+        st2->lhs = std::move(lhs);
+        auto rhs = std::make_unique<Var>();
+        rhs->name = "y";
+        st2->rhs = std::move(rhs);
+        auto ret = std::make_unique<Return>();
+        ret->statement = std::move(st2);
+        sum_fun->body.push_back(std::move(ret));
+    }
+
     Function main_fun;
     main_fun.name = "main";
 
-    auto fun_call = std::make_unique<FunCall>();
-    fun_call->func = abs_fun.get();
+    auto abs_fun_call = std::make_unique<FunCall>();
+    abs_fun_call->func = abs_fun.get();
 
     {
         auto st2 = std::make_unique<ArithOp>();
@@ -64,25 +84,35 @@ int main() {
         auto lhs = std::make_unique<Integer>();
         lhs->val = -10;
         st2->lhs = std::move(lhs);
-        auto rhs = std::make_unique<Integer>();
-        rhs->val = 8;
-        st2->rhs = std::move(rhs);
-        fun_call->args.push_back(std::move(st2));
+
+        auto sum_fun_call = std::make_unique<FunCall>();
+        sum_fun_call->func = sum_fun.get();
+        {
+            auto one = std::make_unique<Integer>();
+            one->val = 1;
+            auto two = std::make_unique<Integer>();
+            two->val = 2;
+            sum_fun_call->args.push_back(std::move(one));
+            sum_fun_call->args.push_back(std::move(two));
+        }
+        st2->rhs = std::move(sum_fun_call);
+        abs_fun_call->args.push_back(std::move(st2));
     }
 
     auto print = std::make_unique<Print>();
-    print->st = std::move(fun_call);
+    print->st = std::move(abs_fun_call);
 
     main_fun.fun.push_back(std::move(abs_fun));
 
     main_fun.body.push_back(std::move(print));
-    main_fun.return_type = Type::VOID;
+    main_fun.return_type = Type::INT;
 
     std::stack<Statement*> st;
     Statement* node = &main_fun;
     std::unordered_set<Statement*> set;
 
     std::stack<std::string> result_stack;
+    std::queue<std::string> result_queue;
 
     while (!st.empty() || node) {
         if (node) {
@@ -141,11 +171,11 @@ int main() {
                     }
                 }
                 if (!node) {
-                    visit(cur, result_stack);
+                    visit(cur, result_stack, result_queue);
                     set.insert(cur);
                 }
             } else if (auto pr = dynamic_cast<Print*>(cur); pr) {
-                visit(cur, result_stack);
+                visit(cur, result_stack, result_queue);
                 set.insert(cur);
             } else if (auto fc = dynamic_cast<FunCall*>(cur); fc) {
                 if (!set.count(fc->func)) {
@@ -160,7 +190,7 @@ int main() {
                         }
                     }
                     if (!node) {
-                        visit(cur, result_stack);
+                        visit(cur, result_stack, result_queue);
                         set.insert(cur);
                     }
                 }
@@ -172,7 +202,7 @@ int main() {
                     st.push(cur);
                     node = &ifthen->return_false;
                 } else {
-                    visit(cur, result_stack);
+                    visit(cur, result_stack, result_queue);
                     set.insert(cur);
                 }
             } else if (auto logic_op = dynamic_cast<LogicOp*>(cur); logic_op) {
@@ -183,11 +213,11 @@ int main() {
                     st.push(cur);
                     node = logic_op->rhs.get();
                 } else {
-                    visit(cur, result_stack);
+                    visit(cur, result_stack, result_queue);
                     set.insert(cur);
                 }
             } else if (auto ret = dynamic_cast<Return*>(cur); ret) {
-                visit(cur, result_stack);
+                visit(cur, result_stack, result_queue);
                 set.insert(cur);
             } else if (auto arith_op = dynamic_cast<ArithOp*>(cur); arith_op) {
                 if (!set.count(arith_op->lhs.get())) {
@@ -197,14 +227,14 @@ int main() {
                     st.push(cur);
                     node = arith_op->rhs.get();
                 } else {
-                    visit(cur, result_stack);
+                    visit(cur, result_stack, result_queue);
                     set.insert(cur);
                 }
             } else if (auto var = dynamic_cast<Var*>(cur); var) {
-                visit(cur, result_stack);
+                visit(cur, result_stack, result_queue);
                 set.insert(cur);
             } else if (auto integer = dynamic_cast<Integer*>(cur); integer) {
-                visit(cur, result_stack);
+                visit(cur, result_stack, result_queue);
                 set.insert(cur);
             } else {
                 throw std::logic_error("err");
@@ -212,22 +242,23 @@ int main() {
         }
     }
 
-    auto main_str = result_stack.top();
-    result_stack.pop();
-
     std::cout << "#include <iostream>\n\n";
+
+    while (!result_queue.empty()) {
+        std::cout << result_queue.front() << "\n\n";
+        result_queue.pop();
+    }
 
     while (!result_stack.empty()) {
         std::cout << result_stack.top() << "\n\n";
         result_stack.pop();
     }
 
-    std::cout << main_str;
-
     return 0;
 }
 
-void visit(Statement* node, std::stack<std::string>& result_stack) {
+void visit(Statement* node, std::stack<std::string>& result_stack,
+           std::queue<std::string>& result_queue) {
     if (auto f = dynamic_cast<Function*>(node); f) {
         assert(!result_stack.empty());
         auto a = result_stack.top();
@@ -238,19 +269,24 @@ void visit(Statement* node, std::stack<std::string>& result_stack) {
             str += to_string(f->args[i].type) + " " + f->args[i].name;
         }
         str += ") {\n" + a + "\n}";
-        result_stack.push(str);
+        result_queue.push(str);
     } else if (auto pr = dynamic_cast<Print*>(node); pr) {
         assert(!result_stack.empty());
         auto a = result_stack.top();
         result_stack.pop();
         result_stack.push("std::cout << (" + a + ");");
     } else if (auto fc = dynamic_cast<FunCall*>(node); fc) {
+        assert(result_stack.size() >= fc->args.size());
+        std::stack<std::string> temp_st;
+        for (int i = 0; i < fc->args.size(); ++i) {
+            temp_st.push(result_stack.top());
+            result_stack.pop();
+        }
         auto str = fc->func->name + "(";
         for (int i = 0; i < fc->args.size(); ++i) {
             if (i > 0) str += ", ";
-            assert(!result_stack.empty());
-            str += result_stack.top();
-            result_stack.pop();
+            str += temp_st.top();
+            temp_st.pop();
         }
         str += ")";
         result_stack.push(str);

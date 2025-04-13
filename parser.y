@@ -1,20 +1,26 @@
 %{
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include "ast.h"
+#include <string>
 
 extern int yylex();
-extern int yyparse();
-void yyerror(const char *s);
+extern int yyparse(std::shared_ptr<ASTNode>* root);
+void yyerror(std::shared_ptr<ASTNode>* root, const char *s);
 
 // symbol table (very basic)
 int symbol_table[256];  // assuming one-letter variable names like x, y, z
 %}
 
+%code requires {
+  #include "ast.h"
+}
+
 %union {
     int ival;
-    char* sval;
+    std::string* sval;
+	std::shared_ptr<ASTNode>* node;
 }
+
+%parse-param { std::shared_ptr<ASTNode>* root }
 
 %token <sval> ID
 %token <ival> NUMBER
@@ -22,15 +28,21 @@ int symbol_table[256];  // assuming one-letter variable names like x, y, z
 %token INT
 
 %type <ival> expr
+%type <node> declaration program function
 
 %%
 
 program:
-    function
+    function {
+        root = $1;
+	}
     ;
 
 function:
-    INT ID '(' ')' block
+    INT ID '(' ')' block { 
+        $$ = new std::shared_ptr<ASTNode>(make_function(*$2));
+        delete $2;
+    }
     ;
 
 block:
@@ -50,21 +62,20 @@ stmt:
 
 declaration:
     INT ID ';' {
-        symbol_table[$2[0]] = 0;
-        free($2);
+		$$ = new std::shared_ptr<ASTNode>(make_decl(*$2));
     }
     ;
 
 assignment:
     ID '=' expr ';' {
-        symbol_table[$1[0]] = $3;
+        symbol_table[(*$1)[0]] = $3;
         free($1);
     }
     ;
 
 print_stmt:
     PRINT '(' ID ')' ';' {
-        printf("%d\n", symbol_table[$3[0]]);
+        printf("%d\n", symbol_table[(*$3)[0]]);
         free($3);
     }
     ;
@@ -76,15 +87,19 @@ expr:
     | expr '/' expr { $$ = $1 / $3; }
     | '(' expr ')'  { $$ = $2; }
     | NUMBER        { $$ = $1; }
-    | ID            { $$ = symbol_table[$1[0]]; free($1); }
+    | ID            { $$ = symbol_table[(*$1)[0]]; free($1); }
     ;
 
 %%
 
 int main() {
-    return yyparse();
+    std::shared_ptr<ASTNode>* root = nullptr;
+    yyparse(root);  // or assign root inside grammar
+    //print_ast(root, 0);
+    //free_ast(root);
+    return 0;
 }
 
-void yyerror(const char *s) {
-    fprintf(stderr, "Syntax error: %s\n", s);
+void yyerror(std::shared_ptr<ASTNode>* root, const char *s) {
+    fprintf(stderr, "Parser error: %s\n", s);
 }

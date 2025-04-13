@@ -2,12 +2,12 @@
 
 #include <string>
 
+#include "ast.h"
 #include "integer.h"
-#include "statement.h"
 #include "var.h"
 
-struct ArithOp : Statement {
+struct ArithOp : ASTNode {
     std::string op;
-    std::unique_ptr<Statement> lhs;
-    std::unique_ptr<Statement> rhs;
+    std::unique_ptr<ASTNode> lhs;
+    std::unique_ptr<ASTNode> rhs;
 };

@@ -15,8 +15,9 @@
 #include "type.h"
 #include "var.h"
 #include "while.h"
+#include "ast.h"
 
-void visit(Statement* node, std::stack<std::string>& result_stack,
+void visit(ASTNode* node, std::stack<std::string>& result_stack,
            std::queue<std::string>& result_queue);
 
 int main() {
@@ -154,9 +155,9 @@ int main() {
     main_fun.body.push_back(std::move(print));
     main_fun.return_type = Type::INT;
 
-    std::stack<Statement*> st;
-    Statement* node = &main_fun;
-    std::unordered_set<Statement*> set;
+    std::stack<ASTNode*> st;
+    ASTNode* node = &main_fun;
+    std::unordered_set<ASTNode*> set;
 
     std::stack<std::string> result_stack;
     std::queue<std::string> result_queue;
@@ -344,7 +345,7 @@ int main() {
     return 0;
 }
 
-void visit(Statement* node, std::stack<std::string>& result_stack,
+void visit(ASTNode* node, std::stack<std::string>& result_stack,
            std::queue<std::string>& result_queue) {
     if (auto f = dynamic_cast<Function*>(node); f) {
         auto str = to_string(f->return_type) + " " + f->name + "(";

@@ -6,9 +6,9 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-add_executable (compiler "main.cpp"  "function.h" "print.h" "return.h"
+add_executable (compiler "main.cpp"  "function.h" "print.h" "return.h" "ast.h"
                          "assign.h" "while.h" "if_then_else.h" "arithmetic_op.h" "logic_op.h"
-                         "integer.h" "boolean.h" "string.h" "var.h" "fun_call.h" "statement.h" "type.h")
+                         "integer.h" "boolean.h" "string.h" "var.h" "fun_call.h"  "type.h")
 
 if (MSVC)
     set(MY_COMLILE_OPTIONS /W4 /WX)

@@ -2,12 +2,12 @@
 
 #include <string>
 
+#include "ast.h"
 #include "integer.h"
-#include "statement.h"
 #include "var.h"
 
-struct LogicOp : public Statement {
+struct LogicOp : public ASTNode {
     std::string op;
-    std::unique_ptr<Statement> lhs;
-    std::unique_ptr<Statement> rhs;
+    std::unique_ptr<ASTNode> lhs;
+    std::unique_ptr<ASTNode> rhs;
 };

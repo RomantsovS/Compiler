@@ -3,8 +3,8 @@
 #include <memory>
 #include <string>
 
-#include "statement.h"
+#include "ast.h"
 
-struct Print : public Statement{
-    std::unique_ptr<Statement> st;
+struct Print : public ASTNode {
+    std::unique_ptr<ASTNode> st;
 };

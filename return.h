@@ -2,8 +2,8 @@
 
 #include <memory>
 
-#include "statement.h"
+#include "ast.h"
 
-struct Return : public Statement {
-    std::unique_ptr<Statement> statement;
+struct Return : public ASTNode {
+    std::unique_ptr<ASTNode> statement;
 };

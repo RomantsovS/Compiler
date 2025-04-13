@@ -3,9 +3,9 @@
 #include <memory>
 #include <vector>
 
-#include "statement.h"
+#include "ast.h"
 
-struct While : public Statement {
-    std::unique_ptr<Statement> condition;
-    std::vector<std::unique_ptr<Statement>> body;
+struct While : public ASTNode {
+    std::unique_ptr<ASTNode> condition;
+    std::vector<std::unique_ptr<ASTNode>> body;
 };

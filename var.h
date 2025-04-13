@@ -2,10 +2,10 @@
 
 #include <string>
 
-#include "statement.h"
+#include "ast.h"
 #include "type.h"
 
-struct Var : public Statement {
+struct Var : public ASTNode {
     std::string name;
 };
 

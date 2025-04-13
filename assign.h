@@ -1,11 +1,11 @@
 ﻿#pragma once
 
-#include <string>
 #include <memory>
+#include <string>
 
-#include "statement.h"
+#include "ast.h"
 
-struct Assign : public Statement {
+struct Assign : public ASTNode {
     std::string var;
-    std::unique_ptr<Statement> st;
+    std::unique_ptr<ASTNode> st;
 };

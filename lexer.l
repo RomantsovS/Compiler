@@ -1,31 +1,33 @@
+%option noyywrap
+
 %{
-#include "parser.tab.h"
-#include <stdlib.h>
-#include <string.h>
+#include "parser.hpp"
+#include <string>
 %}
 
 %%
 
-"int"           { return INT; }
-"print"         { return PRINT; }
-
-[0-9]+          { yylval.ival = atoi(yytext); return NUMBER; }
+"int"           { printf("TOKEN: INT\n"); return INT; }
+"print"         { printf("TOKEN: PRINT\n"); return PRINT; }
+ 
+[0-9]+          { printf("TOKEN: NUMBER (%s)\n", yytext); yylval.ival = atoi(yytext); return NUMBER; }
 
 [a-zA-Z_][a-zA-Z0-9_]*  {
-                        yylval.sval = strdup(yytext);
+						printf("TOKEN: ID (%s)\n", yytext);
+                        yylval.sval = new std::string(yytext);
                         return ID;
                       }
 
 "=="            { return '='; }  // optional: for later
-"="             { return '='; }
+"="             { printf("TOKEN: =\n"); return '='; }
 ";"             { return ';'; }
 "("             { return '('; }
 ")"             { return ')'; }
 "{"             { return '{'; }
 "}"             { return '}'; }
-"+"             { return '+'; }
+"+"             { printf("TOKEN: +\n"); return '+'; }
 "-"             { return '-'; }
-"*"             { return '*'; }
+"*"             { printf("TOKEN: *\n"); return '*'; }
 "/"             { return '/'; }
 
 [ \t\r\n]+      ;  // skip whitespace

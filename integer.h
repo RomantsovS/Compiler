@@ -1,7 +1,7 @@
 ﻿#pragma once
 
-#include "statement.h"
+#include "ast.h"
 
-struct Integer : public Statement {
+struct Integer : public ASTNode {
     int val;
 };

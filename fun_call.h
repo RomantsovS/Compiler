@@ -3,10 +3,10 @@
 #include <memory>
 #include <vector>
 
+#include "ast.h"
 #include "function.h"
-#include "statement.h"
 
-struct FunCall : public Statement {
+struct FunCall : public ASTNode {
     Function* func;
-    std::vector<std::unique_ptr<Statement>> args;
+    std::vector<std::unique_ptr<ASTNode>> args;
 };

@@ -26,17 +26,53 @@
  * 
  */
 
+#include "command.h"
+
 #include <iostream>
-#include "scanner.h"
-#include "parser.hpp"
-#include "interpreter.h"
+#include <sstream>
 
 using namespace EzAquarii;
-using namespace std;
+using std::cout;
+using std::endl;
 
-int main(int argc, char **argv) {
-    Interpreter i;
-    int res = i.parse();
-    cout << "Parse complete. Result = " << res << endl;
-    return res;
+Command::Command(const std::string &name, const std::vector<uint64_t> arguments) :
+    m_name(name),
+    m_args(arguments)
+{
+}
+
+Command::Command(const std::string &name) :
+    m_name(name),
+    m_args()
+{
+}
+
+Command::Command() :
+    m_name(),
+    m_args()
+{
+}
+
+Command::~Command()
+{
+}
+    
+std::string Command::str() const {
+    std::stringstream ts;
+    ts << "name = [" << m_name << "], ";
+    ts << "arguments = [";
+    
+    for(int i = 0; i < m_args.size(); i++) {
+        ts << m_args[i];
+        if(i < m_args.size() - 1) {
+            ts << ", ";
+        }
+    }
+    
+    ts << "]";
+    return ts.str();
+}
+
+std::string Command::name() const {
+    return m_name;
 }

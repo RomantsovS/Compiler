@@ -3,7 +3,6 @@
 #include <iostream>
 
 #include "function.h"
-#include "statement.h"
 #include "var.h"
 
 std::shared_ptr<ASTNode> make_function(const std::string& name) {

@@ -26,17 +26,35 @@
  * 
  */
 
-#include <iostream>
-#include "scanner.h"
-#include "parser.hpp"
-#include "interpreter.h"
+#ifndef COMMAND_H
+#define COMMAND_H
 
-using namespace EzAquarii;
-using namespace std;
+#include <string>
+#include <vector>
+#include <stdint.h>
 
-int main(int argc, char **argv) {
-    Interpreter i;
-    int res = i.parse();
-    cout << "Parse complete. Result = " << res << endl;
-    return res;
+namespace EzAquarii {
+
+/**
+ * AST node. If you can call it AST at all...
+ * It keeps function name and a list of arguments.
+ */
+class Command
+{
+public:
+    Command(const std::string &name, const std::vector<uint64_t> arguments);
+    Command(const std::string &name);
+    Command();
+    ~Command();
+    
+    std::string str() const;
+    std::string name() const;
+    
+private:
+    std::string m_name;
+    std::vector<uint64_t> m_args;
+};
+
 }
+
+#endif // COMMAND_H

@@ -1,7 +1,8 @@
-%option noyywrap
+%option c++ noyywrap
 
 %{
 #include "parser.hpp"
+#include "scanner.h"
 #include <string>
 %}
 

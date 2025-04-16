@@ -1,17 +1,35 @@
-﻿cmake_minimum_required (VERSION 3.8)
+﻿#Minimum version of CMake to build this project
+cmake_minimum_required(VERSION 3.8)
 
-project ("Compiler")
+# Declaration et nommage du projet
+project(parser)
 
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
+set(CXX "clang++")
+set(CMAKE_CXX_FLAGS_DEBUG "-g")
+set(CMAKE_CXX_FLAGS "-Wall -W -pedantic")
 
-add_executable (compiler "main.cpp"  "function.h" "print.h" "return.h" "ast.h"
-                         "assign.h" "while.h" "if_then_else.h" "arithmetic_op.h" "logic_op.h"
-                         "integer.h" "boolean.h" "string.h" "var.h" "fun_call.h"  "type.h")
 
-if (MSVC)
-    set(MY_COMLILE_OPTIONS /W4 /WX)
-endif()
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
-target_compile_options(compiler PRIVATE ${MY_COMLILE_OPTIONS})
+find_package(BISON)
+find_package(FLEX)
+
+bison_target(Parser parser.y ${CMAKE_CURRENT_BINARY_DIR}/parser.cpp)
+flex_target(Scanner scanner.l ${CMAKE_CURRENT_BINARY_DIR}/scanner.cpp)
+
+add_flex_bison_dependency(Scanner Parser)
+
+add_library(parse
+            STATIC
+            ${FLEX_Scanner_OUTPUTS}
+            ${BISON_Parser_OUTPUTS}
+)
+
+add_executable(
+  parser
+  main.cpp
+  interpreter.cpp command.cpp
+)
+
+target_link_libraries(parser parse)

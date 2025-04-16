@@ -7,7 +7,7 @@ enum class Type {
 	INT
 };
 
-std::string to_string(Type type) {
+inline std::string to_string(Type type) {
     switch (type) {
         case Type::VOID:
             return "void";

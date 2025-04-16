@@ -1,4 +1,4 @@
-﻿#Minimum version of CMake to build this project
+#Minimum version of CMake to build this project
 cmake_minimum_required(VERSION 3.8)
 
 # Declaration et nommage du projet

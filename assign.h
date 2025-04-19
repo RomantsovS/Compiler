@@ -7,5 +7,5 @@
 
 struct Assign : public ASTNode {
     std::string var;
-    std::unique_ptr<ASTNode> st;
+    std::shared_ptr<ASTNode> st;
 };

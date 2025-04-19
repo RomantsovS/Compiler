@@ -2,16 +2,13 @@
 
 #include <string>
 
-enum class Type {
-	VOID,
-	INT
-};
+enum class Type { Void, Int };
 
 inline std::string to_string(Type type) {
     switch (type) {
-        case Type::VOID:
+        case Type::Void:
             return "void";
-        case Type::INT:
+        case Type::Int:
             return "int";
         default:
             return "Unknown";

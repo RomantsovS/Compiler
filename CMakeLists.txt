@@ -27,9 +27,10 @@ add_library(parse
 )
 
 add_executable(
-  parser
+  compiler
   main.cpp
-  interpreter.cpp command.cpp
+  interpreter.cpp
+  ast.cpp
 )
 
-target_link_libraries(parser parse)
+target_link_libraries(compiler parse)

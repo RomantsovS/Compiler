@@ -41,7 +41,8 @@
     #include <string>
     #include <vector>
     #include <stdint.h>
-    #include "command.h"
+    #include "ast.h"
+    #include "block.h"
 
     using namespace std;
 
@@ -80,6 +81,8 @@
 %lex-param { EzAquarii::Interpreter &driver }
 %parse-param { EzAquarii::Scanner &scanner }
 %parse-param { EzAquarii::Interpreter &driver }
+%parse-param { std::shared_ptr<ASTNode>& result }
+
 %locations
 %define parse.trace
 %define parse.error verbose
@@ -87,80 +90,87 @@
 %define api.token.prefix {TOKEN_}
 
 %token END 0 "end of file"
-%token <std::string> STRING  "string";
 %token <uint64_t> NUMBER "number";
 %token LEFTPAR "leftpar";
 %token RIGHTPAR "rightpar";
+%token LEFTFIGPAR;
+%token RIGHTFIGPAR;
 %token SEMICOLON "semicolon";
 %token COMMA "comma";
+%token EQUAL;
+%token <std::string> ID
+%token INT
+%token PRINT
 
-%type< EzAquarii::Command > command;
-%type< std::vector<uint64_t> > arguments;
+%type< Type > type;
+%type< std::shared_ptr<Block> > block;
+%type< std::shared_ptr<std::vector<std::shared_ptr<ASTNode>>> > stmt_list;
+%type< std::shared_ptr<ASTNode> > function declaration expr assignment print_stmt stmt;
 
 %start program
 
 %%
 
-program :   {
-                cout << "*** RUN ***" << endl;
-                cout << "Type function with list of parmeters. Parameter list can be empty" << endl
-                     << "or contain positive integers only. Examples: " << endl
-                     << " * function()" << endl
-                     << " * function(1,2,3)" << endl
-                     << "Terminate listing with ; to see parsed AST" << endl
-                     << "Terminate parser with Ctrl-D" << endl;
-                
-                cout << endl << "prompt> ";
-                
-                driver.clear();
-            }
-        | program command
-            {
-                const Command &cmd = $2;
-                cout << "command parsed, updating AST" << endl;
-                driver.addCommand(cmd);
-                cout << endl << "prompt> ";
-            }
-        | program SEMICOLON
-            {
-                cout << "*** STOP RUN ***" << endl;
-                cout << driver.str() << endl;
-            }
-        ;
-
-
-command : STRING LEFTPAR RIGHTPAR
-        {
-            string &id = $1;
-            cout << "ID: " << id << endl;
-            $$ = Command(id);
-        }
-    | STRING LEFTPAR arguments RIGHTPAR
-        {
-            string &id = $1;
-            const std::vector<uint64_t> &args = $3;
-            cout << "function: " << id << ", " << args.size() << endl;
-            $$ = Command(id, args);
-        }
+program:
+    function {
+        result = $1;
+	}
     ;
 
-arguments : NUMBER
-        {
-            uint64_t number = $1;
-            $$ = std::vector<uint64_t>();
-            $$.push_back(number);
-            cout << "first argument: " << number << endl;
-        }
-    | arguments COMMA NUMBER
-        {
-            uint64_t number = $3;
-            std::vector<uint64_t> &args = $1;
-            args.push_back(number);
-            $$ = args;
-            cout << "next argument: " << number << ", arg list size = " << args.size() << endl;
-        }
+function:
+    type ID LEFTPAR RIGHTPAR block { 
+        $$ = make_function($1, $2, $5);
+    }
     ;
-    
+
+type:
+    INT {
+        $$ = Type::Int;
+    }
+    ;
+
+block:
+    LEFTFIGPAR stmt_list RIGHTFIGPAR {
+        $$ = make_block($2);
+    }
+    ;
+
+stmt_list:
+    stmt_list stmt {
+        $$ = append_stmt($1, $2);
+    }
+    | /* empty */
+    ;
+
+stmt:
+    declaration
+    | assignment
+    | print_stmt
+    ;
+
+declaration:
+    type ID SEMICOLON {
+		$$ = make_decl($1, $2);
+    }
+    ;
+
+assignment:
+    ID EQUAL expr SEMICOLON {
+        $$ = make_assignment($1, $3);
+    }
+    ;
+
+print_stmt:
+    PRINT LEFTPAR expr RIGHTPAR SEMICOLON {
+        $$ = make_print($3);
+    }
+    ;
+
+expr:
+    ID { $$ = make_var($1); }
+    | NUMBER { $$ = make_integer($1); }
+    ;
+
 %%
 
 // Bison expects us to provide implementation - otherwise linker complains

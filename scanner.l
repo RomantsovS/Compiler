@@ -42,7 +42,7 @@
 
 	// This will track current scanner location.
 	// Action is called when length of the token is known.
-	#define YY_USER_ACTION m_driver.increaseLocation(yyleng);
+	#define YY_USER_ACTION driver_.increaseLocation(yyleng);
 	
 	// !!!WARNING!!!
 	// Location API is used, but the location is not initialized, 'cause I'm lazy. When making
@@ -63,11 +63,20 @@
 
 %%
 
+"int"           {
+                cout << "Scanner: int " << std::endl;
+                return EzAquarii::Parser::make_INT(EzAquarii::location( /* put location data here if you want */ )); 
+                }
 
-[a-z]+      { 
-                cout << "Scanner: identifier [" << yytext << "]" << endl;
-                return EzAquarii::Parser::make_STRING(yytext, EzAquarii::location( /* put location data here if you want */ )); 
-            }
+"print"         {
+                cout << "Scanner: print " << std::endl;
+                return EzAquarii::Parser::make_PRINT(EzAquarii::location( /* put location data here if you want */ )); 
+                }
+
+[a-zA-Z_][a-zA-Z0-9_]*  {
+						cout << "Scanner: identifier [" << yytext << "]" << endl;
+                        return EzAquarii::Parser::make_ID(yytext, EzAquarii::location( /* put location data here if you want */ )); 
+                        }
             
 \(          {
                 cout << "Scanner: '('" << endl;
@@ -78,6 +87,16 @@
                 cout << "Scanner: ')'" << endl;
                 return EzAquarii::Parser::make_RIGHTPAR(EzAquarii::location());
             }
+
+\{          {
+                cout << "Scanner: '{'" << endl;
+                return EzAquarii::Parser::make_LEFTFIGPAR(EzAquarii::location());
+            }
+            
+\}          { 
+                cout << "Scanner: '}'" << endl;
+                return EzAquarii::Parser::make_RIGHTFIGPAR(EzAquarii::location());
+            }
             
 ;           {
                 cout << "Scanner: ';'" << endl;
@@ -87,6 +106,11 @@
 ,           {
                 cout << "Scanner: ','" << endl;
                 return EzAquarii::Parser::make_COMMA(EzAquarii::location());
+            }
+
+=           {
+                cout << "Scanner: '='" << endl;
+                return EzAquarii::Parser::make_EQUAL(EzAquarii::location());
             }
             
 [\n\t ]     {

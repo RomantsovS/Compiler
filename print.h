@@ -6,5 +6,5 @@
 #include "ast.h"
 
 struct Print : public ASTNode {
-    std::unique_ptr<ASTNode> st;
+    std::shared_ptr<ASTNode> st;
 };

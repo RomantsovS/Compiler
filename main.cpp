@@ -24,148 +24,147 @@ void visit(ASTNode* node, std::stack<std::string>& result_stack,
            std::queue<std::string>& result_queue);
 
 int main() {
-    auto root = std::make_shared<ASTNode>();
-    EzAquarii::Interpreter i;
-    int res = i.parse();
-    return res;
+    std::shared_ptr<ASTNode> ast;
+    EzAquarii::Interpreter interpreter(ast);
+    auto res = interpreter.parse();
+    if (res) return res;
+    auto node = ast.get();
     /*
-    auto abs_fun = std::make_unique<Function>();
-    abs_fun->name = "abs";
-    abs_fun->args = {{"x", Type::INT}};
+        auto abs_fun = std::make_unique<Function>();
+        abs_fun->name = "abs";
+        abs_fun->args = {{"x", Type::Int}};
 
-    {
-        auto st = std::make_unique<IfThenElse>();
-        st->op.op = "<";
         {
-            auto lhs = std::make_unique<Var>();
-            lhs->name = "x";
-            st->op.lhs = std::move(lhs);
-            auto rhs = std::make_unique<Integer>();
-            rhs->val = 0;
-            st->op.rhs = std::move(rhs);
+            auto st = std::make_unique<IfThenElse>();
+            st->op.op = "<";
+            {
+                auto lhs = std::make_unique<Var>();
+                lhs->name = "x";
+                st->op.lhs = std::move(lhs);
+                auto rhs = std::make_unique<Integer>();
+                rhs->val = 0;
+                st->op.rhs = std::move(rhs);
+            }
+
+            {
+                auto st2 = std::make_unique<ArithOp>();
+                st2->op = "-";
+                auto lhs = std::make_unique<Integer>();
+                lhs->val = 0;
+                st2->lhs = std::move(lhs);
+                auto rhs = std::make_unique<Var>();
+                rhs->name = "x";
+                st2->rhs = std::move(rhs);
+                st->return_true.statement = std::move(st2);
+            }
+            {
+                auto var = std::make_unique<Var>();
+                var->name = "x";
+                st->return_false.statement = std::move(var);
+            }
+            abs_fun->body.body.push_back(std::move(st));
         }
+        abs_fun->return_type = Type::Int;
+
+        auto sum_fun = std::make_unique<Function>();
+        sum_fun->name = "sum";
+        sum_fun->args = {{"x", Type::Int}, {"y", Type::Int}};
+        sum_fun->return_type = Type::Int;
+
+        {
+            auto var = std::make_unique<VarDef>();
+            var->name = "z";
+            var->type = Type::Int;
+            sum_fun->body.body.push_back(std::move(var));
+
+            auto ass = std::make_unique<Assign>();
+            ass->var = "z";
+            auto three = std::make_unique<Integer>();
+            three->val = 3;
+            ass->st = std::move(three);
+            sum_fun->body.body.push_back(std::move(ass));
+
+            auto whil = std::make_unique<While>();
+            {
+                auto st4 = std::make_unique<LogicOp>();
+                st4->op = "<";
+                auto lhs = std::make_unique<Var>();
+                lhs->name = "z";
+                st4->lhs = std::move(lhs);
+                auto rhs = std::make_unique<Integer>();
+                rhs->val = 20;
+                st4->rhs = std::move(rhs);
+                whil->condition = std::move(st4);
+            }
+
+            auto ass2 = std::make_unique<Assign>();
+            ass2->var = "z";
+
+            auto st2 = std::make_unique<ArithOp>();
+            st2->op = "+";
+            auto lhs = std::make_unique<Var>();
+            lhs->name = "z";
+            st2->lhs = std::move(lhs);
+            {
+                auto st3 = std::make_unique<ArithOp>();
+                st3->op = "+";
+                auto lhs2 = std::make_unique<Var>();
+                lhs2->name = "x";
+                st3->lhs = std::move(lhs2);
+                auto rhs = std::make_unique<Var>();
+                rhs->name = "y";
+                st3->rhs = std::move(rhs);
+                st2->rhs = std::move(st3);
+            }
+            ass2->st = std::move(st2);
+
+            whil->body.push_back(std::move(ass2));
+
+            sum_fun->body.body.push_back(std::move(whil));
+
+            auto ret = std::make_unique<Return>();
+            auto v = std::make_unique<Var>();
+            v->name = "z";
+            ret->statement = std::move(v);
+            sum_fun->body.body.push_back(std::move(ret));
+        }
+
+        Function main_fun;
+        main_fun.name = "main";
+
+        auto abs_fun_call = std::make_unique<FunCall>();
+        abs_fun_call->func = abs_fun.get();
 
         {
             auto st2 = std::make_unique<ArithOp>();
-            st2->op = "-";
+            st2->op = "+";
             auto lhs = std::make_unique<Integer>();
-            lhs->val = 0;
+            lhs->val = -10;
             st2->lhs = std::move(lhs);
-            auto rhs = std::make_unique<Var>();
-            rhs->name = "x";
-            st2->rhs = std::move(rhs);
-            st->return_true.statement = std::move(st2);
-        }
-        {
-            auto var = std::make_unique<Var>();
-            var->name = "x";
-            st->return_false.statement = std::move(var);
-        }
-        abs_fun->body.push_back(std::move(st));
-    }
-    abs_fun->return_type = Type::INT;
 
-    auto sum_fun = std::make_unique<Function>();
-    sum_fun->name = "sum";
-    sum_fun->args = {{"x", Type::INT}, {"y", Type::INT}};
-    sum_fun->return_type = Type::INT;
-
-    {
-        auto var = std::make_unique<VarDef>();
-        var->name = "z";
-        var->type = Type::INT;
-        sum_fun->body.push_back(std::move(var));
-
-        auto ass = std::make_unique<Assign>();
-        ass->var = "z";
-        auto three = std::make_unique<Integer>();
-        three->val = 3;
-        ass->st = std::move(three);
-        sum_fun->body.push_back(std::move(ass));
-
-        auto whil = std::make_unique<While>();
-        {
-            auto st4 = std::make_unique<LogicOp>();
-            st4->op = "<";
-            auto lhs = std::make_unique<Var>();
-            lhs->name = "z";
-            st4->lhs = std::move(lhs);
-            auto rhs = std::make_unique<Integer>();
-            rhs->val = 20;
-            st4->rhs = std::move(rhs);
-            whil->condition = std::move(st4);
+            auto sum_fun_call = std::make_unique<FunCall>();
+            sum_fun_call->func = sum_fun.get();
+            {
+                auto one = std::make_unique<Integer>();
+                one->val = 1;
+                auto two = std::make_unique<Integer>();
+                two->val = 2;
+                sum_fun_call->args.push_back(std::move(one));
+                sum_fun_call->args.push_back(std::move(two));
+            }
+            st2->rhs = std::move(sum_fun_call);
+            abs_fun_call->args.push_back(std::move(st2));
         }
 
-        auto ass2 = std::make_unique<Assign>();
-        ass2->var = "z";
+        auto print = std::make_unique<Print>();
+        print->st = std::move(abs_fun_call);
 
-        auto st2 = std::make_unique<ArithOp>();
-        st2->op = "+";
-        auto lhs = std::make_unique<Var>();
-        lhs->name = "z";
-        st2->lhs = std::move(lhs);
-        {
-            auto st3 = std::make_unique<ArithOp>();
-            st3->op = "+";
-            auto lhs2 = std::make_unique<Var>();
-            lhs2->name = "x";
-            st3->lhs = std::move(lhs2);
-            auto rhs = std::make_unique<Var>();
-            rhs->name = "y";
-            st3->rhs = std::move(rhs);
-            st2->rhs = std::move(st3);
-        }
-        ass2->st = std::move(st2);
-
-        whil->body.push_back(std::move(ass2));
-
-        sum_fun->body.push_back(std::move(whil));
-
-        auto ret = std::make_unique<Return>();
-        auto v = std::make_unique<Var>();
-        v->name = "z";
-        ret->statement = std::move(v);
-        sum_fun->body.push_back(std::move(ret));
-    }
-
-    Function main_fun;
-    main_fun.name = "main";
-
-    auto abs_fun_call = std::make_unique<FunCall>();
-    abs_fun_call->func = abs_fun.get();
-
-    {
-        auto st2 = std::make_unique<ArithOp>();
-        st2->op = "+";
-        auto lhs = std::make_unique<Integer>();
-        lhs->val = -10;
-        st2->lhs = std::move(lhs);
-
-        auto sum_fun_call = std::make_unique<FunCall>();
-        sum_fun_call->func = sum_fun.get();
-        {
-            auto one = std::make_unique<Integer>();
-            one->val = 1;
-            auto two = std::make_unique<Integer>();
-            two->val = 2;
-            sum_fun_call->args.push_back(std::move(one));
-            sum_fun_call->args.push_back(std::move(two));
-        }
-        st2->rhs = std::move(sum_fun_call);
-        abs_fun_call->args.push_back(std::move(st2));
-    }
-
-    auto print = std::make_unique<Print>();
-    print->st = std::move(abs_fun_call);
-
-    main_fun.fun.push_back(std::move(abs_fun));
-
-    main_fun.body.push_back(std::move(print));
-    main_fun.return_type = Type::INT;
+        main_fun.body.body.push_back(std::move(print));
+        main_fun.return_type = Type::Int;
+        ASTNode* node = &main_fun;
     */
-
     std::stack<ASTNode*> st;
-    ASTNode* node = root.get();
+
     std::unordered_set<ASTNode*> set;
 
     std::stack<std::string> result_stack;
@@ -175,7 +174,7 @@ int main() {
         if (node) {
             st.push(node);
             if (auto f = dynamic_cast<Function*>(node); f) {
-                for (auto& s : f->body) {
+                for (auto& s : f->body.body) {
                     if (!set.count(s.get())) {
                         node = s.get();
                         break;
@@ -242,7 +241,7 @@ int main() {
             auto* cur = st.top();
             st.pop();
             if (auto f = dynamic_cast<Function*>(cur); f) {
-                for (auto& s : f->body) {
+                for (auto& s : f->body.body) {
                     if (!set.count(s.get())) {
                         st.push(cur);
                         node = s.get();
@@ -363,13 +362,13 @@ void visit(ASTNode* node, std::stack<std::string>& result_stack,
             str += to_string(f->args[i].type) + " " + f->args[i].name;
         }
         str += ") {\n";
-        assert(result_stack.size() >= f->body.size());
+        assert(result_stack.size() >= f->body.body.size());
         std::stack<std::string> temp_st;
-        for (size_t i = 0; i < f->body.size(); ++i) {
+        for (size_t i = 0; i < f->body.body.size(); ++i) {
             temp_st.push(result_stack.top());
             result_stack.pop();
         }
-        for (size_t i = 0; i < f->body.size(); ++i) {
+        for (size_t i = 0; i < f->body.body.size(); ++i) {
             if (i > 0) str += "\n";
             str += temp_st.top();
             temp_st.pop();

@@ -30,11 +30,15 @@ std::shared_ptr<Block> make_block(
     return block;
 }
 
+std::shared_ptr<std::vector<std::shared_ptr<ASTNode>>> make_empty_stmt_list() {
+    return std::make_shared<std::vector<std::shared_ptr<ASTNode>>>();
+}
+
 std::shared_ptr<std::vector<std::shared_ptr<ASTNode>>> append_stmt(
     std::shared_ptr<std::vector<std::shared_ptr<ASTNode>>> list,
     std::shared_ptr<ASTNode> stmt) {
     if (!list) {
-        list = std::make_shared<std::vector<std::shared_ptr<ASTNode>>>();
+        list = make_empty_stmt_list();
     }
     list->push_back(stmt);
     return list;

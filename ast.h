@@ -19,6 +19,8 @@ std::shared_ptr<ASTNode> make_function(Type return_type,
 std::shared_ptr<Block> make_block(
     std::shared_ptr<std::vector<std::shared_ptr<ASTNode>>> stmt_list);
 
+std::shared_ptr<std::vector<std::shared_ptr<ASTNode>>> make_empty_stmt_list();
+
 std::shared_ptr<std::vector<std::shared_ptr<ASTNode>>> append_stmt(
     std::shared_ptr<std::vector<std::shared_ptr<ASTNode>>> list,
     std::shared_ptr<ASTNode> stmt);

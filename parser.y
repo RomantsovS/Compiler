@@ -1,35 +1,7 @@
-/*
- * The MIT License (MIT)
- * 
- * Copyright (c) 2014 Krzysztof Narkiewicz <krzysztof.narkiewicz@ezaquarii.com>
- * 
- * Permission is hereby granted, free of charge, to any person
- * obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without
- * restriction, including without limitation the rights to use,
- * copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following
- * conditions:
- * 
- * The above copyright notice and this permission notice shall be
- * included in all copies or substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
- * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
- * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
- * OTHER DEALINGS IN THE SOFTWARE.
- * 
- */
-
 %skeleton "lalr1.cc" /* -*- C++ -*- */
 %require "3.0"
 %defines
-%define parser_class_name { Parser }
+%define api.parser.class { Parser }
 
 %define api.token.constructor
 %define api.value.type variant
@@ -66,7 +38,7 @@
     #include "location.hh"
     
     // yylex() arguments are defined in parser.y
-    static EzAquarii::Parser::symbol_type yylex(EzAquarii::Scanner &scanner, EzAquarii::Interpreter &driver) {
+    static EzAquarii::Parser::symbol_type yylex(EzAquarii::Scanner &scanner) {
         return scanner.get_next_token();
     }
     
@@ -78,7 +50,7 @@
 }
 
 %lex-param { EzAquarii::Scanner &scanner }
-%lex-param { EzAquarii::Interpreter &driver }
+
 %parse-param { EzAquarii::Scanner &scanner }
 %parse-param { EzAquarii::Interpreter &driver }
 %parse-param { std::shared_ptr<ASTNode>& result }
@@ -98,6 +70,10 @@
 %token SEMICOLON "semicolon";
 %token COMMA "comma";
 %token EQUAL;
+%token PLUS;
+%token MINUS;
+%token MULTIPLY;
+%token DIVIDE;
 %token <std::string> ID
 %token INT
 %token PRINT
@@ -139,7 +115,9 @@ stmt_list:
     stmt_list stmt {
         $$ = append_stmt($1, $2);
     }
-    | /* empty */
+    | /* empty */ {
+        $$ = make_empty_stmt_list();
+    }
     ;
 
 stmt:
@@ -178,11 +156,6 @@ expr:
 %%
 
 // Bison expects us to provide implementation - otherwise linker complains
-void EzAquarii::Parser::error(const location &loc , const std::string &message) {
-        
-        // Location should be initialized inside scanner action, but is not in this example.
-        // Let's grab location directly from driver class.
-	// cout << "Error: " << message << endl << "Location: " << loc << endl;
-	
-        cout << "Error: " << message << endl << "Error location: " << driver.location() << endl;
+void EzAquarii::Parser::error([[maybe_unused]] const location &loc , const std::string &message) {	
+    cout << "Error: " << message << endl << "Error location: " << driver.location() << endl;
 }

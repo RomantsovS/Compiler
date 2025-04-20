@@ -6,7 +6,7 @@ project(parser)
 
 set(CXX "clang++")
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
-set(CMAKE_CXX_FLAGS "-Wall -W -pedantic")
+set(CMAKE_CXX_FLAGS "-Wall -Werror -pedantic")
 
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})

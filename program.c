@@ -1,3 +1,5 @@
+int abs(int x) { return x; }
+
 int main() {
     int x;
     if (1 < 2)

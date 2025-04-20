@@ -83,9 +83,14 @@
                 return EzAquarii::Parser::make_ELSE(EzAquarii::location());
             }
 
-"while"      {
+"while"     {
                 cout << "Scanner: 'while'" << endl;
                 return EzAquarii::Parser::make_WHILE(EzAquarii::location());
+            }
+
+"return"     {
+                cout << "Scanner: 'return'" << endl;
+                return EzAquarii::Parser::make_RETURN(EzAquarii::location());
             }
 
 [a-zA-Z_][a-zA-Z0-9_]*  {
@@ -162,7 +167,7 @@
                 //cout << "Scanner: whitechar (ignored)" << endl;
             }
 
-[1-9][0-9]* {
+[0-9]+ {
                 cout << "Scanner: decimal number: " << yytext << endl;
                 uint64_t number = strtoull(yytext, 0, 10);
                 return EzAquarii::Parser::make_NUMBER(number, EzAquarii::location());

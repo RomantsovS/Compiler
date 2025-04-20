@@ -9,17 +9,42 @@
 #include "if_then_else.h"
 #include "integer.h"
 #include "print.h"
+#include "program.h"
 #include "var.h"
 #include "while.h"
 
+std::shared_ptr<ASTNode> make_program(std::shared_ptr<Statements> functions) {
+    std::cout << "create ast program " << '\n';
+    auto node = std::make_shared<Program>();
+    node->functions = functions;
+    return node;
+}
+
+std::shared_ptr<Statements> make_empty_function_list() {
+    return std::make_shared<Statements>();
+}
+
+std::shared_ptr<Statements> append_function(
+    std::shared_ptr<Statements> functions, std::shared_ptr<ASTNode> stmt) {
+    std::cout << "call ast append_function, functions initialized: "
+              << static_cast<bool>(functions) << '\n';
+    if (!functions) {
+        functions = make_empty_function_list();
+    }
+    functions->push_back(stmt);
+    return functions;
+}
+
 std::shared_ptr<ASTNode> make_function(Type return_type,
                                        const std::string& name,
+                                       std::shared_ptr<Params> params,
                                        std::shared_ptr<Block> block) {
     std::cout << "create ast function " << name << '\n';
     auto node = std::make_shared<Function>();
 
     node->return_type = return_type;
     node->name = name;
+    node->args = *params;
     node->body = *block.get();
 
     return node;
@@ -37,11 +62,43 @@ std::shared_ptr<Statements> make_empty_stmt_list() {
 
 std::shared_ptr<Statements> append_stmt(std::shared_ptr<Statements> list,
                                         std::shared_ptr<ASTNode> stmt) {
+    std::cout << "call ast append_stmt, list initialized: "
+              << static_cast<bool>(list) << '\n';
     if (!list) {
         list = make_empty_stmt_list();
     }
     list->push_back(stmt);
     return list;
+}
+
+std::shared_ptr<Params> make_empty_param_list() {
+    std::cout << "call ast make_empty_param_list" << '\n';
+    return std::make_shared<Params>();
+}
+
+std::shared_ptr<Params> make_param_list(Type type, const std::string& name) {
+    std::cout << "call ast make_param_list" << '\n';
+    auto params = make_empty_param_list();
+    params->push_back({name, type});
+    return params;
+}
+
+std::shared_ptr<Params> append_param(std::shared_ptr<Params> params, Type type,
+                                     const std::string& name) {
+    std::cout << "call ast append_param, params initialized: "
+              << static_cast<bool>(params) << '\n';
+    if (!params) {
+        params = make_empty_param_list();
+    }
+    params->push_back({name, type});
+    return params;
+}
+
+std::shared_ptr<ASTNode> make_return(std::shared_ptr<ASTNode> stmt) {
+    std::cout << "create ast return " << '\n';
+    auto node = std::make_shared<Return>();
+    node->statement = stmt;
+    return node;
 }
 
 std::shared_ptr<ASTNode> make_decl(Type type, const std::string& name) {

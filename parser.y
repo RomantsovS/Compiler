@@ -15,6 +15,7 @@
     #include <stdint.h>
     #include "ast.h"
     #include "block.h"
+    #include "name_type.h"
 
     using namespace std;
 
@@ -78,31 +79,54 @@
 %token <std::string> ID
 %token INT
 %token PRINT
+%token RETURN
 
 %type< Type > type;
 %type< std::shared_ptr<Block> > block;
-%type< std::shared_ptr<std::vector<std::shared_ptr<ASTNode>>> > stmt_list;
-%type< std::shared_ptr<ASTNode> > function declaration expr assignment print_stmt stmt while if;
+%type< std::shared_ptr<Statements> > stmt_list function_list;
+%type< std::shared_ptr<Params> > param_list;
+%type< std::shared_ptr<ASTNode> > program function declaration expr assignment print_stmt stmt while if;
 
 %start program
 
 %%
 
 program:
-    function {
-        result = $1;
-	}
+    function_list {
+        result = make_program($1);
+    }
+    ;
+
+function_list:
+    function_list function {
+        $$ = append_function($1, $2);
+    }
+    | /* empty */ {
+        $$ = make_empty_function_list();
+    }
     ;
 
 function:
-    type ID LEFTPAR RIGHTPAR block { 
-        $$ = make_function($1, $2, $5);
+    type ID LEFTPAR param_list RIGHTPAR block { 
+        $$ = make_function($1, $2, $4, $6);
     }
     ;
 
 type:
     INT {
         $$ = Type::Int;
+    }
+    ;
+
+param_list:
+    /* empty */ {
+        $$ = make_empty_param_list();
+    }
+    | type ID {
+        $$ = make_param_list($1, $2);
+    }
+    | param_list COMMA type ID {
+        $$ = append_param($1, $3, $4);
     }
     ;
 
@@ -140,6 +164,9 @@ stmt:
     | while
     | if
     | print_stmt
+    | RETURN expr SEMICOLON {
+        $$ = make_return($2);
+    }
     ;
 
 declaration:

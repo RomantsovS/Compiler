@@ -15,6 +15,7 @@
 #include "logic_op.h"
 #include "parser.hpp"
 #include "print.h"
+#include "program.h"
 #include "scanner.h"
 #include "type.h"
 #include "var.h"
@@ -31,11 +32,11 @@ int main() {
         auto res = interpreter.parse();
         if (res) return res;
     } else {
-        {
-            auto abs_fun = std::make_shared<Function>();
-            auto abs_fun2 = std::make_shared<Function>();
-        }
+        auto prog = std::make_shared<Program>();
+
         auto abs_fun = std::make_shared<Function>();
+        prog->functions->push_back(abs_fun);
+
         abs_fun->name = "abs";
         abs_fun->args = {{"x", Type::Int}};
 
@@ -78,6 +79,8 @@ int main() {
         abs_fun->return_type = Type::Int;
 
         auto sum_fun = std::make_shared<Function>();
+        prog->functions->push_back(sum_fun);
+
         sum_fun->name = "sum";
         sum_fun->args = {{"x", Type::Int}, {"y", Type::Int}};
         sum_fun->return_type = Type::Int;
@@ -141,6 +144,8 @@ int main() {
         }
 
         auto main_fun = std::make_shared<Function>();
+        prog->functions->push_back(main_fun);
+
         main_fun->name = "main";
 
         auto abs_fun_call = std::make_shared<FunCall>();
@@ -172,7 +177,7 @@ int main() {
 
         main_fun->body.body.push_back(print);
         main_fun->return_type = Type::Int;
-        ast = main_fun;
+        ast = prog;
     }
     auto* node = ast.get();
     std::stack<ASTNode*> st;
@@ -185,7 +190,14 @@ int main() {
     while (!st.empty() || node) {
         if (node) {
             st.push(node);
-            if (auto f = dynamic_cast<Function*>(node); f) {
+            if (auto pr = dynamic_cast<Program*>(node); pr) {
+                for (auto& f : *pr->functions) {
+                    if (!set.count(f.get())) {
+                        node = f.get();
+                        break;
+                    }
+                }
+            } else if (auto f = dynamic_cast<Function*>(node); f) {
                 for (auto& s : f->body.body) {
                     if (!set.count(s.get())) {
                         node = s.get();
@@ -252,7 +264,19 @@ int main() {
         } else {
             auto* cur = st.top();
             st.pop();
-            if (auto f = dynamic_cast<Function*>(cur); f) {
+            if (auto pr = dynamic_cast<Program*>(cur); pr) {
+                for (auto& f : *pr->functions) {
+                    if (!set.count(f.get())) {
+                        st.push(cur);
+                        node = f.get();
+                        break;
+                    }
+                }
+                if (!node) {
+                    visit(cur, result_stack, result_queue);
+                    set.insert(cur);
+                }
+            } else if (auto f = dynamic_cast<Function*>(cur); f) {
                 for (auto& s : f->body.body) {
                     if (!set.count(s.get())) {
                         st.push(cur);
@@ -367,7 +391,9 @@ int main() {
 
 void visit(ASTNode* node, std::stack<std::string>& result_stack,
            std::queue<std::string>& result_queue) {
-    if (auto f = dynamic_cast<Function*>(node); f) {
+    if (auto pr = dynamic_cast<Program*>(node); pr) {
+        ;
+    } else if (auto f = dynamic_cast<Function*>(node); f) {
         auto str = to_string(f->return_type) + " " + f->name + "(";
         for (size_t i = 0; i < f->args.size(); ++i) {
             if (i > 0) str += ", ";

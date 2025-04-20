@@ -6,16 +6,26 @@
 #include "type.h"
 
 struct Block;
+struct NameType;
 
 struct ASTNode {
     virtual ~ASTNode() = default;
 };
 
 using Statements = std::vector<std::shared_ptr<ASTNode>>;
+using Params = std::vector<NameType>;
 
 // functions
+std::shared_ptr<ASTNode> make_program(std::shared_ptr<Statements> functions);
+
+std::shared_ptr<Statements> make_empty_function_list();
+
+std::shared_ptr<Statements> append_function(
+    std::shared_ptr<Statements> functions, std::shared_ptr<ASTNode> stmt);
+
 std::shared_ptr<ASTNode> make_function(Type return_type,
                                        const std::string& name,
+                                       std::shared_ptr<Params> params,
                                        std::shared_ptr<Block> block);
 
 std::shared_ptr<Block> make_block(std::shared_ptr<Statements> stmt_list);
@@ -24,6 +34,15 @@ std::shared_ptr<Statements> make_empty_stmt_list();
 
 std::shared_ptr<Statements> append_stmt(std::shared_ptr<Statements> list,
                                         std::shared_ptr<ASTNode> stmt);
+
+std::shared_ptr<Params> make_empty_param_list();
+
+std::shared_ptr<Params> make_param_list(Type type, const std::string& name);
+
+std::shared_ptr<Params> append_param(std::shared_ptr<Params> params, Type type,
+                                     const std::string& name);
+
+std::shared_ptr<ASTNode> make_return(std::shared_ptr<ASTNode> stmt);
 
 std::shared_ptr<ASTNode> make_decl(Type type, const std::string& name);
 

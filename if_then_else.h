@@ -1,7 +1,7 @@
 ﻿#pragma once
 
+#include <memory>
 #include <string>
-#include <vector>
 
 #include "ast.h"
 #include "logic_op.h"
@@ -9,7 +9,7 @@
 #include "return.h"
 
 struct IfThenElse : public ASTNode {
-    LogicOp op;
-    Return return_true;
-    Return return_false;
+    std::shared_ptr<ASTNode> condition;
+    std::shared_ptr<ASTNode> then_branch;
+    std::shared_ptr<ASTNode> else_branch;
 };

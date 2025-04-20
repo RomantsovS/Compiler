@@ -6,6 +6,6 @@
 #include "ast.h"
 
 struct While : public ASTNode {
-    std::unique_ptr<ASTNode> condition;
-    std::vector<std::unique_ptr<ASTNode>> body;
+    std::shared_ptr<ASTNode> condition;
+    std::vector<std::shared_ptr<ASTNode>> body;
 };

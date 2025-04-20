@@ -5,5 +5,5 @@
 #include "ast.h"
 
 struct Return : public ASTNode {
-    std::unique_ptr<ASTNode> statement;
+    std::shared_ptr<ASTNode> statement;
 };

@@ -7,6 +7,6 @@
 #include "function.h"
 
 struct FunCall : public ASTNode {
-    Function* func;
-    std::vector<std::unique_ptr<ASTNode>> args;
+    std::shared_ptr<Function> func;
+    std::vector<std::shared_ptr<ASTNode>> args;
 };

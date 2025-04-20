@@ -63,15 +63,25 @@
 
 %%
 
-"int"           {
+"int"       {
                 cout << "Scanner: int " << std::endl;
                 return EzAquarii::Parser::make_INT(EzAquarii::location( /* put location data here if you want */ )); 
-                }
+            }
 
-"print"         {
+"print"     {
                 cout << "Scanner: print " << std::endl;
                 return EzAquarii::Parser::make_PRINT(EzAquarii::location( /* put location data here if you want */ )); 
-                }
+            }
+
+"if"        {
+                cout << "Scanner: 'if'" << endl;
+                return EzAquarii::Parser::make_IF(EzAquarii::location());
+            }
+
+"else"      {
+                cout << "Scanner: 'else'" << endl;
+                return EzAquarii::Parser::make_ELSE(EzAquarii::location());
+            }
 
 [a-zA-Z_][a-zA-Z0-9_]*  {
 						cout << "Scanner: identifier [" << yytext << "]" << endl;

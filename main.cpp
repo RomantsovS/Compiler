@@ -24,7 +24,7 @@ void visit(ASTNode* node, std::stack<std::string>& result_stack,
            std::queue<std::string>& result_queue);
 
 int main() {
-    bool use_parser = false;
+    bool use_parser = true;
     std::shared_ptr<ASTNode> ast;
     if (use_parser) {
         EzAquarii::Interpreter interpreter(ast);

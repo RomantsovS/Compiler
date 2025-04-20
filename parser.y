@@ -74,6 +74,7 @@
 %token MINUS;
 %token MULTIPLY;
 %token DIVIDE;
+%token IF ELSE;
 %token <std::string> ID
 %token INT
 %token PRINT
@@ -121,7 +122,13 @@ stmt_list:
     ;
 
 stmt:
-    declaration
+    IF LEFTPAR expr RIGHTPAR stmt {
+        $$ = make_if($3, $5, nullptr);
+    }
+    | IF LEFTPAR expr RIGHTPAR stmt ELSE stmt {
+        $$ = make_if($3, $5, $7);
+    }
+    | declaration
     | assignment
     | print_stmt
     ;

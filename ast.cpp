@@ -6,6 +6,7 @@
 #include "assign.h"
 #include "block.h"
 #include "function.h"
+#include "if_then_else.h"
 #include "integer.h"
 #include "print.h"
 #include "var.h"
@@ -85,11 +86,22 @@ std::shared_ptr<ASTNode> make_var(const std::string& var) {
 std::shared_ptr<ASTNode> make_arith_op(const std::string& op,
                                        std::shared_ptr<ASTNode> lhs,
                                        std::shared_ptr<ASTNode> rhs) {
-    std::cout << "create ast arith op " << '\n';
+    std::cout << "create ast arith_op " << '\n';
     auto node = std::make_shared<ArithOp>();
     node->lhs = lhs;
     node->op = op;
     node->rhs = rhs;
 
+    return node;
+}
+
+std::shared_ptr<ASTNode> make_if(std::shared_ptr<ASTNode> condition,
+                                 std::shared_ptr<ASTNode> then_branch,
+                                 std::shared_ptr<ASTNode> else_branch) {
+    std::cout << "create ast if_then_else " << '\n';
+    auto node = std::make_shared<IfThenElse>();
+    node->condition = condition;
+    node->then_branch = then_branch;
+    node->else_branch = else_branch;
     return node;
 }

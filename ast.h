@@ -33,3 +33,7 @@ std::shared_ptr<ASTNode> make_assignment(const std::string& var,
 std::shared_ptr<ASTNode> make_print(std::shared_ptr<ASTNode> st);
 
 std::shared_ptr<ASTNode> make_var(const std::string& var);
+
+std::shared_ptr<ASTNode> make_arith_op(const std::string& op,
+                                       std::shared_ptr<ASTNode> lhs,
+                                       std::shared_ptr<ASTNode> rhs);

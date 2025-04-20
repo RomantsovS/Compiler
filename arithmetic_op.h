@@ -8,6 +8,6 @@
 
 struct ArithOp : ASTNode {
     std::string op;
-    std::unique_ptr<ASTNode> lhs;
-    std::unique_ptr<ASTNode> rhs;
+    std::shared_ptr<ASTNode> lhs;
+    std::shared_ptr<ASTNode> rhs;
 };

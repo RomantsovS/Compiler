@@ -2,6 +2,7 @@
 
 #include <iostream>
 
+#include "arithmetic_op.h"
 #include "assign.h"
 #include "block.h"
 #include "function.h"
@@ -74,5 +75,17 @@ std::shared_ptr<ASTNode> make_var(const std::string& var) {
     std::cout << "create ast var " << var << '\n';
     auto node = std::make_shared<Var>();
     node->name = var;
+    return node;
+}
+
+std::shared_ptr<ASTNode> make_arith_op(const std::string& op,
+                                       std::shared_ptr<ASTNode> lhs,
+                                       std::shared_ptr<ASTNode> rhs) {
+    std::cout << "create ast arith op " << '\n';
+    auto node = std::make_shared<ArithOp>();
+    node->lhs = lhs;
+    node->op = op;
+    node->rhs = rhs;
+
     return node;
 }

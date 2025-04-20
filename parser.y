@@ -167,7 +167,11 @@ print_stmt:
     ;
 
 expr:
-    ID { $$ = make_var($1); }
+    expr PLUS expr { $$ = make_arith_op("+", $1, $3); }
+    | expr MINUS expr { $$ = make_arith_op("-", $1, $3); }
+    | expr MULTIPLY expr { $$ = make_arith_op("*", $1, $3); }
+    | expr DIVIDE expr { $$ = make_arith_op("/", $1, $3); }
+    | ID { $$ = make_var($1); }
     | NUMBER { $$ = make_integer($1); }
     ;
 

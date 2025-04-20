@@ -112,6 +112,26 @@
                 cout << "Scanner: '='" << endl;
                 return EzAquarii::Parser::make_EQUAL(EzAquarii::location());
             }
+
+"+"         {
+                cout << "Scanner: '+'" << endl;
+                return EzAquarii::Parser::make_PLUS(EzAquarii::location());
+            }
+
+"-"         {
+                cout << "Scanner: '-'" << endl;
+                return EzAquarii::Parser::make_MINUS(EzAquarii::location());
+            }
+
+"*"         {
+                cout << "Scanner: '*'" << endl;
+                return EzAquarii::Parser::make_MULTIPLY(EzAquarii::location());
+            }
+
+"/"         {
+                cout << "Scanner: '/'" << endl;
+                return EzAquarii::Parser::make_DIVIDE(EzAquarii::location());
+            }
             
 [\n\t ]     {
                 //cout << "Scanner: whitechar (ignored)" << endl;

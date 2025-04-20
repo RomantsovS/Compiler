@@ -33,6 +33,7 @@ int main() {
         if (res) return res;
     } else {
         auto prog = std::make_shared<Program>();
+        prog->functions = std::make_shared<Statements>();
 
         auto abs_fun = std::make_shared<Function>();
         prog->functions->push_back(abs_fun);
@@ -189,73 +190,65 @@ int main() {
 
     while (!st.empty() || node) {
         if (node) {
+            assert(st.empty() || st.top() != node);
             st.push(node);
-            if (auto pr = dynamic_cast<Program*>(node); pr) {
+            auto* cur = node;
+            node = nullptr;
+            if (auto pr = dynamic_cast<Program*>(cur); pr) {
                 for (auto& f : *pr->functions) {
                     if (!set.count(f.get())) {
                         node = f.get();
                         break;
                     }
                 }
-            } else if (auto f = dynamic_cast<Function*>(node); f) {
+            } else if (auto f = dynamic_cast<Function*>(cur); f) {
                 for (auto& s : f->body.body) {
                     if (!set.count(s.get())) {
                         node = s.get();
                         break;
                     }
                 }
-            } else if (auto pr = dynamic_cast<Print*>(node); pr) {
+            } else if (auto pr = dynamic_cast<Print*>(cur); pr) {
                 node = pr->st.get();
-            } else if (auto fc = dynamic_cast<FunCall*>(node); fc) {
+            } else if (auto fc = dynamic_cast<FunCall*>(cur); fc) {
                 node = fc->func.get();
-            } else if (auto ifthen = dynamic_cast<IfThenElse*>(node); ifthen) {
+            } else if (auto ifthen = dynamic_cast<IfThenElse*>(cur); ifthen) {
                 if (!set.count(ifthen->condition.get()))
                     node = ifthen->condition.get();
                 else if (!set.count(ifthen->then_branch.get()))
                     node = ifthen->then_branch.get();
                 else if (!set.count(ifthen->else_branch.get()))
                     node = ifthen->else_branch.get();
-                else
-                    node = nullptr;
-            } else if (auto logic_op = dynamic_cast<LogicOp*>(node); logic_op) {
+            } else if (auto logic_op = dynamic_cast<LogicOp*>(cur); logic_op) {
                 if (!set.count(logic_op->lhs.get()))
                     node = logic_op->lhs.get();
                 else if (!set.count(logic_op->rhs.get()))
                     node = logic_op->rhs.get();
-                else
-                    node = nullptr;
-            } else if (auto ret = dynamic_cast<Return*>(node); ret) {
+            } else if (auto ret = dynamic_cast<Return*>(cur); ret) {
                 node = ret->statement.get();
-            } else if (auto arith_op = dynamic_cast<ArithOp*>(node); arith_op) {
+            } else if (auto arith_op = dynamic_cast<ArithOp*>(cur); arith_op) {
                 if (!set.count(arith_op->lhs.get()))
                     node = arith_op->lhs.get();
                 else if (!set.count(arith_op->rhs.get()))
                     node = arith_op->rhs.get();
-                else
-                    node = nullptr;
-            } else if (auto var_def = dynamic_cast<VarDef*>(node); var_def) {
-                node = nullptr;
-            } else if (auto var = dynamic_cast<Var*>(node); var) {
-                node = nullptr;
-            } else if (auto integer = dynamic_cast<Integer*>(node); integer) {
-                node = nullptr;
-            } else if (auto ass = dynamic_cast<Assign*>(node); ass) {
-                if (!set.count(ass->st.get()))
-                    node = ass->st.get();
-                else
-                    node = nullptr;
-            } else if (auto whil = dynamic_cast<While*>(node); whil) {
+            } else if (auto var_def = dynamic_cast<VarDef*>(cur); var_def) {
+                ;
+            } else if (auto var = dynamic_cast<Var*>(cur); var) {
+                ;
+            } else if (auto integer = dynamic_cast<Integer*>(cur); integer) {
+                ;
+            } else if (auto ass = dynamic_cast<Assign*>(cur); ass) {
+                if (!set.count(ass->st.get())) node = ass->st.get();
+            } else if (auto whil = dynamic_cast<While*>(cur); whil) {
                 for (auto& s : whil->body) {
                     if (!set.count(s.get())) {
                         node = s.get();
                         break;
                     }
                 }
-                if (node == whil) {
+                if (!node) {
                     if (!set.count(whil->condition.get())) {
                         node = whil->condition.get();
-                    } else {
-                        node = nullptr;
                     }
                 }
             } else {
@@ -284,7 +277,7 @@ int main() {
                         break;
                     }
                 }
-                if (!node) {
+                if (!node && !set.count(cur)) {
                     visit(cur, result_stack, result_queue);
                     set.insert(cur);
                 }

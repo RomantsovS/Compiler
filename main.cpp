@@ -418,7 +418,9 @@ void visit(ASTNode* node, std::stack<std::string>& result_stack,
             temp_st.push(result_stack.top());
             result_stack.pop();
         }
-        auto str = fc->func->name + "(";
+        auto func = dynamic_cast<Function*>(fc->func.get());
+        assert(func);
+        auto str = func->name + "(";
         for (size_t i = 0; i < fc->args.size(); ++i) {
             if (i > 0) str += ", ";
             str += temp_st.top();

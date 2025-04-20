@@ -28,6 +28,16 @@ std::shared_ptr<ASTNode> make_function(Type return_type,
                                        std::shared_ptr<Params> params,
                                        std::shared_ptr<Block> block);
 
+std::shared_ptr<ASTNode> make_function_call(const std::string& name,
+                                            std::shared_ptr<Statements> args);
+
+std::shared_ptr<Statements> make_empty_arg_list();
+
+std::shared_ptr<Statements> make_arg_list(std::shared_ptr<ASTNode> stmt);
+
+std::shared_ptr<Statements> append_arg(std::shared_ptr<Statements> args,
+                                       std::shared_ptr<ASTNode> stmt);
+
 std::shared_ptr<Block> make_block(std::shared_ptr<Statements> stmt_list);
 
 std::shared_ptr<Statements> make_empty_stmt_list();

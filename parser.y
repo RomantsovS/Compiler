@@ -83,9 +83,9 @@
 
 %type< Type > type;
 %type< std::shared_ptr<Block> > block;
-%type< std::shared_ptr<Statements> > stmt_list function_list;
+%type< std::shared_ptr<Statements> > stmt_list function_list arg_list;
 %type< std::shared_ptr<Params> > param_list;
-%type< std::shared_ptr<ASTNode> > program function declaration expr assignment print_stmt stmt while if;
+%type< std::shared_ptr<ASTNode> > program function function_call declaration expr assignment print_stmt stmt while if;
 
 %start program
 
@@ -127,6 +127,24 @@ param_list:
     }
     | param_list COMMA type ID {
         $$ = append_param($1, $3, $4);
+    }
+    ;
+
+function_call:
+    ID LEFTPAR arg_list RIGHTPAR { 
+        $$ = make_function_call($1, $3);
+    }
+    ;
+
+arg_list:
+    /* empty */ {
+        $$ = make_empty_arg_list();
+    }
+    | expr {
+        $$ = make_arg_list($1);
+    }
+    | arg_list COMMA expr {
+        $$ = append_arg($1, $3);
     }
     ;
 
@@ -189,6 +207,7 @@ print_stmt:
 
 expr:
     LEFTPAR expr RIGHTPAR { $$ = $2; }
+    | function_call { $$ = $1; }
     | expr PLUS expr { $$ = make_arith_op("+", $1, $3); }
     | expr MINUS expr { $$ = make_arith_op("-", $1, $3); }
     | expr MULTIPLY expr { $$ = make_arith_op("*", $1, $3); }

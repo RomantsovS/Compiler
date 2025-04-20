@@ -1,11 +1,16 @@
-int abs(int x) { return x; }
-
-int main() {
-    int x;
-    if (1 < 2)
-        x = (3 + 4) * 2;
+int abs(int x) {
+    if (x < 0)
+        return (0) - (x);
     else
-        x = 5;
-    while (x < 10) x = x + 1;
-    print(x);
+        return x;
 }
+
+int sum(int x, int y) {
+    int z;
+    z = 3;
+    while (z < 20) z = (z) + ((x) + (y));
+
+    return z;
+}
+
+int main() { print(abs((0 - 10) + (sum(1, 2)))); }

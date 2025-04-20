@@ -1,10 +1,12 @@
 #include "ast.h"
 
 #include <iostream>
+#include <unordered_map>
 
 #include "arithmetic_op.h"
 #include "assign.h"
 #include "block.h"
+#include "fun_call.h"
 #include "function.h"
 #include "if_then_else.h"
 #include "integer.h"
@@ -12,6 +14,8 @@
 #include "program.h"
 #include "var.h"
 #include "while.h"
+
+std::unordered_map<std::string, std::shared_ptr<ASTNode>> name_to_func;
 
 std::shared_ptr<ASTNode> make_program(std::shared_ptr<Statements> functions) {
     std::cout << "create ast program " << '\n';
@@ -47,16 +51,54 @@ std::shared_ptr<ASTNode> make_function(Type return_type,
     node->args = *params;
     node->body = *block.get();
 
+    name_to_func[name] = node;
+
     return node;
 }
 
+std::shared_ptr<ASTNode> make_function_call(const std::string& name,
+                                            std::shared_ptr<Statements> args) {
+    std::cout << "create ast function call " << name << '\n';
+    auto node = std::make_shared<FunCall>();
+
+    node->func = name_to_func.at(name);
+    node->args = *args;
+
+    return node;
+}
+
+std::shared_ptr<Statements> make_empty_arg_list() {
+    std::cout << "call ast make_empty_arg_list" << '\n';
+    return std::make_shared<Statements>();
+}
+
+std::shared_ptr<Statements> make_arg_list(std::shared_ptr<ASTNode> stmt) {
+    std::cout << "call ast make_arg_list" << '\n';
+    auto args = make_empty_arg_list();
+    args->push_back(stmt);
+    return args;
+}
+
+std::shared_ptr<Statements> append_arg(std::shared_ptr<Statements> args,
+                                       std::shared_ptr<ASTNode> stmt) {
+    std::cout << "call ast append_arg, args initialized: "
+              << static_cast<bool>(args) << '\n';
+    if (!args) {
+        args = make_empty_arg_list();
+    }
+    args->push_back(stmt);
+    return args;
+}
+
 std::shared_ptr<Block> make_block(std::shared_ptr<Statements> stmt_list) {
+    std::cout << "call ast make_block" << '\n';
     auto block = std::make_shared<Block>();
     block->body = *stmt_list.get();
     return block;
 }
 
 std::shared_ptr<Statements> make_empty_stmt_list() {
+    std::cout << "call ast make_empty_stmt_list" << '\n';
     return std::make_shared<Statements>();
 }
 

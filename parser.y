@@ -70,10 +70,9 @@
 %token SEMICOLON "semicolon";
 %token COMMA "comma";
 %token EQUAL;
-%token PLUS;
-%token MINUS;
-%token MULTIPLY;
-%token DIVIDE;
+%token PLUS MINUS;
+%token MULTIPLY DIVIDE;
+%token LESS GREATER;
 %token IF ELSE;
 %token <std::string> ID
 %token INT
@@ -156,6 +155,8 @@ expr:
     | expr MINUS expr { $$ = make_arith_op("-", $1, $3); }
     | expr MULTIPLY expr { $$ = make_arith_op("*", $1, $3); }
     | expr DIVIDE expr { $$ = make_arith_op("/", $1, $3); }
+    | expr LESS expr { $$ = make_logic_op("<", $1, $3); }
+    | expr GREATER expr { $$ = make_logic_op(">", $1, $3); }
     | ID { $$ = make_var($1); }
     | NUMBER { $$ = make_integer($1); }
     ;

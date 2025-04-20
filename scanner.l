@@ -142,6 +142,16 @@
                 cout << "Scanner: '/'" << endl;
                 return EzAquarii::Parser::make_DIVIDE(EzAquarii::location());
             }
+
+"<"         {
+                cout << "Scanner: '<'" << endl;
+                return EzAquarii::Parser::make_LESS(EzAquarii::location());
+            }
+
+">"         {
+                cout << "Scanner: '<'" << endl;
+                return EzAquarii::Parser::make_GREATER(EzAquarii::location());
+            }
             
 [\n\t ]     {
                 //cout << "Scanner: whitechar (ignored)" << endl;

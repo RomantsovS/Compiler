@@ -95,6 +95,18 @@ std::shared_ptr<ASTNode> make_arith_op(const std::string& op,
     return node;
 }
 
+std::shared_ptr<ASTNode> make_logic_op(const std::string& op,
+                                       std::shared_ptr<ASTNode> lhs,
+                                       std::shared_ptr<ASTNode> rhs) {
+    std::cout << "create ast logic_op " << '\n';
+    auto node = std::make_shared<LogicOp>();
+    node->lhs = lhs;
+    node->op = op;
+    node->rhs = rhs;
+
+    return node;
+}
+
 std::shared_ptr<ASTNode> make_if(std::shared_ptr<ASTNode> condition,
                                  std::shared_ptr<ASTNode> then_branch,
                                  std::shared_ptr<ASTNode> else_branch) {

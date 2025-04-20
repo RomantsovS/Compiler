@@ -82,7 +82,7 @@
 %type< Type > type;
 %type< std::shared_ptr<Block> > block;
 %type< std::shared_ptr<std::vector<std::shared_ptr<ASTNode>>> > stmt_list;
-%type< std::shared_ptr<ASTNode> > function declaration expr assignment print_stmt stmt while;
+%type< std::shared_ptr<ASTNode> > function declaration expr assignment print_stmt stmt while if;
 
 %start program
 
@@ -126,16 +126,19 @@ while:
         $$ = make_while($3, $5);
     }
 
-stmt:
+if:
     IF LEFTPAR expr RIGHTPAR stmt {
         $$ = make_if($3, $5, nullptr);
     }
     | IF LEFTPAR expr RIGHTPAR stmt ELSE stmt {
         $$ = make_if($3, $5, $7);
     }
-    | while
-    | declaration
+
+stmt:
+    declaration
     | assignment
+    | while
+    | if
     | print_stmt
     ;
 

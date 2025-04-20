@@ -188,7 +188,8 @@ print_stmt:
     ;
 
 expr:
-    expr PLUS expr { $$ = make_arith_op("+", $1, $3); }
+    LEFTPAR expr RIGHTPAR { $$ = $2; }
+    | expr PLUS expr { $$ = make_arith_op("+", $1, $3); }
     | expr MINUS expr { $$ = make_arith_op("-", $1, $3); }
     | expr MULTIPLY expr { $$ = make_arith_op("*", $1, $3); }
     | expr DIVIDE expr { $$ = make_arith_op("/", $1, $3); }

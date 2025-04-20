@@ -74,6 +74,7 @@
 %token MULTIPLY DIVIDE;
 %token LESS GREATER;
 %token IF ELSE;
+%token WHILE;
 %token <std::string> ID
 %token INT
 %token PRINT
@@ -81,7 +82,7 @@
 %type< Type > type;
 %type< std::shared_ptr<Block> > block;
 %type< std::shared_ptr<std::vector<std::shared_ptr<ASTNode>>> > stmt_list;
-%type< std::shared_ptr<ASTNode> > function declaration expr assignment print_stmt stmt;
+%type< std::shared_ptr<ASTNode> > function declaration expr assignment print_stmt stmt while;
 
 %start program
 
@@ -120,6 +121,11 @@ stmt_list:
     }
     ;
 
+while:
+    WHILE LEFTPAR expr RIGHTPAR stmt {
+        $$ = make_while($3, $5);
+    }
+
 stmt:
     IF LEFTPAR expr RIGHTPAR stmt {
         $$ = make_if($3, $5, nullptr);
@@ -127,6 +133,7 @@ stmt:
     | IF LEFTPAR expr RIGHTPAR stmt ELSE stmt {
         $$ = make_if($3, $5, $7);
     }
+    | while
     | declaration
     | assignment
     | print_stmt

@@ -10,6 +10,7 @@
 #include "integer.h"
 #include "print.h"
 #include "var.h"
+#include "while.h"
 
 std::shared_ptr<ASTNode> make_function(Type return_type,
                                        const std::string& name,
@@ -24,20 +25,18 @@ std::shared_ptr<ASTNode> make_function(Type return_type,
     return node;
 }
 
-std::shared_ptr<Block> make_block(
-    std::shared_ptr<std::vector<std::shared_ptr<ASTNode>>> stmt_list) {
+std::shared_ptr<Block> make_block(std::shared_ptr<Statements> stmt_list) {
     auto block = std::make_shared<Block>();
     block->body = *stmt_list.get();
     return block;
 }
 
-std::shared_ptr<std::vector<std::shared_ptr<ASTNode>>> make_empty_stmt_list() {
-    return std::make_shared<std::vector<std::shared_ptr<ASTNode>>>();
+std::shared_ptr<Statements> make_empty_stmt_list() {
+    return std::make_shared<Statements>();
 }
 
-std::shared_ptr<std::vector<std::shared_ptr<ASTNode>>> append_stmt(
-    std::shared_ptr<std::vector<std::shared_ptr<ASTNode>>> list,
-    std::shared_ptr<ASTNode> stmt) {
+std::shared_ptr<Statements> append_stmt(std::shared_ptr<Statements> list,
+                                        std::shared_ptr<ASTNode> stmt) {
     if (!list) {
         list = make_empty_stmt_list();
     }
@@ -115,5 +114,14 @@ std::shared_ptr<ASTNode> make_if(std::shared_ptr<ASTNode> condition,
     node->condition = condition;
     node->then_branch = then_branch;
     node->else_branch = else_branch;
+    return node;
+}
+
+std::shared_ptr<ASTNode> make_while(std::shared_ptr<ASTNode> condition,
+                                    std::shared_ptr<ASTNode> statement) {
+    std::cout << "create ast while " << '\n';
+    auto node = std::make_shared<While>();
+    node->condition = condition;
+    node->body.push_back(statement);
     return node;
 }

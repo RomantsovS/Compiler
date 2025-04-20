@@ -83,6 +83,11 @@
                 return EzAquarii::Parser::make_ELSE(EzAquarii::location());
             }
 
+"while"      {
+                cout << "Scanner: 'while'" << endl;
+                return EzAquarii::Parser::make_WHILE(EzAquarii::location());
+            }
+
 [a-zA-Z_][a-zA-Z0-9_]*  {
 						cout << "Scanner: identifier [" << yytext << "]" << endl;
                         return EzAquarii::Parser::make_ID(yytext, EzAquarii::location( /* put location data here if you want */ )); 

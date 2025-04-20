@@ -4,5 +4,6 @@ int main() {
         x = 3 + 4 * 2;
     else
         x = 5;
+    while (x < 10) x = x + 1;
     print(x);
 }

@@ -6,6 +6,7 @@
 #include "arithmetic_op.h"
 #include "assign.h"
 #include "block.h"
+#include "bool_literal.h"
 #include "fun_call.h"
 #include "function.h"
 #include "if_then_else.h"
@@ -179,6 +180,13 @@ std::shared_ptr<ASTNode> make_string_literal(const std::string& string) {
     std::cout << "create ast string literal " << string << '\n';
     auto node = std::make_shared<StringLiteral>();
     node->value = string;
+    return node;
+}
+
+std::shared_ptr<ASTNode> make_bool_literal(const bool value) {
+    std::cout << "create ast bool literal " << value << '\n';
+    auto node = std::make_shared<BoolLiteral>();
+    node->value = value;
     return node;
 }
 

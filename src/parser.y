@@ -81,12 +81,14 @@
 %token PRINT
 %token RETURN
 %token <std::string> STRING
+%token <bool> BOOL
 
 %type< Type > type;
 %type< std::shared_ptr<Block> > block;
 %type< std::shared_ptr<Statements> > stmt_list function_list arg_list;
 %type< std::shared_ptr<Params> > param_list;
-%type< std::shared_ptr<ASTNode> > program function function_call declaration expr assignment print_stmt string_literal stmt while if;
+%type< std::shared_ptr<ASTNode> > program function function_call print_stmt;
+%type< std::shared_ptr<ASTNode> > declaration expr assignment literal stmt while if;
 
 %start program
 
@@ -206,9 +208,12 @@ print_stmt:
     }
     ;
 
-string_literal:
+literal:
     STRING {
         $$ = make_string_literal($1);
+    }
+    | BOOL {
+        $$ = make_bool_literal($1);
     }
     ;
 
@@ -223,7 +228,7 @@ expr:
     | expr GREATER expr { $$ = make_logic_op(">", $1, $3); }
     | ID { $$ = make_var($1); }
     | NUMBER { $$ = make_integer($1); }
-    | string_literal
+    | literal
     ;
 
 %%

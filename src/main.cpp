@@ -8,6 +8,7 @@
 #include "ast/arithmetic_op.h"
 #include "ast/assign.h"
 #include "ast/ast.h"
+#include "ast/bool_literal.h"
 #include "ast/fun_call.h"
 #include "ast/function.h"
 #include "ast/if_then_else.h"
@@ -255,6 +256,8 @@ int main() {
                 }
             } else if (auto str = dynamic_cast<StringLiteral*>(cur); str) {
                 ;
+            } else if (auto str = dynamic_cast<BoolLiteral*>(cur); str) {
+                ;
             } else {
                 throw std::logic_error("err"s + typeid(cur).name());
             }
@@ -369,6 +372,9 @@ int main() {
                     }
                 }
             } else if (auto str = dynamic_cast<StringLiteral*>(cur); str) {
+                visit(cur, result_stack, result_queue);
+                set.insert(cur);
+            } else if (auto str = dynamic_cast<BoolLiteral*>(cur); str) {
                 visit(cur, result_stack, result_queue);
                 set.insert(cur);
             } else {
@@ -494,6 +500,8 @@ void visit(ASTNode* node, std::stack<std::string>& result_stack,
         result_stack.push(str);
     } else if (auto str = dynamic_cast<StringLiteral*>(node); str) {
         result_stack.push("\"" + str->value + "\"");
+    } else if (auto b_lit = dynamic_cast<BoolLiteral*>(node); b_lit) {
+        result_stack.push(b_lit->value ? "true" : "false");
     } else {
         throw std::logic_error("err"s + typeid(node).name());
     }

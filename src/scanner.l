@@ -93,6 +93,9 @@
                 return EzAquarii::Parser::make_RETURN(EzAquarii::location());
             }
 
+"true"      { return EzAquarii::Parser::make_BOOL(true, EzAquarii::location()); }
+"false"      { return EzAquarii::Parser::make_BOOL(false, EzAquarii::location()); }
+
 "//".*      { /* skip single-line comment */ }
 
 \"([^\\"]|\\.)*\" {

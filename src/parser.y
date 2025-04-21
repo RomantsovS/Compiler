@@ -13,9 +13,9 @@
     #include <string>
     #include <vector>
     #include <stdint.h>
-    #include "ast.h"
-    #include "block.h"
-    #include "name_type.h"
+    #include "ast/ast.h"
+    #include "ast/block.h"
+    #include "ast/name_type.h"
 
     using namespace std;
 

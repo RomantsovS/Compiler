@@ -30,7 +30,7 @@
 
 #include <sstream>
 
-#include "ast.h"
+#include "ast/ast.h"
 
 using namespace EzAquarii;
 

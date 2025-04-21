@@ -4,22 +4,22 @@
 #include <stack>
 #include <unordered_set>
 
-#include "arithmetic_op.h"
-#include "assign.h"
-#include "ast.h"
-#include "fun_call.h"
-#include "function.h"
-#include "if_then_else.h"
-#include "integer.h"
+#include "ast/arithmetic_op.h"
+#include "ast/assign.h"
+#include "ast/ast.h"
+#include "ast/fun_call.h"
+#include "ast/function.h"
+#include "ast/if_then_else.h"
+#include "ast/integer.h"
+#include "ast/logic_op.h"
+#include "ast/print.h"
+#include "ast/program.h"
+#include "ast/type.h"
+#include "ast/var.h"
+#include "ast/while.h"
 #include "interpreter.h"
-#include "logic_op.h"
 #include "parser.hpp"
-#include "print.h"
-#include "program.h"
 #include "scanner.h"
-#include "type.h"
-#include "var.h"
-#include "while.h"
 
 void visit(ASTNode* node, std::stack<std::string>& result_stack,
            std::queue<std::string>& result_queue);

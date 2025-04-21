@@ -6,5 +6,5 @@
 #include "ast.h"
 
 struct Program : public ASTNode {
-    std::shared_ptr<std::vector<std::shared_ptr<ASTNode>>> functions;
+    std::vector<std::shared_ptr<ASTNode>> functions;
 };

@@ -26,7 +26,7 @@ std::shared_ptr<Statements> append_function(
 std::shared_ptr<ASTNode> make_function(Type return_type,
                                        const std::string& name,
                                        std::shared_ptr<Params> params,
-                                       std::shared_ptr<Block> block);
+                                       std::shared_ptr<Statements> list);
 
 std::shared_ptr<ASTNode> make_function_call(const std::string& name,
                                             std::shared_ptr<Statements> args);
@@ -37,8 +37,6 @@ std::shared_ptr<Statements> make_arg_list(std::shared_ptr<ASTNode> stmt);
 
 std::shared_ptr<Statements> append_arg(std::shared_ptr<Statements> args,
                                        std::shared_ptr<ASTNode> stmt);
-
-std::shared_ptr<Block> make_block(std::shared_ptr<Statements> stmt_list);
 
 std::shared_ptr<Statements> make_empty_stmt_list();
 
@@ -83,3 +81,6 @@ std::shared_ptr<ASTNode> make_if(std::shared_ptr<ASTNode> condition,
 
 std::shared_ptr<ASTNode> make_while(std::shared_ptr<ASTNode> condition,
                                     std::shared_ptr<ASTNode> statement);
+
+std::shared_ptr<ASTNode> make_while(std::shared_ptr<ASTNode> condition,
+                                    std::shared_ptr<Statements> statement);

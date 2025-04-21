@@ -14,7 +14,6 @@
     #include <vector>
     #include <stdint.h>
     #include "ast/ast.h"
-    #include "ast/block.h"
     #include "ast/name_type.h"
 
     using namespace std;
@@ -84,8 +83,7 @@
 %token <bool> BOOL
 
 %type< Type > type;
-%type< std::shared_ptr<Block> > block;
-%type< std::shared_ptr<Statements> > stmt_list function_list arg_list;
+%type< std::shared_ptr<Statements> > stmt_list block function_list arg_list;
 %type< std::shared_ptr<Params> > param_list;
 %type< std::shared_ptr<ASTNode> > program function function_call print_stmt;
 %type< std::shared_ptr<ASTNode> > declaration expr assignment literal stmt while if;
@@ -153,7 +151,7 @@ arg_list:
 
 block:
     LEFTFIGPAR stmt_list RIGHTFIGPAR {
-        $$ = make_block($2);
+        $$ = $2;
     }
     ;
 
@@ -170,6 +168,10 @@ while:
     WHILE LEFTPAR expr RIGHTPAR stmt {
         $$ = make_while($3, $5);
     }
+    | WHILE LEFTPAR expr RIGHTPAR block {
+        $$ = make_while($3, $5);
+    }
+    ;
 
 if:
     IF LEFTPAR expr RIGHTPAR stmt {
@@ -178,6 +180,7 @@ if:
     | IF LEFTPAR expr RIGHTPAR stmt ELSE stmt {
         $$ = make_if($3, $5, $7);
     }
+    ;
 
 stmt:
     declaration

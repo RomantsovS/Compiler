@@ -1,3 +1,5 @@
 int main() {
-    while (true) print("x");
+    while (true) {
+        print("x");
+    }
 }

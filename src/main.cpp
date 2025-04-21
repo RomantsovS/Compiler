@@ -36,10 +36,9 @@ int main() {
         if (res) return res;
     } else {
         auto prog = std::make_shared<Program>();
-        prog->functions = std::make_shared<Statements>();
 
         auto abs_fun = std::make_shared<Function>();
-        prog->functions->push_back(abs_fun);
+        prog->functions.push_back(abs_fun);
 
         abs_fun->name = "abs";
         abs_fun->args = {{"x", Type::Int}};
@@ -78,12 +77,12 @@ int main() {
                 ret->statement = var;
                 st->else_branch = ret;
             }
-            abs_fun->body.body.push_back(st);
+            abs_fun->body.push_back(st);
         }
         abs_fun->return_type = Type::Int;
 
         auto sum_fun = std::make_shared<Function>();
-        prog->functions->push_back(sum_fun);
+        prog->functions.push_back(sum_fun);
 
         sum_fun->name = "sum";
         sum_fun->args = {{"x", Type::Int}, {"y", Type::Int}};
@@ -93,14 +92,14 @@ int main() {
             auto var = std::make_shared<VarDef>();
             var->name = "z";
             var->type = Type::Int;
-            sum_fun->body.body.push_back(var);
+            sum_fun->body.push_back(var);
 
             auto ass = std::make_shared<Assign>();
             ass->var = "z";
             auto three = std::make_shared<Integer>();
             three->val = 3;
             ass->st = three;
-            sum_fun->body.body.push_back(ass);
+            sum_fun->body.push_back(ass);
 
             auto whil = std::make_shared<While>();
             {
@@ -138,17 +137,17 @@ int main() {
 
             whil->body.push_back(ass2);
 
-            sum_fun->body.body.push_back(whil);
+            sum_fun->body.push_back(whil);
 
             auto ret = std::make_shared<Return>();
             auto v = std::make_shared<Var>();
             v->name = "z";
             ret->statement = v;
-            sum_fun->body.body.push_back(ret);
+            sum_fun->body.push_back(ret);
         }
 
         auto main_fun = std::make_shared<Function>();
-        prog->functions->push_back(main_fun);
+        prog->functions.push_back(main_fun);
 
         main_fun->name = "main";
 
@@ -179,7 +178,7 @@ int main() {
         auto print = std::make_shared<Print>();
         print->st = abs_fun_call;
 
-        main_fun->body.body.push_back(print);
+        main_fun->body.push_back(print);
         main_fun->return_type = Type::Int;
         ast = prog;
     }
@@ -198,14 +197,14 @@ int main() {
             auto* cur = node;
             node = nullptr;
             if (auto pr = dynamic_cast<Program*>(cur); pr) {
-                for (auto& f : *pr->functions) {
+                for (auto& f : pr->functions) {
                     if (!set.count(f.get())) {
                         node = f.get();
                         break;
                     }
                 }
             } else if (auto f = dynamic_cast<Function*>(cur); f) {
-                for (auto& s : f->body.body) {
+                for (auto& s : f->body) {
                     if (!set.count(s.get())) {
                         node = s.get();
                         break;
@@ -265,7 +264,7 @@ int main() {
             auto* cur = st.top();
             st.pop();
             if (auto pr = dynamic_cast<Program*>(cur); pr) {
-                for (auto& f : *pr->functions) {
+                for (auto& f : pr->functions) {
                     if (!set.count(f.get())) {
                         st.push(cur);
                         node = f.get();
@@ -277,7 +276,7 @@ int main() {
                     set.insert(cur);
                 }
             } else if (auto f = dynamic_cast<Function*>(cur); f) {
-                for (auto& s : f->body.body) {
+                for (auto& s : f->body) {
                     if (!set.count(s.get())) {
                         st.push(cur);
                         node = s.get();
@@ -406,13 +405,13 @@ void visit(ASTNode* node, std::stack<std::string>& result_stack,
             str += to_string(f->args[i].type) + " " + f->args[i].name;
         }
         str += ") {\n";
-        assert(result_stack.size() >= f->body.body.size());
+        assert(result_stack.size() >= f->body.size());
         std::stack<std::string> temp_st;
-        for (size_t i = 0; i < f->body.body.size(); ++i) {
+        for (size_t i = 0; i < f->body.size(); ++i) {
             temp_st.push(result_stack.top());
             result_stack.pop();
         }
-        for (size_t i = 0; i < f->body.body.size(); ++i) {
+        for (size_t i = 0; i < f->body.size(); ++i) {
             if (i > 0) str += "\n";
             str += temp_st.top();
             temp_st.pop();

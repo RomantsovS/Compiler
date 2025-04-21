@@ -5,7 +5,6 @@
 
 #include "arithmetic_op.h"
 #include "assign.h"
-#include "block.h"
 #include "bool_literal.h"
 #include "fun_call.h"
 #include "function.h"
@@ -22,7 +21,7 @@ std::unordered_map<std::string, std::shared_ptr<ASTNode>> name_to_func;
 std::shared_ptr<ASTNode> make_program(std::shared_ptr<Statements> functions) {
     std::cout << "create ast program " << '\n';
     auto node = std::make_shared<Program>();
-    node->functions = functions;
+    node->functions = *functions;
     return node;
 }
 
@@ -44,14 +43,14 @@ std::shared_ptr<Statements> append_function(
 std::shared_ptr<ASTNode> make_function(Type return_type,
                                        const std::string& name,
                                        std::shared_ptr<Params> params,
-                                       std::shared_ptr<Block> block) {
+                                       std::shared_ptr<Statements> list) {
     std::cout << "create ast function " << name << '\n';
     auto node = std::make_shared<Function>();
 
     node->return_type = return_type;
     node->name = name;
     node->args = *params;
-    node->body = *block.get();
+    node->body = *list;
 
     name_to_func[name] = node;
 
@@ -90,13 +89,6 @@ std::shared_ptr<Statements> append_arg(std::shared_ptr<Statements> args,
     }
     args->push_back(stmt);
     return args;
-}
-
-std::shared_ptr<Block> make_block(std::shared_ptr<Statements> stmt_list) {
-    std::cout << "call ast make_block" << '\n';
-    auto block = std::make_shared<Block>();
-    block->body = *stmt_list.get();
-    return block;
 }
 
 std::shared_ptr<Statements> make_empty_stmt_list() {
@@ -238,5 +230,14 @@ std::shared_ptr<ASTNode> make_while(std::shared_ptr<ASTNode> condition,
     auto node = std::make_shared<While>();
     node->condition = condition;
     node->body.push_back(statement);
+    return node;
+}
+
+std::shared_ptr<ASTNode> make_while(std::shared_ptr<ASTNode> condition,
+                                    std::shared_ptr<Statements> list) {
+    std::cout << "create ast while with block " << '\n';
+    auto node = std::make_shared<While>();
+    node->condition = condition;
+    node->body = *list;
     return node;
 }

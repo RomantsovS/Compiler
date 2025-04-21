@@ -93,6 +93,8 @@
                 return EzAquarii::Parser::make_RETURN(EzAquarii::location());
             }
 
+"//".*      { /* skip single-line comment */ }
+
 \"([^\\"]|\\.)*\" {
                 cout << "Scanner: 'string'" << endl;
                 std::string raw_str(yytext);

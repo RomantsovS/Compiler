@@ -1,1 +1,4 @@
-int main() { print("test"); }
+int main() {
+    // print("\033[2J");
+    int x;
+}

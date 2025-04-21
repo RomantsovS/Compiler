@@ -88,10 +88,17 @@
                 return EzAquarii::Parser::make_WHILE(EzAquarii::location());
             }
 
-"return"     {
+"return"    {
                 cout << "Scanner: 'return'" << endl;
                 return EzAquarii::Parser::make_RETURN(EzAquarii::location());
             }
+
+\"([^\\"]|\\.)*\" {
+                cout << "Scanner: 'string'" << endl;
+                std::string raw_str(yytext);
+                raw_str = raw_str.substr(1, raw_str.length() - 2); // Strip quotes
+                return EzAquarii::Parser::make_STRING(raw_str, EzAquarii::location());
+                }
 
 [a-zA-Z_][a-zA-Z0-9_]*  {
 						cout << "Scanner: identifier [" << yytext << "]" << endl;

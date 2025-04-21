@@ -12,6 +12,7 @@
 #include "integer.h"
 #include "print.h"
 #include "program.h"
+#include "string_literal.h"
 #include "var.h"
 #include "while.h"
 
@@ -171,6 +172,13 @@ std::shared_ptr<ASTNode> make_print(std::shared_ptr<ASTNode> st) {
     std::cout << "create ast print " << '\n';
     auto node = std::make_shared<Print>();
     node->st = st;
+    return node;
+}
+
+std::shared_ptr<ASTNode> make_string_literal(const std::string& string) {
+    std::cout << "create ast string literal " << string << '\n';
+    auto node = std::make_shared<StringLiteral>();
+    node->value = string;
     return node;
 }
 

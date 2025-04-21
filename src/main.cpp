@@ -2,6 +2,7 @@
 #include <iostream>
 #include <queue>
 #include <stack>
+#include <typeinfo>
 #include <unordered_set>
 
 #include "ast/arithmetic_op.h"
@@ -14,6 +15,7 @@
 #include "ast/logic_op.h"
 #include "ast/print.h"
 #include "ast/program.h"
+#include "ast/string_literal.h"
 #include "ast/type.h"
 #include "ast/var.h"
 #include "ast/while.h"
@@ -251,8 +253,10 @@ int main() {
                         node = whil->condition.get();
                     }
                 }
+            } else if (auto str = dynamic_cast<StringLiteral*>(cur); str) {
+                ;
             } else {
-                throw std::logic_error("err");
+                throw std::logic_error("err"s + typeid(cur).name());
             }
         } else {
             auto* cur = st.top();
@@ -364,8 +368,11 @@ int main() {
                         set.insert(cur);
                     }
                 }
+            } else if (auto str = dynamic_cast<StringLiteral*>(cur); str) {
+                visit(cur, result_stack, result_queue);
+                set.insert(cur);
             } else {
-                throw std::logic_error("err");
+                throw std::logic_error("err"s + typeid(cur).name());
             }
         }
     }
@@ -485,7 +492,9 @@ void visit(ASTNode* node, std::stack<std::string>& result_stack,
         }
         str += "\n}\n";
         result_stack.push(str);
+    } else if (auto str = dynamic_cast<StringLiteral*>(node); str) {
+        result_stack.push("\"" + str->value + "\"");
     } else {
-        throw std::logic_error("err");
+        throw std::logic_error("err"s + typeid(node).name());
     }
 }

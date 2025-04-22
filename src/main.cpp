@@ -26,7 +26,8 @@
 #include "scanner.h"
 
 void visit(ASTNode* node, std::stack<std::string>& result_stack,
-           std::queue<std::string>& result_queue);
+           std::queue<std::string>& result_queue,
+           std::unordered_set<ASTNode*>& visited);
 
 int main() {
     bool use_parser = true;
@@ -186,8 +187,7 @@ int main() {
     auto* node = ast.get();
     std::stack<ASTNode*> st;
 
-    std::unordered_set<ASTNode*> set;
-
+    std::unordered_set<ASTNode*> visited;
     std::stack<std::string> result_stack;
     std::queue<std::string> result_queue;
 
@@ -199,14 +199,14 @@ int main() {
             node = nullptr;
             if (auto pr = dynamic_cast<Program*>(cur); pr) {
                 for (auto& f : pr->functions) {
-                    if (!set.count(f.get())) {
+                    if (!visited.count(f.get())) {
                         node = f.get();
                         break;
                     }
                 }
             } else if (auto f = dynamic_cast<Function*>(cur); f) {
                 for (auto& s : f->body) {
-                    if (!set.count(s.get())) {
+                    if (!visited.count(s.get())) {
                         node = s.get();
                         break;
                     }
@@ -216,23 +216,23 @@ int main() {
             } else if (auto fc = dynamic_cast<FunCall*>(cur); fc) {
                 node = fc->func.get();
             } else if (auto ifthen = dynamic_cast<IfThenElse*>(cur); ifthen) {
-                if (!set.count(ifthen->condition.get()))
+                if (!visited.count(ifthen->condition.get()))
                     node = ifthen->condition.get();
-                else if (!set.count(ifthen->then_branch.get()))
+                else if (!visited.count(ifthen->then_branch.get()))
                     node = ifthen->then_branch.get();
-                else if (!set.count(ifthen->else_branch.get()))
+                else if (!visited.count(ifthen->else_branch.get()))
                     node = ifthen->else_branch.get();
             } else if (auto logic_op = dynamic_cast<LogicOp*>(cur); logic_op) {
-                if (!set.count(logic_op->lhs.get()))
+                if (!visited.count(logic_op->lhs.get()))
                     node = logic_op->lhs.get();
-                else if (!set.count(logic_op->rhs.get()))
+                else if (!visited.count(logic_op->rhs.get()))
                     node = logic_op->rhs.get();
             } else if (auto ret = dynamic_cast<Return*>(cur); ret) {
                 node = ret->statement.get();
             } else if (auto arith_op = dynamic_cast<ArithOp*>(cur); arith_op) {
-                if (!set.count(arith_op->lhs.get()))
+                if (!visited.count(arith_op->lhs.get()))
                     node = arith_op->lhs.get();
-                else if (!set.count(arith_op->rhs.get()))
+                else if (!visited.count(arith_op->rhs.get()))
                     node = arith_op->rhs.get();
             } else if (auto var_def = dynamic_cast<VarDef*>(cur); var_def) {
                 ;
@@ -241,16 +241,16 @@ int main() {
             } else if (auto integer = dynamic_cast<Integer*>(cur); integer) {
                 ;
             } else if (auto ass = dynamic_cast<Assign*>(cur); ass) {
-                if (!set.count(ass->st.get())) node = ass->st.get();
+                if (!visited.count(ass->st.get())) node = ass->st.get();
             } else if (auto whil = dynamic_cast<While*>(cur); whil) {
                 for (auto& s : whil->body) {
-                    if (!set.count(s.get())) {
+                    if (!visited.count(s.get())) {
                         node = s.get();
                         break;
                     }
                 }
                 if (!node) {
-                    if (!set.count(whil->condition.get())) {
+                    if (!visited.count(whil->condition.get())) {
                         node = whil->condition.get();
                     }
                 }
@@ -261,14 +261,14 @@ int main() {
             } else if (auto arr = dynamic_cast<ArrayDeclaration*>(cur); arr) {
                 ;
             } else if (auto arr_ac = dynamic_cast<ArrayAccess*>(cur); arr_ac) {
-                if (!set.count(arr_ac->index.get())) {
+                if (!visited.count(arr_ac->index.get())) {
                     node = arr_ac->index.get();
                 }
             } else if (auto arr_as = dynamic_cast<ArrayAssignment*>(cur);
                        arr_as) {
-                if (!set.count(arr_as->index.get())) {
+                if (!visited.count(arr_as->index.get())) {
                     node = arr_as->index.get();
-                } else if (!set.count(arr_as->value.get())) {
+                } else if (!visited.count(arr_as->value.get())) {
                     node = arr_as->value.get();
                 }
             } else {
@@ -279,135 +279,117 @@ int main() {
             st.pop();
             if (auto pr = dynamic_cast<Program*>(cur); pr) {
                 for (auto& f : pr->functions) {
-                    if (!set.count(f.get())) {
+                    if (!visited.count(f.get())) {
                         st.push(cur);
                         node = f.get();
                         break;
                     }
                 }
                 if (!node) {
-                    visit(cur, result_stack, result_queue);
-                    set.insert(cur);
+                    visit(cur, result_stack, result_queue, visited);
                 }
             } else if (auto f = dynamic_cast<Function*>(cur); f) {
                 for (auto& s : f->body) {
-                    if (!set.count(s.get())) {
+                    if (!visited.count(s.get())) {
                         st.push(cur);
                         node = s.get();
                         break;
                     }
                 }
-                if (!node && !set.count(cur)) {
-                    visit(cur, result_stack, result_queue);
-                    set.insert(cur);
+                if (!node && !visited.count(cur)) {
+                    visit(cur, result_stack, result_queue, visited);
                 }
             } else if (auto pr = dynamic_cast<Print*>(cur); pr) {
-                visit(cur, result_stack, result_queue);
-                set.insert(cur);
+                visit(cur, result_stack, result_queue, visited);
             } else if (auto fc = dynamic_cast<FunCall*>(cur); fc) {
-                if (!set.count(fc->func.get())) {
+                if (!visited.count(fc->func.get())) {
                     st.push(cur);
                     node = fc->func.get();
                 } else {
                     for (auto& s : fc->args) {
-                        if (!set.count(s.get())) {
+                        if (!visited.count(s.get())) {
                             st.push(cur);
                             node = s.get();
                             break;
                         }
                     }
                     if (!node) {
-                        visit(cur, result_stack, result_queue);
-                        set.insert(cur);
+                        visit(cur, result_stack, result_queue, visited);
                     }
                 }
             } else if (auto ifthen = dynamic_cast<IfThenElse*>(cur); ifthen) {
-                if (!set.count(ifthen->then_branch.get())) {
+                if (!visited.count(ifthen->then_branch.get())) {
                     st.push(cur);
                     node = ifthen->then_branch.get();
-                } else if (!set.count(ifthen->else_branch.get())) {
+                } else if (!visited.count(ifthen->else_branch.get())) {
                     st.push(cur);
                     node = ifthen->else_branch.get();
                 } else {
-                    visit(cur, result_stack, result_queue);
-                    set.insert(cur);
+                    visit(cur, result_stack, result_queue, visited);
                 }
             } else if (auto logic_op = dynamic_cast<LogicOp*>(cur); logic_op) {
-                if (!set.count(logic_op->lhs.get())) {
+                if (!visited.count(logic_op->lhs.get())) {
                     st.push(cur);
                     node = logic_op->lhs.get();
-                } else if (!set.count(logic_op->rhs.get())) {
+                } else if (!visited.count(logic_op->rhs.get())) {
                     st.push(cur);
                     node = logic_op->rhs.get();
                 } else {
-                    visit(cur, result_stack, result_queue);
-                    set.insert(cur);
+                    visit(cur, result_stack, result_queue, visited);
                 }
             } else if (auto ret = dynamic_cast<Return*>(cur); ret) {
-                visit(cur, result_stack, result_queue);
-                set.insert(cur);
+                visit(cur, result_stack, result_queue, visited);
             } else if (auto arith_op = dynamic_cast<ArithOp*>(cur); arith_op) {
-                if (!set.count(arith_op->lhs.get())) {
+                if (!visited.count(arith_op->lhs.get())) {
                     st.push(cur);
                     node = arith_op->lhs.get();
-                } else if (!set.count(arith_op->rhs.get())) {
+                } else if (!visited.count(arith_op->rhs.get())) {
                     st.push(cur);
                     node = arith_op->rhs.get();
                 } else {
-                    visit(cur, result_stack, result_queue);
-                    set.insert(cur);
+                    visit(cur, result_stack, result_queue, visited);
                 }
             } else if (auto var_def = dynamic_cast<VarDef*>(cur); var_def) {
-                visit(cur, result_stack, result_queue);
-                set.insert(cur);
+                visit(cur, result_stack, result_queue, visited);
             } else if (auto var = dynamic_cast<Var*>(cur); var) {
-                visit(cur, result_stack, result_queue);
-                set.insert(cur);
+                visit(cur, result_stack, result_queue, visited);
             } else if (auto integer = dynamic_cast<Integer*>(cur); integer) {
-                visit(cur, result_stack, result_queue);
-                set.insert(cur);
+                visit(cur, result_stack, result_queue, visited);
             } else if (auto ass = dynamic_cast<Assign*>(cur); ass) {
-                visit(cur, result_stack, result_queue);
-                set.insert(cur);
+                visit(cur, result_stack, result_queue, visited);
             } else if (auto whil = dynamic_cast<While*>(cur); whil) {
                 for (auto& s : whil->body) {
-                    if (!set.count(s.get())) {
+                    if (!visited.count(s.get())) {
                         node = s.get();
                         break;
                     }
                 }
                 if (!node) {
-                    if (!set.count(whil->condition.get())) {
+                    if (!visited.count(whil->condition.get())) {
                         node = whil->condition.get();
                     } else {
-                        visit(cur, result_stack, result_queue);
-                        set.insert(cur);
+                        visit(cur, result_stack, result_queue, visited);
                     }
                 }
             } else if (auto str = dynamic_cast<StringLiteral*>(cur); str) {
-                visit(cur, result_stack, result_queue);
-                set.insert(cur);
+                visit(cur, result_stack, result_queue, visited);
             } else if (auto str = dynamic_cast<BoolLiteral*>(cur); str) {
-                visit(cur, result_stack, result_queue);
-                set.insert(cur);
+                visit(cur, result_stack, result_queue, visited);
             } else if (auto arr = dynamic_cast<ArrayDeclaration*>(cur); arr) {
-                visit(cur, result_stack, result_queue);
-                set.insert(cur);
+                visit(cur, result_stack, result_queue, visited);
             } else if (auto arr_ac = dynamic_cast<ArrayAccess*>(cur); arr_ac) {
-                visit(cur, result_stack, result_queue);
-                set.insert(cur);
+                visit(cur, result_stack, result_queue, visited);
             } else if (auto arr_as = dynamic_cast<ArrayAssignment*>(cur);
                        arr_as) {
-                if (!set.count(arr_as->index.get())) {
+                if (!visited.count(arr_as->index.get())) {
                     st.push(cur);
                     node = arr_as->index.get();
-                } else if (!set.count(arr_as->value.get())) {
+                } else if (!visited.count(arr_as->value.get())) {
                     st.push(cur);
                     node = arr_as->value.get();
                 }
                 if (!node) {
-                    visit(cur, result_stack, result_queue);
-                    set.insert(cur);
+                    visit(cur, result_stack, result_queue, visited);
                 }
             } else {
                 throw std::logic_error("err"s + typeid(cur).name());
@@ -428,7 +410,9 @@ int main() {
 }
 
 void visit(ASTNode* node, std::stack<std::string>& result_stack,
-           std::queue<std::string>& result_queue) {
+           std::queue<std::string>& result_queue,
+           std::unordered_set<ASTNode*>& visited) {
+    visited.insert(node);
     if (auto pr = dynamic_cast<Program*>(node); pr) {
         ;
     } else if (auto f = dynamic_cast<Function*>(node); f) {

@@ -14,7 +14,7 @@
     #include <vector>
     #include <stdint.h>
     #include "ast/ast.h"
-    #include "ast/name_type.h"
+    #include "ast/type.h"
 
     using namespace std;
 
@@ -63,10 +63,9 @@
 
 %token END 0 "end of file"
 %token <uint64_t> NUMBER "number";
-%token LEFTPAR "leftpar";
-%token RIGHTPAR "rightpar";
-%token LEFTFIGPAR;
-%token RIGHTFIGPAR;
+%token LEFTPAR RIGHTPAR;
+%token LEFTFIGPAR RIGHTFIGPAR;
+%token LEFTBRACKET RIGHTBRACKET;
 %token SEMICOLON "semicolon";
 %token COMMA "comma";
 %token EQUAL;
@@ -115,8 +114,11 @@ function:
 
 type:
     INT {
-        $$ = Type::Int;
+        $$ = Type::Int();
     }
+    | INT LEFTBRACKET NUMBER RIGHTBRACKET {
+        $$ = Type::IntArray($3);
+    } 
     ;
 
 param_list:
@@ -185,17 +187,24 @@ if:
 stmt:
     declaration
     | assignment
+    | expr
     | while
     | if
     | print_stmt
     | RETURN expr SEMICOLON {
         $$ = make_return($2);
     }
+    | ID LEFTBRACKET expr RIGHTBRACKET EQUAL expr SEMICOLON {
+        $$ = make_array_assignment($1, $3, $6);
+    }
     ;
 
 declaration:
     type ID SEMICOLON {
 		$$ = make_decl($1, $2);
+    }
+    | type ID LEFTBRACKET NUMBER RIGHTBRACKET SEMICOLON {
+        $$ = make_array_declaration($2, Type::IntArray($4));
     }
     ;
 
@@ -230,6 +239,7 @@ expr:
     | expr LESS expr { $$ = make_logic_op("<", $1, $3); }
     | expr GREATER expr { $$ = make_logic_op(">", $1, $3); }
     | ID { $$ = make_var($1); }
+    | ID LEFTBRACKET expr RIGHTBRACKET { $$ = make_array_access($1, $3); }
     | NUMBER { $$ = make_integer($1); }
     | literal
     ;

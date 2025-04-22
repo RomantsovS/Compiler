@@ -2,15 +2,24 @@
 
 #include <string>
 
-enum class Type { Void, Int };
+enum class BaseType { Void, Int };
 
-inline std::string to_string(Type type) {
-    switch (type) {
-        case Type::Void:
-            return "void";
-        case Type::Int:
-            return "int";
-        default:
-            return "Unknown";
+struct Type {
+    BaseType base;
+    bool is_array = false;
+    int array_size = 0;  // optional: 0 = unknown or dynamic size
+
+    std::string to_string() {
+        switch (base) {
+            case BaseType::Void:
+                return "void";
+            case BaseType::Int:
+                return "int";
+            default:
+                return "Unknown";
+        }
     }
-}
+
+    static Type Int() { return {BaseType::Int}; }
+    static Type IntArray(int size) { return {BaseType::Int, true, size}; }
+};

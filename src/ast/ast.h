@@ -84,3 +84,13 @@ std::shared_ptr<ASTNode> make_while(std::shared_ptr<ASTNode> condition,
 
 std::shared_ptr<ASTNode> make_while(std::shared_ptr<ASTNode> condition,
                                     std::shared_ptr<Statements> statement);
+
+std::shared_ptr<ASTNode> make_array_declaration(const std::string& name,
+                                                const Type& type);
+
+std::shared_ptr<ASTNode> make_array_access(const std::string& name,
+                                           std::shared_ptr<ASTNode> expr);
+
+std::shared_ptr<ASTNode> make_array_assignment(const std::string& name,
+                                               std::shared_ptr<ASTNode> index,
+                                               std::shared_ptr<ASTNode> value);

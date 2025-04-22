@@ -6,6 +6,7 @@
 #include <unordered_set>
 
 #include "ast/arithmetic_op.h"
+#include "ast/array.h"
 #include "ast/assign.h"
 #include "ast/ast.h"
 #include "ast/bool_literal.h"
@@ -41,7 +42,7 @@ int main() {
         prog->functions.push_back(abs_fun);
 
         abs_fun->name = "abs";
-        abs_fun->args = {{"x", Type::Int}};
+        abs_fun->args = {{"x", Type::Int()}};
 
         {
             auto st = std::make_shared<IfThenElse>();
@@ -79,19 +80,19 @@ int main() {
             }
             abs_fun->body.push_back(st);
         }
-        abs_fun->return_type = Type::Int;
+        abs_fun->return_type = Type::Int();
 
         auto sum_fun = std::make_shared<Function>();
         prog->functions.push_back(sum_fun);
 
         sum_fun->name = "sum";
-        sum_fun->args = {{"x", Type::Int}, {"y", Type::Int}};
-        sum_fun->return_type = Type::Int;
+        sum_fun->args = {{"x", Type::Int()}, {"y", Type::Int()}};
+        sum_fun->return_type = Type::Int();
 
         {
             auto var = std::make_shared<VarDef>();
             var->name = "z";
-            var->type = Type::Int;
+            var->type = Type::Int();
             sum_fun->body.push_back(var);
 
             auto ass = std::make_shared<Assign>();
@@ -179,7 +180,7 @@ int main() {
         print->st = abs_fun_call;
 
         main_fun->body.push_back(print);
-        main_fun->return_type = Type::Int;
+        main_fun->return_type = Type::Int();
         ast = prog;
     }
     auto* node = ast.get();
@@ -257,6 +258,19 @@ int main() {
                 ;
             } else if (auto str = dynamic_cast<BoolLiteral*>(cur); str) {
                 ;
+            } else if (auto arr = dynamic_cast<ArrayDeclaration*>(cur); arr) {
+                ;
+            } else if (auto arr_ac = dynamic_cast<ArrayAccess*>(cur); arr_ac) {
+                if (!set.count(arr_ac->index.get())) {
+                    node = arr_ac->index.get();
+                }
+            } else if (auto arr_as = dynamic_cast<ArrayAssignment*>(cur);
+                       arr_as) {
+                if (!set.count(arr_as->index.get())) {
+                    node = arr_as->index.get();
+                } else if (!set.count(arr_as->value.get())) {
+                    node = arr_as->value.get();
+                }
             } else {
                 throw std::logic_error("err"s + typeid(cur).name());
             }
@@ -376,6 +390,25 @@ int main() {
             } else if (auto str = dynamic_cast<BoolLiteral*>(cur); str) {
                 visit(cur, result_stack, result_queue);
                 set.insert(cur);
+            } else if (auto arr = dynamic_cast<ArrayDeclaration*>(cur); arr) {
+                visit(cur, result_stack, result_queue);
+                set.insert(cur);
+            } else if (auto arr_ac = dynamic_cast<ArrayAccess*>(cur); arr_ac) {
+                visit(cur, result_stack, result_queue);
+                set.insert(cur);
+            } else if (auto arr_as = dynamic_cast<ArrayAssignment*>(cur);
+                       arr_as) {
+                if (!set.count(arr_as->index.get())) {
+                    st.push(cur);
+                    node = arr_as->index.get();
+                } else if (!set.count(arr_as->value.get())) {
+                    st.push(cur);
+                    node = arr_as->value.get();
+                }
+                if (!node) {
+                    visit(cur, result_stack, result_queue);
+                    set.insert(cur);
+                }
             } else {
                 throw std::logic_error("err"s + typeid(cur).name());
             }
@@ -399,10 +432,10 @@ void visit(ASTNode* node, std::stack<std::string>& result_stack,
     if (auto pr = dynamic_cast<Program*>(node); pr) {
         ;
     } else if (auto f = dynamic_cast<Function*>(node); f) {
-        auto str = to_string(f->return_type) + " " + f->name + "(";
+        auto str = f->return_type.to_string() + " " + f->name + "(";
         for (size_t i = 0; i < f->args.size(); ++i) {
             if (i > 0) str += ", ";
-            str += to_string(f->args[i].type) + " " + f->args[i].name;
+            str += f->args[i].type.to_string() + " " + f->args[i].name;
         }
         str += ") {\n";
         assert(result_stack.size() >= f->body.size());
@@ -470,16 +503,17 @@ void visit(ASTNode* node, std::stack<std::string>& result_stack,
         result_stack.pop();
         result_stack.push("(" + b + ") " + arith_op->op + " (" + a + ")");
     } else if (auto var_def = dynamic_cast<VarDef*>(node); var_def) {
-        result_stack.push(to_string(var_def->type) + " " + var_def->name + ";");
+        result_stack.push(var_def->type.to_string() + " " + var_def->name +
+                          ";");
     } else if (auto var = dynamic_cast<Var*>(node); var) {
         result_stack.push(var->name);
     } else if (auto integer = dynamic_cast<Integer*>(node); integer) {
         result_stack.push(std::to_string(integer->val));
     } else if (auto ass = dynamic_cast<Assign*>(node); ass) {
         assert(result_stack.size() >= 1);
-        auto a = result_stack.top();
+        auto expr = result_stack.top();
         result_stack.pop();
-        result_stack.push(ass->var + " = " + a + ";");
+        result_stack.push(ass->var + " = " + expr + ";");
     } else if (auto whil = dynamic_cast<While*>(node); whil) {
         assert(result_stack.size() >= whil->body.size() + 1);
         auto cond = result_stack.top();
@@ -501,6 +535,21 @@ void visit(ASTNode* node, std::stack<std::string>& result_stack,
         result_stack.push("\"" + str->value + "\"");
     } else if (auto b_lit = dynamic_cast<BoolLiteral*>(node); b_lit) {
         result_stack.push(b_lit->value ? "true" : "false");
+    } else if (auto arr = dynamic_cast<ArrayDeclaration*>(node); arr) {
+        result_stack.push(arr->type.to_string() + " " + arr->name + "[" +
+                          std::to_string(arr->type.array_size) + "];");
+    } else if (auto arr_ac = dynamic_cast<ArrayAccess*>(node); arr_ac) {
+        assert(result_stack.size() >= 1);
+        auto expr = result_stack.top();
+        result_stack.pop();
+        result_stack.push(arr_ac->name + "[" + expr + "]");
+    } else if (auto arr_as = dynamic_cast<ArrayAssignment*>(node); arr_as) {
+        assert(result_stack.size() >= 2);
+        auto value = result_stack.top();
+        result_stack.pop();
+        auto expr = result_stack.top();
+        result_stack.pop();
+        result_stack.push(arr_as->name + "[" + expr + "] = " + value + ";");
     } else {
         throw std::logic_error("err"s + typeid(node).name());
     }

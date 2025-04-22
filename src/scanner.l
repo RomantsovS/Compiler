@@ -129,6 +129,16 @@
                 cout << "Scanner: '}'" << endl;
                 return EzAquarii::Parser::make_RIGHTFIGPAR(EzAquarii::location());
             }
+
+"["         {
+                cout << "Scanner: '['" << endl;
+                return EzAquarii::Parser::make_LEFTBRACKET(EzAquarii::location());
+            }
+            
+"]"         { 
+                cout << "Scanner: ']'" << endl;
+                return EzAquarii::Parser::make_RIGHTBRACKET(EzAquarii::location());
+            }
             
 ;           {
                 cout << "Scanner: ';'" << endl;

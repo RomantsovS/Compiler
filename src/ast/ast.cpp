@@ -4,6 +4,7 @@
 #include <unordered_map>
 
 #include "arithmetic_op.h"
+#include "array.h"
 #include "assign.h"
 #include "bool_literal.h"
 #include "fun_call.h"
@@ -239,5 +240,34 @@ std::shared_ptr<ASTNode> make_while(std::shared_ptr<ASTNode> condition,
     auto node = std::make_shared<While>();
     node->condition = condition;
     node->body = *list;
+    return node;
+}
+
+std::shared_ptr<ASTNode> make_array_declaration(const std::string& name,
+                                                const Type& type) {
+    std::cout << "create ast array decl " << name << '\n';
+    auto node = std::make_shared<ArrayDeclaration>();
+    node->name = name;
+    node->type = type;
+    return node;
+}
+
+std::shared_ptr<ASTNode> make_array_access(const std::string& name,
+                                           std::shared_ptr<ASTNode> expr) {
+    std::cout << "create ast array access " << name << '\n';
+    auto node = std::make_shared<ArrayAccess>();
+    node->name = name;
+    node->index = expr;
+    return node;
+}
+
+std::shared_ptr<ASTNode> make_array_assignment(const std::string& name,
+                                               std::shared_ptr<ASTNode> index,
+                                               std::shared_ptr<ASTNode> value) {
+    std::cout << "create ast array assignment " << name << '\n';
+    auto node = std::make_shared<ArrayAssignment>();
+    node->name = name;
+    node->index = index;
+    node->value = value;
     return node;
 }

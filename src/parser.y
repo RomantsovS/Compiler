@@ -69,13 +69,12 @@
 %token SEMICOLON "semicolon";
 %token COMMA "comma";
 %token EQUAL;
-%token PLUS MINUS;
-%token MULTIPLY DIVIDE;
+%token PLUS MINUS MULTIPLY DIVIDE MOD;
 %token LESS GREATER;
 %token IF ELSE;
 %token WHILE;
 %token <std::string> ID
-%token INT
+%token INT VOID
 %token PRINT
 %token RETURN
 %token <std::string> STRING
@@ -115,6 +114,9 @@ function:
 type:
     INT {
         $$ = Type::Int();
+    }
+    | VOID {
+        $$ = Type::Void();
     }
     | INT LEFTBRACKET NUMBER RIGHTBRACKET {
         $$ = Type::IntArray($3);
@@ -236,6 +238,7 @@ expr:
     | expr MINUS expr { $$ = make_arith_op("-", $1, $3); }
     | expr MULTIPLY expr { $$ = make_arith_op("*", $1, $3); }
     | expr DIVIDE expr { $$ = make_arith_op("/", $1, $3); }
+    | expr MOD expr { $$ = make_arith_op("%", $1, $3); }
     | expr LESS expr { $$ = make_logic_op("<", $1, $3); }
     | expr GREATER expr { $$ = make_logic_op(">", $1, $3); }
     | ID { $$ = make_var($1); }

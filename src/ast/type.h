@@ -21,5 +21,6 @@ struct Type {
     }
 
     static Type Int() { return {BaseType::Int}; }
+    static Type Void() { return {BaseType::Void}; }
     static Type IntArray(int size) { return {BaseType::Int, true, size}; }
 };

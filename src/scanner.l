@@ -68,6 +68,11 @@
                 return EzAquarii::Parser::make_INT(EzAquarii::location( /* put location data here if you want */ )); 
             }
 
+"void"      {
+                cout << "Scanner: void " << std::endl;
+                return EzAquarii::Parser::make_VOID(EzAquarii::location( /* put location data here if you want */ )); 
+            }
+
 "print"     {
                 cout << "Scanner: print " << std::endl;
                 return EzAquarii::Parser::make_PRINT(EzAquarii::location( /* put location data here if you want */ )); 
@@ -173,6 +178,11 @@
 "/"         {
                 cout << "Scanner: '/'" << endl;
                 return EzAquarii::Parser::make_DIVIDE(EzAquarii::location());
+            }
+
+"%"         {
+                cout << "Scanner: '%'" << endl;
+                return EzAquarii::Parser::make_MOD(EzAquarii::location());
             }
 
 "<"         {

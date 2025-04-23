@@ -19,26 +19,33 @@
 
 std::unordered_map<std::string, std::shared_ptr<ASTNode>> name_to_func;
 
-std::shared_ptr<ASTNode> make_program(std::shared_ptr<Statements> functions) {
+std::shared_ptr<ASTNode> make_program(
+    std::shared_ptr<Statements> top_level_list) {
     std::cout << "create ast program " << '\n';
     auto node = std::make_shared<Program>();
-    node->functions = *functions;
+    for (auto top_level : *top_level_list) {
+        if (auto* func = dynamic_cast<Function*>(top_level.get()); func) {
+            node->functions.push_back(top_level);
+        } else {
+            node->globals.push_back(top_level);
+        }
+    }
     return node;
 }
 
-std::shared_ptr<Statements> make_empty_function_list() {
+std::shared_ptr<Statements> make_empty_top_level_list() {
     return std::make_shared<Statements>();
 }
 
-std::shared_ptr<Statements> append_function(
-    std::shared_ptr<Statements> functions, std::shared_ptr<ASTNode> stmt) {
+std::shared_ptr<Statements> append_top_level(
+    std::shared_ptr<Statements> top_level_list, std::shared_ptr<ASTNode> stmt) {
     std::cout << "call ast append_function, functions initialized: "
-              << static_cast<bool>(functions) << '\n';
-    if (!functions) {
-        functions = make_empty_function_list();
+              << static_cast<bool>(top_level_list) << '\n';
+    if (!top_level_list) {
+        top_level_list = make_empty_top_level_list();
     }
-    functions->push_back(stmt);
-    return functions;
+    top_level_list->push_back(stmt);
+    return top_level_list;
 }
 
 std::shared_ptr<ASTNode> make_function(Type return_type,

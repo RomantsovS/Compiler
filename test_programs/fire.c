@@ -1,3 +1,6 @@
+int fire[256];
+fire[0] = 1;
+
 void line_blur(int offset, int step, int nsteps) {
     int circ[3];
     circ[0] = 0;

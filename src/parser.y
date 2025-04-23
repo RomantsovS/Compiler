@@ -81,9 +81,9 @@
 %token <bool> BOOL
 
 %type< Type > type;
-%type< std::shared_ptr<Statements> > stmt_list block function_list arg_list;
+%type< std::shared_ptr<Statements> > stmt_list block top_level_list arg_list;
 %type< std::shared_ptr<Params> > param_list;
-%type< std::shared_ptr<ASTNode> > program function function_call print_stmt;
+%type< std::shared_ptr<ASTNode> > program top_level global function function_call print_stmt;
 %type< std::shared_ptr<ASTNode> > declaration expr assignment literal stmt while if;
 
 %start program
@@ -91,18 +91,27 @@
 %%
 
 program:
-    function_list {
+    top_level_list {
         result = make_program($1);
     }
     ;
 
-function_list:
-    function_list function {
-        $$ = append_function($1, $2);
+top_level:
+    global
+    | function
+    ;
+
+top_level_list:
+    top_level_list top_level {
+        $$ = append_top_level($1, $2);
     }
     | /* empty */ {
-        $$ = make_empty_function_list();
+        $$ = make_empty_top_level_list();
     }
+    ;
+
+global:
+    stmt
     ;
 
 function:

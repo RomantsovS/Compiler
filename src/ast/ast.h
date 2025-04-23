@@ -16,12 +16,13 @@ using Statements = std::vector<std::shared_ptr<ASTNode>>;
 using Params = std::vector<NameType>;
 
 // functions
-std::shared_ptr<ASTNode> make_program(std::shared_ptr<Statements> functions);
+std::shared_ptr<ASTNode> make_program(
+    std::shared_ptr<Statements> top_level_list);
 
-std::shared_ptr<Statements> make_empty_function_list();
+std::shared_ptr<Statements> make_empty_top_level_list();
 
-std::shared_ptr<Statements> append_function(
-    std::shared_ptr<Statements> functions, std::shared_ptr<ASTNode> stmt);
+std::shared_ptr<Statements> append_top_level(
+    std::shared_ptr<Statements> top_level_list, std::shared_ptr<ASTNode> stmt);
 
 std::shared_ptr<ASTNode> make_function(Type return_type,
                                        const std::string& name,

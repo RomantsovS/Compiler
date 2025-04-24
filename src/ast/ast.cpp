@@ -11,11 +11,15 @@
 #include "function.h"
 #include "if_then_else.h"
 #include "integer.h"
+#include "logic_op.h"
 #include "print.h"
 #include "program.h"
+#include "return.h"
 #include "string_literal.h"
 #include "var.h"
 #include "while.h"
+
+namespace AST {
 
 std::unordered_map<std::string, std::shared_ptr<ASTNode>> name_to_func;
 
@@ -70,7 +74,7 @@ std::shared_ptr<ASTNode> make_function_call(const std::string& name,
     std::cout << "create ast function call " << name << '\n';
     auto node = std::make_shared<FunCall>();
 
-    node->func = name_to_func.at(name);
+    node->name = name;
     node->args = *args;
 
     return node;
@@ -278,3 +282,5 @@ std::shared_ptr<ASTNode> make_array_assignment(const std::string& name,
     node->value = value;
     return node;
 }
+
+}  // namespace AST

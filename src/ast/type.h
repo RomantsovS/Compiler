@@ -2,6 +2,8 @@
 
 #include <string>
 
+namespace AST {
+
 enum class BaseType { Void, Int };
 
 struct Type {
@@ -24,3 +26,5 @@ struct Type {
     static Type Void() { return {BaseType::Void}; }
     static Type IntArray(int size) { return {BaseType::Int, true, size}; }
 };
+
+}  // namespace AST

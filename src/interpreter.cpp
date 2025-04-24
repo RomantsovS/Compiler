@@ -34,7 +34,7 @@
 
 using namespace EzAquarii;
 
-Interpreter::Interpreter(std::shared_ptr<ASTNode>& ast)
+Interpreter::Interpreter(std::shared_ptr<AST::ASTNode>& ast)
     : scanner_(*this), parser_(scanner_, *this, ast), m_location(0) {}
 
 int Interpreter::parse() {

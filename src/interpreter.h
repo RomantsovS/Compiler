@@ -37,7 +37,9 @@
 // if your IDE can't resolve it - call make first
 #include "parser.hpp"
 
+namespace AST {
 class ASTNode;
+}
 
 namespace EzAquarii {
 
@@ -53,7 +55,7 @@ namespace EzAquarii {
  */
 class Interpreter {
    public:
-    Interpreter(std::shared_ptr<ASTNode>& ast);
+    Interpreter(std::shared_ptr<AST::ASTNode>& ast);
 
     /**
      * Run parser. Results are stored inside.

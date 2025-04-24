@@ -17,120 +17,118 @@
 #include "ast/logic_op.h"
 #include "ast/print.h"
 #include "ast/program.h"
+#include "ast/return.h"
 #include "ast/string_literal.h"
 #include "ast/type.h"
 #include "ast/var.h"
 #include "ast/while.h"
 #include "interpreter.h"
 #include "parser.hpp"
+#include "print_visitor.h"
 #include "scanner.h"
-
-void visit(ASTNode* node, std::stack<std::string>& result_stack,
-           std::deque<std::string>& result_deque,
-           std::unordered_set<ASTNode*>& visited);
 
 int main() {
     bool use_parser = true;
-    std::shared_ptr<ASTNode> ast;
+    std::shared_ptr<AST::ASTNode> ast;
     if (use_parser) {
         EzAquarii::Interpreter interpreter(ast);
         auto res = interpreter.parse();
         if (res) return res;
     } else {
-        auto prog = std::make_shared<Program>();
+        auto prog = std::make_shared<AST::Program>();
 
-        auto abs_fun = std::make_shared<Function>();
+        auto abs_fun = std::make_shared<AST::Function>();
         prog->functions.push_back(abs_fun);
 
         abs_fun->name = "abs";
-        abs_fun->args = {{"x", Type::Int()}};
+        abs_fun->args = {{"x", AST::Type::Int()}};
 
         {
-            auto st = std::make_shared<IfThenElse>();
-            auto l_op = std::make_shared<LogicOp>();
+            auto st = std::make_shared<AST::IfThenElse>();
+            auto l_op = std::make_shared<AST::LogicOp>();
             st->condition = l_op;
             {
                 l_op->op = "<";
-                auto lhs = std::make_shared<Var>();
+                auto lhs = std::make_shared<AST::Var>();
                 lhs->name = "x";
                 l_op->lhs = lhs;
-                auto rhs = std::make_shared<Integer>();
+                auto rhs = std::make_shared<AST::Integer>();
                 rhs->val = 0;
                 l_op->rhs = rhs;
             }
 
             {
-                auto st2 = std::make_shared<ArithOp>();
+                auto st2 = std::make_shared<AST::ArithOp>();
                 st2->op = "-";
-                auto lhs = std::make_shared<Integer>();
+                auto lhs = std::make_shared<AST::Integer>();
                 lhs->val = 0;
                 st2->lhs = lhs;
-                auto rhs = std::make_shared<Var>();
+                auto rhs = std::make_shared<AST::Var>();
                 rhs->name = "x";
                 st2->rhs = rhs;
-                auto ret = std::make_shared<Return>();
+                auto ret = std::make_shared<AST::Return>();
                 ret->statement = st2;
                 st->then_branch = ret;
             }
             {
-                auto var = std::make_shared<Var>();
+                auto var = std::make_shared<AST::Var>();
                 var->name = "x";
-                auto ret = std::make_shared<Return>();
+                auto ret = std::make_shared<AST::Return>();
                 ret->statement = var;
                 st->else_branch = ret;
             }
             abs_fun->body.push_back(st);
         }
-        abs_fun->return_type = Type::Int();
+        abs_fun->return_type = AST::Type::Int();
 
-        auto sum_fun = std::make_shared<Function>();
+        auto sum_fun = std::make_shared<AST::Function>();
         prog->functions.push_back(sum_fun);
 
         sum_fun->name = "sum";
-        sum_fun->args = {{"x", Type::Int()}, {"y", Type::Int()}};
-        sum_fun->return_type = Type::Int();
+        sum_fun->args = {{"x", AST::Type::Int()}, {"y", AST::Type::Int()}};
+        sum_fun->return_type = AST::Type::Int();
 
         {
-            auto var = std::make_shared<VarDef>();
+            auto var = std::make_shared<AST::VarDef>();
             var->name = "z";
-            var->type = Type::Int();
+            var->type = AST::Type::Int();
             sum_fun->body.push_back(var);
 
-            auto ass = std::make_shared<Assign>();
+            auto ass = std::make_shared<AST::Assign>();
             ass->var = "z";
-            auto three = std::make_shared<Integer>();
+            auto three = std::make_shared<AST::Integer>();
             three->val = 3;
             ass->st = three;
             sum_fun->body.push_back(ass);
 
-            auto whil = std::make_shared<While>();
+            auto whil = std::make_shared<AST::While>();
             {
-                auto st4 = std::make_shared<LogicOp>();
+                auto st4 = std::make_shared<AST::LogicOp>();
                 st4->op = "<";
-                auto lhs = std::make_shared<Var>();
+                auto lhs = std::make_shared<AST::Var>();
                 lhs->name = "z";
                 st4->lhs = lhs;
-                auto rhs = std::make_shared<Integer>();
+                auto rhs = std::make_shared<AST::Integer>();
                 rhs->val = 20;
                 st4->rhs = rhs;
                 whil->condition = st4;
             }
 
-            auto ass2 = std::make_shared<Assign>();
+            auto ass2 = std::make_shared<AST::Assign>();
             ass2->var = "z";
 
-            auto st2 = std::make_shared<ArithOp>();
+            auto st2 = std::make_shared<AST::ArithOp>();
             st2->op = "+";
-            auto lhs = std::make_shared<Var>();
+            auto lhs = std::make_shared<AST::Var>();
             lhs->name = "z";
             st2->lhs = lhs;
             {
-                auto st3 = std::make_shared<ArithOp>();
+                auto st3 = std::make_shared<AST::ArithOp>();
                 st3->op = "+";
-                auto lhs2 = std::make_shared<Var>();
+                auto lhs2 = std::make_shared<AST::Var>();
                 lhs2->name = "x";
                 st3->lhs = lhs2;
-                auto rhs = std::make_shared<Var>();
+                auto rhs = std::make_shared<AST::Var>();
                 rhs->name = "y";
                 st3->rhs = rhs;
                 st2->rhs = st3;
@@ -141,34 +139,34 @@ int main() {
 
             sum_fun->body.push_back(whil);
 
-            auto ret = std::make_shared<Return>();
-            auto v = std::make_shared<Var>();
+            auto ret = std::make_shared<AST::Return>();
+            auto v = std::make_shared<AST::Var>();
             v->name = "z";
             ret->statement = v;
             sum_fun->body.push_back(ret);
         }
 
-        auto main_fun = std::make_shared<Function>();
+        auto main_fun = std::make_shared<AST::Function>();
         prog->functions.push_back(main_fun);
 
         main_fun->name = "main";
 
-        auto abs_fun_call = std::make_shared<FunCall>();
-        abs_fun_call->func = abs_fun;
+        auto abs_fun_call = std::make_shared<AST::FunCall>();
+        abs_fun_call->name = abs_fun->name;
 
         {
-            auto st2 = std::make_shared<ArithOp>();
+            auto st2 = std::make_shared<AST::ArithOp>();
             st2->op = "+";
-            auto lhs = std::make_shared<Integer>();
+            auto lhs = std::make_shared<AST::Integer>();
             lhs->val = -10;
             st2->lhs = lhs;
 
-            auto sum_fun_call = std::make_shared<FunCall>();
-            sum_fun_call->func = sum_fun;
+            auto sum_fun_call = std::make_shared<AST::FunCall>();
+            sum_fun_call->name = sum_fun->name;
             {
-                auto one = std::make_shared<Integer>();
+                auto one = std::make_shared<AST::Integer>();
                 one->val = 1;
-                auto two = std::make_shared<Integer>();
+                auto two = std::make_shared<AST::Integer>();
                 two->val = 2;
                 sum_fun_call->args.push_back(one);
                 sum_fun_call->args.push_back(two);
@@ -177,19 +175,19 @@ int main() {
             abs_fun_call->args.push_back(st2);
         }
 
-        auto print = std::make_shared<Print>();
+        auto print = std::make_shared<AST::Print>();
         print->st = abs_fun_call;
 
         main_fun->body.push_back(print);
-        main_fun->return_type = Type::Int();
+        main_fun->return_type = AST::Type::Int();
         ast = prog;
     }
     auto* node = ast.get();
-    std::stack<ASTNode*> st;
+    std::stack<AST::ASTNode*> st;
 
-    std::unordered_set<ASTNode*> visited;
-    std::stack<std::string> result_stack;
-    std::deque<std::string> result_deque;
+    std::unordered_set<AST::ASTNode*> visited;
+
+    PrintVisitor print_visitor;
 
     while (!st.empty() || node) {
         if (node) {
@@ -197,7 +195,7 @@ int main() {
             st.push(node);
             auto* cur = node;
             node = nullptr;
-            if (auto pr = dynamic_cast<Program*>(cur); pr) {
+            if (auto pr = dynamic_cast<AST::Program*>(cur); pr) {
                 for (auto& gl : pr->globals) {
                     if (!visited.count(gl.get())) {
                         node = gl.get();
@@ -211,45 +209,50 @@ int main() {
                         break;
                     }
                 }
-            } else if (auto f = dynamic_cast<Function*>(cur); f) {
+            } else if (auto f = dynamic_cast<AST::Function*>(cur); f) {
                 for (auto& s : f->body) {
                     if (!visited.count(s.get())) {
                         node = s.get();
                         break;
                     }
                 }
-            } else if (auto pr = dynamic_cast<Print*>(cur); pr) {
+            } else if (auto pr = dynamic_cast<AST::Print*>(cur); pr) {
                 node = pr->st.get();
-            } else if (auto fc = dynamic_cast<FunCall*>(cur); fc) {
-                node = fc->func.get();
-            } else if (auto ifthen = dynamic_cast<IfThenElse*>(cur); ifthen) {
+            } else if (auto fc = dynamic_cast<AST::FunCall*>(cur); fc) {
+                ;
+            } else if (auto ifthen = dynamic_cast<AST::IfThenElse*>(cur);
+                       ifthen) {
                 if (!visited.count(ifthen->condition.get()))
                     node = ifthen->condition.get();
                 else if (!visited.count(ifthen->then_branch.get()))
                     node = ifthen->then_branch.get();
                 else if (!visited.count(ifthen->else_branch.get()))
                     node = ifthen->else_branch.get();
-            } else if (auto logic_op = dynamic_cast<LogicOp*>(cur); logic_op) {
+            } else if (auto logic_op = dynamic_cast<AST::LogicOp*>(cur);
+                       logic_op) {
                 if (!visited.count(logic_op->lhs.get()))
                     node = logic_op->lhs.get();
                 else if (!visited.count(logic_op->rhs.get()))
                     node = logic_op->rhs.get();
-            } else if (auto ret = dynamic_cast<Return*>(cur); ret) {
+            } else if (auto ret = dynamic_cast<AST::Return*>(cur); ret) {
                 node = ret->statement.get();
-            } else if (auto arith_op = dynamic_cast<ArithOp*>(cur); arith_op) {
+            } else if (auto arith_op = dynamic_cast<AST::ArithOp*>(cur);
+                       arith_op) {
                 if (!visited.count(arith_op->lhs.get()))
                     node = arith_op->lhs.get();
                 else if (!visited.count(arith_op->rhs.get()))
                     node = arith_op->rhs.get();
-            } else if (auto var_def = dynamic_cast<VarDef*>(cur); var_def) {
+            } else if (auto var_def = dynamic_cast<AST::VarDef*>(cur);
+                       var_def) {
                 ;
-            } else if (auto var = dynamic_cast<Var*>(cur); var) {
+            } else if (auto var = dynamic_cast<AST::Var*>(cur); var) {
                 ;
-            } else if (auto integer = dynamic_cast<Integer*>(cur); integer) {
+            } else if (auto integer = dynamic_cast<AST::Integer*>(cur);
+                       integer) {
                 ;
-            } else if (auto ass = dynamic_cast<Assign*>(cur); ass) {
+            } else if (auto ass = dynamic_cast<AST::Assign*>(cur); ass) {
                 if (!visited.count(ass->st.get())) node = ass->st.get();
-            } else if (auto whil = dynamic_cast<While*>(cur); whil) {
+            } else if (auto whil = dynamic_cast<AST::While*>(cur); whil) {
                 for (auto& s : whil->body) {
                     if (!visited.count(s.get())) {
                         node = s.get();
@@ -261,17 +264,19 @@ int main() {
                         node = whil->condition.get();
                     }
                 }
-            } else if (auto str = dynamic_cast<StringLiteral*>(cur); str) {
+            } else if (auto str = dynamic_cast<AST::StringLiteral*>(cur); str) {
                 ;
-            } else if (auto str = dynamic_cast<BoolLiteral*>(cur); str) {
+            } else if (auto str = dynamic_cast<AST::BoolLiteral*>(cur); str) {
                 ;
-            } else if (auto arr = dynamic_cast<ArrayDeclaration*>(cur); arr) {
+            } else if (auto arr = dynamic_cast<AST::ArrayDeclaration*>(cur);
+                       arr) {
                 ;
-            } else if (auto arr_ac = dynamic_cast<ArrayAccess*>(cur); arr_ac) {
+            } else if (auto arr_ac = dynamic_cast<AST::ArrayAccess*>(cur);
+                       arr_ac) {
                 if (!visited.count(arr_ac->index.get())) {
                     node = arr_ac->index.get();
                 }
-            } else if (auto arr_as = dynamic_cast<ArrayAssignment*>(cur);
+            } else if (auto arr_as = dynamic_cast<AST::ArrayAssignment*>(cur);
                        arr_as) {
                 if (!visited.count(arr_as->index.get())) {
                     node = arr_as->index.get();
@@ -284,7 +289,7 @@ int main() {
         } else {
             auto* cur = st.top();
             st.pop();
-            if (auto pr = dynamic_cast<Program*>(cur); pr) {
+            if (auto pr = dynamic_cast<AST::Program*>(cur); pr) {
                 for (auto& gl : pr->globals) {
                     if (!visited.count(gl.get())) {
                         st.push(cur);
@@ -301,9 +306,10 @@ int main() {
                     }
                 }
                 if (!node) {
-                    visit(cur, result_stack, result_deque, visited);
+                    cur->accept(&print_visitor);
+                    visited.insert(cur);
                 }
-            } else if (auto f = dynamic_cast<Function*>(cur); f) {
+            } else if (auto f = dynamic_cast<AST::Function*>(cur); f) {
                 for (auto& s : f->body) {
                     if (!visited.count(s.get())) {
                         st.push(cur);
@@ -312,27 +318,26 @@ int main() {
                     }
                 }
                 if (!node && !visited.count(cur)) {
-                    visit(cur, result_stack, result_deque, visited);
+                    cur->accept(&print_visitor);
+                    visited.insert(cur);
                 }
-            } else if (auto pr = dynamic_cast<Print*>(cur); pr) {
-                visit(cur, result_stack, result_deque, visited);
-            } else if (auto fc = dynamic_cast<FunCall*>(cur); fc) {
-                if (!visited.count(fc->func.get())) {
-                    st.push(cur);
-                    node = fc->func.get();
-                } else {
-                    for (auto& s : fc->args) {
-                        if (!visited.count(s.get())) {
-                            st.push(cur);
-                            node = s.get();
-                            break;
-                        }
-                    }
-                    if (!node) {
-                        visit(cur, result_stack, result_deque, visited);
+            } else if (auto pr = dynamic_cast<AST::Print*>(cur); pr) {
+                cur->accept(&print_visitor);
+                visited.insert(cur);
+            } else if (auto fc = dynamic_cast<AST::FunCall*>(cur); fc) {
+                for (auto& s : fc->args) {
+                    if (!visited.count(s.get())) {
+                        st.push(cur);
+                        node = s.get();
+                        break;
                     }
                 }
-            } else if (auto ifthen = dynamic_cast<IfThenElse*>(cur); ifthen) {
+                if (!node) {
+                    cur->accept(&print_visitor);
+                    visited.insert(cur);
+                }
+            } else if (auto ifthen = dynamic_cast<AST::IfThenElse*>(cur);
+                       ifthen) {
                 if (!visited.count(ifthen->then_branch.get())) {
                     st.push(cur);
                     node = ifthen->then_branch.get();
@@ -340,9 +345,11 @@ int main() {
                     st.push(cur);
                     node = ifthen->else_branch.get();
                 } else {
-                    visit(cur, result_stack, result_deque, visited);
+                    cur->accept(&print_visitor);
+                    visited.insert(cur);
                 }
-            } else if (auto logic_op = dynamic_cast<LogicOp*>(cur); logic_op) {
+            } else if (auto logic_op = dynamic_cast<AST::LogicOp*>(cur);
+                       logic_op) {
                 if (!visited.count(logic_op->lhs.get())) {
                     st.push(cur);
                     node = logic_op->lhs.get();
@@ -350,11 +357,14 @@ int main() {
                     st.push(cur);
                     node = logic_op->rhs.get();
                 } else {
-                    visit(cur, result_stack, result_deque, visited);
+                    cur->accept(&print_visitor);
+                    visited.insert(cur);
                 }
-            } else if (auto ret = dynamic_cast<Return*>(cur); ret) {
-                visit(cur, result_stack, result_deque, visited);
-            } else if (auto arith_op = dynamic_cast<ArithOp*>(cur); arith_op) {
+            } else if (auto ret = dynamic_cast<AST::Return*>(cur); ret) {
+                cur->accept(&print_visitor);
+                visited.insert(cur);
+            } else if (auto arith_op = dynamic_cast<AST::ArithOp*>(cur);
+                       arith_op) {
                 if (!visited.count(arith_op->lhs.get())) {
                     st.push(cur);
                     node = arith_op->lhs.get();
@@ -362,17 +372,24 @@ int main() {
                     st.push(cur);
                     node = arith_op->rhs.get();
                 } else {
-                    visit(cur, result_stack, result_deque, visited);
+                    cur->accept(&print_visitor);
+                    visited.insert(cur);
                 }
-            } else if (auto var_def = dynamic_cast<VarDef*>(cur); var_def) {
-                visit(cur, result_stack, result_deque, visited);
-            } else if (auto var = dynamic_cast<Var*>(cur); var) {
-                visit(cur, result_stack, result_deque, visited);
-            } else if (auto integer = dynamic_cast<Integer*>(cur); integer) {
-                visit(cur, result_stack, result_deque, visited);
-            } else if (auto ass = dynamic_cast<Assign*>(cur); ass) {
-                visit(cur, result_stack, result_deque, visited);
-            } else if (auto whil = dynamic_cast<While*>(cur); whil) {
+            } else if (auto var_def = dynamic_cast<AST::VarDef*>(cur);
+                       var_def) {
+                cur->accept(&print_visitor);
+                visited.insert(cur);
+            } else if (auto var = dynamic_cast<AST::Var*>(cur); var) {
+                cur->accept(&print_visitor);
+                visited.insert(cur);
+            } else if (auto integer = dynamic_cast<AST::Integer*>(cur);
+                       integer) {
+                cur->accept(&print_visitor);
+                visited.insert(cur);
+            } else if (auto ass = dynamic_cast<AST::Assign*>(cur); ass) {
+                cur->accept(&print_visitor);
+                visited.insert(cur);
+            } else if (auto whil = dynamic_cast<AST::While*>(cur); whil) {
                 for (auto& s : whil->body) {
                     if (!visited.count(s.get())) {
                         node = s.get();
@@ -383,18 +400,25 @@ int main() {
                     if (!visited.count(whil->condition.get())) {
                         node = whil->condition.get();
                     } else {
-                        visit(cur, result_stack, result_deque, visited);
+                        cur->accept(&print_visitor);
+                        visited.insert(cur);
                     }
                 }
-            } else if (auto str = dynamic_cast<StringLiteral*>(cur); str) {
-                visit(cur, result_stack, result_deque, visited);
-            } else if (auto str = dynamic_cast<BoolLiteral*>(cur); str) {
-                visit(cur, result_stack, result_deque, visited);
-            } else if (auto arr = dynamic_cast<ArrayDeclaration*>(cur); arr) {
-                visit(cur, result_stack, result_deque, visited);
-            } else if (auto arr_ac = dynamic_cast<ArrayAccess*>(cur); arr_ac) {
-                visit(cur, result_stack, result_deque, visited);
-            } else if (auto arr_as = dynamic_cast<ArrayAssignment*>(cur);
+            } else if (auto str = dynamic_cast<AST::StringLiteral*>(cur); str) {
+                cur->accept(&print_visitor);
+                visited.insert(cur);
+            } else if (auto str = dynamic_cast<AST::BoolLiteral*>(cur); str) {
+                cur->accept(&print_visitor);
+                visited.insert(cur);
+            } else if (auto arr = dynamic_cast<AST::ArrayDeclaration*>(cur);
+                       arr) {
+                cur->accept(&print_visitor);
+                visited.insert(cur);
+            } else if (auto arr_ac = dynamic_cast<AST::ArrayAccess*>(cur);
+                       arr_ac) {
+                cur->accept(&print_visitor);
+                visited.insert(cur);
+            } else if (auto arr_as = dynamic_cast<AST::ArrayAssignment*>(cur);
                        arr_as) {
                 if (!visited.count(arr_as->index.get())) {
                     st.push(cur);
@@ -404,7 +428,8 @@ int main() {
                     node = arr_as->value.get();
                 }
                 if (!node) {
-                    visit(cur, result_stack, result_deque, visited);
+                    cur->accept(&print_visitor);
+                    visited.insert(cur);
                 }
             } else {
                 throw std::logic_error("err"s + typeid(cur).name());
@@ -412,157 +437,7 @@ int main() {
         }
     }
 
-    assert(result_stack.empty());
-
-    std::cout << "#include <iostream>\n\n";
-
-    while (!result_deque.empty()) {
-        std::cout << result_deque.front() << "\n\n";
-        result_deque.pop_front();
-    }
+    print_visitor.Print(std::cout);
 
     return 0;
-}
-
-void visit(ASTNode* node, std::stack<std::string>& result_stack,
-           std::deque<std::string>& result_deque,
-           std::unordered_set<ASTNode*>& visited) {
-    visited.insert(node);
-    if (auto pr = dynamic_cast<Program*>(node); pr) {
-        assert(result_stack.size() >= pr->globals.size());
-        auto str = ""s;
-        std::stack<std::string> temp_st;
-        for (size_t i = 0; i < pr->globals.size(); ++i) {
-            temp_st.push(result_stack.top());
-            result_stack.pop();
-        }
-        for (size_t i = 0; i < pr->globals.size(); ++i) {
-            if (i > 0) str += "\n";
-            str += temp_st.top();
-            temp_st.pop();
-        }
-        str += "\n";
-        result_deque.push_front(str);
-    } else if (auto f = dynamic_cast<Function*>(node); f) {
-        auto str = f->return_type.to_string() + " " + f->name + "(";
-        for (size_t i = 0; i < f->args.size(); ++i) {
-            if (i > 0) str += ", ";
-            str += f->args[i].type.to_string() + " " + f->args[i].name;
-        }
-        str += ") {\n";
-        assert(result_stack.size() >= f->body.size());
-        std::stack<std::string> temp_st;
-        for (size_t i = 0; i < f->body.size(); ++i) {
-            temp_st.push(result_stack.top());
-            result_stack.pop();
-        }
-        for (size_t i = 0; i < f->body.size(); ++i) {
-            if (i > 0) str += "\n";
-            str += temp_st.top();
-            temp_st.pop();
-        }
-        str += "\n}";
-        result_deque.push_back(str);
-    } else if (auto pr = dynamic_cast<Print*>(node); pr) {
-        assert(!result_stack.empty());
-        auto a = result_stack.top();
-        result_stack.pop();
-        result_stack.push("std::cout << (" + a + ");");
-    } else if (auto fc = dynamic_cast<FunCall*>(node); fc) {
-        assert(result_stack.size() >= fc->args.size());
-        std::stack<std::string> temp_st;
-        for (size_t i = 0; i < fc->args.size(); ++i) {
-            temp_st.push(result_stack.top());
-            result_stack.pop();
-        }
-        auto func = dynamic_cast<Function*>(fc->func.get());
-        assert(func);
-        auto str = func->name + "(";
-        for (size_t i = 0; i < fc->args.size(); ++i) {
-            if (i > 0) str += ", ";
-            str += temp_st.top();
-            temp_st.pop();
-        }
-        str += ")";
-        result_stack.push(str);
-    } else if (auto ifthen = dynamic_cast<IfThenElse*>(node); ifthen) {
-        assert(result_stack.size() >= 3);
-        auto a = result_stack.top();
-        result_stack.pop();
-        auto b = result_stack.top();
-        result_stack.pop();
-        auto c = result_stack.top();
-        result_stack.pop();
-        result_stack.push(std::string("if (") + c + ") { " + b + " } else { " +
-                          a + " }");
-    } else if (auto logic_op = dynamic_cast<LogicOp*>(node); logic_op) {
-        assert(result_stack.size() >= 2);
-        auto a = result_stack.top();
-        result_stack.pop();
-        auto b = result_stack.top();
-        result_stack.pop();
-        result_stack.push(b + " " + logic_op->op + " " + a);
-    } else if (auto ret = dynamic_cast<Return*>(node); ret) {
-        assert(!result_stack.empty());
-        auto a = result_stack.top();
-        result_stack.pop();
-        result_stack.push("return " + a + ";");
-    } else if (auto arith_op = dynamic_cast<ArithOp*>(node); arith_op) {
-        assert(result_stack.size() >= 2);
-        auto a = result_stack.top();
-        result_stack.pop();
-        auto b = result_stack.top();
-        result_stack.pop();
-        result_stack.push("(" + b + ") " + arith_op->op + " (" + a + ")");
-    } else if (auto var_def = dynamic_cast<VarDef*>(node); var_def) {
-        result_stack.push(var_def->type.to_string() + " " + var_def->name +
-                          ";");
-    } else if (auto var = dynamic_cast<Var*>(node); var) {
-        result_stack.push(var->name);
-    } else if (auto integer = dynamic_cast<Integer*>(node); integer) {
-        result_stack.push(std::to_string(integer->val));
-    } else if (auto ass = dynamic_cast<Assign*>(node); ass) {
-        assert(result_stack.size() >= 1);
-        auto expr = result_stack.top();
-        result_stack.pop();
-        result_stack.push(ass->var + " = " + expr + ";");
-    } else if (auto whil = dynamic_cast<While*>(node); whil) {
-        assert(result_stack.size() >= whil->body.size() + 1);
-        auto cond = result_stack.top();
-        result_stack.pop();
-        std::stack<std::string> temp_st;
-        for (size_t i = 0; i < whil->body.size(); ++i) {
-            temp_st.push(result_stack.top());
-            result_stack.pop();
-        }
-        auto str = "while (" + cond + ") {\n";
-        for (size_t i = 0; i < whil->body.size(); ++i) {
-            if (i > 0) str += "\n";
-            str += temp_st.top();
-            temp_st.pop();
-        }
-        str += "\n}\n";
-        result_stack.push(str);
-    } else if (auto str = dynamic_cast<StringLiteral*>(node); str) {
-        result_stack.push("\"" + str->value + "\"");
-    } else if (auto b_lit = dynamic_cast<BoolLiteral*>(node); b_lit) {
-        result_stack.push(b_lit->value ? "true" : "false");
-    } else if (auto arr = dynamic_cast<ArrayDeclaration*>(node); arr) {
-        result_stack.push(arr->type.to_string() + " " + arr->name + "[" +
-                          std::to_string(arr->type.array_size) + "];");
-    } else if (auto arr_ac = dynamic_cast<ArrayAccess*>(node); arr_ac) {
-        assert(result_stack.size() >= 1);
-        auto expr = result_stack.top();
-        result_stack.pop();
-        result_stack.push(arr_ac->name + "[" + expr + "]");
-    } else if (auto arr_as = dynamic_cast<ArrayAssignment*>(node); arr_as) {
-        assert(result_stack.size() >= 2);
-        auto value = result_stack.top();
-        result_stack.pop();
-        auto expr = result_stack.top();
-        result_stack.pop();
-        result_stack.push(arr_as->name + "[" + expr + "] = " + value + ";");
-    } else {
-        throw std::logic_error("err"s + typeid(node).name());
-    }
 }

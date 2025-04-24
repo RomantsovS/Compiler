@@ -3,13 +3,17 @@
 #include <memory>
 #include <vector>
 
+#include "../i_visitor.h"
 #include "type.h"
 
-struct Block;
+namespace AST {
+
 struct NameType;
+// class IASTVisitor;
 
 struct ASTNode {
     virtual ~ASTNode() = default;
+    virtual void accept(IASTVisitor* visitor) = 0;
 };
 
 using Statements = std::vector<std::shared_ptr<ASTNode>>;
@@ -95,3 +99,5 @@ std::shared_ptr<ASTNode> make_array_access(const std::string& name,
 std::shared_ptr<ASTNode> make_array_assignment(const std::string& name,
                                                std::shared_ptr<ASTNode> index,
                                                std::shared_ptr<ASTNode> value);
+
+}  // namespace AST

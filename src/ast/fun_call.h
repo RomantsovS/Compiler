@@ -1,12 +1,18 @@
 ﻿#pragma once
 
-#include <memory>
+#include <string>
 #include <vector>
 
+#include "../i_visitor.h"
 #include "ast.h"
-#include "function.h"
+
+namespace AST {
 
 struct FunCall : public ASTNode {
-    std::shared_ptr<ASTNode> func;
+    void accept(IASTVisitor* visitor) override { visitor->visit(this); }
+
+    std::string name;
     Statements args;
 };
+
+}  // namespace AST

@@ -2,12 +2,17 @@
 
 #include <string>
 
+#include "../i_visitor.h"
 #include "ast.h"
-#include "integer.h"
-#include "var.h"
+
+namespace AST {
 
 struct LogicOp : public ASTNode {
+    void accept(IASTVisitor* visitor) override { visitor->visit(this); }
+
     std::string op;
     std::shared_ptr<ASTNode> lhs;
     std::shared_ptr<ASTNode> rhs;
 };
+
+}  // namespace AST

@@ -53,7 +53,7 @@
 
 %parse-param { EzAquarii::Scanner &scanner }
 %parse-param { EzAquarii::Interpreter &driver }
-%parse-param { std::shared_ptr<ASTNode>& result }
+%parse-param { std::shared_ptr<AST::ASTNode>& result }
 
 %locations
 %define parse.trace
@@ -80,11 +80,11 @@
 %token <std::string> STRING
 %token <bool> BOOL
 
-%type< Type > type;
-%type< std::shared_ptr<Statements> > stmt_list block top_level_list arg_list;
-%type< std::shared_ptr<Params> > param_list;
-%type< std::shared_ptr<ASTNode> > program top_level global function function_call print_stmt;
-%type< std::shared_ptr<ASTNode> > declaration expr assignment literal stmt while if;
+%type< AST::Type > type;
+%type< std::shared_ptr<AST::Statements> > stmt_list block top_level_list arg_list;
+%type< std::shared_ptr<AST::Params> > param_list;
+%type< std::shared_ptr<AST::ASTNode> > program top_level global function function_call print_stmt;
+%type< std::shared_ptr<AST::ASTNode> > declaration expr assignment literal stmt while if;
 
 %start program
 
@@ -92,7 +92,7 @@
 
 program:
     top_level_list {
-        result = make_program($1);
+        result = AST::make_program($1);
     }
     ;
 
@@ -103,10 +103,10 @@ top_level:
 
 top_level_list:
     top_level_list top_level {
-        $$ = append_top_level($1, $2);
+        $$ = AST::append_top_level($1, $2);
     }
     | /* empty */ {
-        $$ = make_empty_top_level_list();
+        $$ = AST::make_empty_top_level_list();
     }
     ;
 
@@ -116,49 +116,49 @@ global:
 
 function:
     type ID LEFTPAR param_list RIGHTPAR block { 
-        $$ = make_function($1, $2, $4, $6);
+        $$ = AST::make_function($1, $2, $4, $6);
     }
     ;
 
 type:
     INT {
-        $$ = Type::Int();
+        $$ = AST::Type::Int();
     }
     | VOID {
-        $$ = Type::Void();
+        $$ = AST::Type::Void();
     }
     | INT LEFTBRACKET NUMBER RIGHTBRACKET {
-        $$ = Type::IntArray($3);
+        $$ = AST::Type::IntArray($3);
     } 
     ;
 
 param_list:
     /* empty */ {
-        $$ = make_empty_param_list();
+        $$ = AST::make_empty_param_list();
     }
     | type ID {
-        $$ = make_param_list($1, $2);
+        $$ = AST::make_param_list($1, $2);
     }
     | param_list COMMA type ID {
-        $$ = append_param($1, $3, $4);
+        $$ = AST::append_param($1, $3, $4);
     }
     ;
 
 function_call:
     ID LEFTPAR arg_list RIGHTPAR { 
-        $$ = make_function_call($1, $3);
+        $$ = AST::make_function_call($1, $3);
     }
     ;
 
 arg_list:
     /* empty */ {
-        $$ = make_empty_arg_list();
+        $$ = AST::make_empty_arg_list();
     }
     | expr {
-        $$ = make_arg_list($1);
+        $$ = AST::make_arg_list($1);
     }
     | arg_list COMMA expr {
-        $$ = append_arg($1, $3);
+        $$ = AST::append_arg($1, $3);
     }
     ;
 
@@ -170,28 +170,28 @@ block:
 
 stmt_list:
     stmt_list stmt {
-        $$ = append_stmt($1, $2);
+        $$ = AST::append_stmt($1, $2);
     }
     | /* empty */ {
-        $$ = make_empty_stmt_list();
+        $$ = AST::make_empty_stmt_list();
     }
     ;
 
 while:
     WHILE LEFTPAR expr RIGHTPAR stmt {
-        $$ = make_while($3, $5);
+        $$ = AST::make_while($3, $5);
     }
     | WHILE LEFTPAR expr RIGHTPAR block {
-        $$ = make_while($3, $5);
+        $$ = AST::make_while($3, $5);
     }
     ;
 
 if:
     IF LEFTPAR expr RIGHTPAR stmt {
-        $$ = make_if($3, $5, nullptr);
+        $$ = AST::make_if($3, $5, nullptr);
     }
     | IF LEFTPAR expr RIGHTPAR stmt ELSE stmt {
-        $$ = make_if($3, $5, $7);
+        $$ = AST::make_if($3, $5, $7);
     }
     ;
 
@@ -203,56 +203,56 @@ stmt:
     | if
     | print_stmt
     | RETURN expr SEMICOLON {
-        $$ = make_return($2);
+        $$ = AST::make_return($2);
     }
     | ID LEFTBRACKET expr RIGHTBRACKET EQUAL expr SEMICOLON {
-        $$ = make_array_assignment($1, $3, $6);
+        $$ = AST::make_array_assignment($1, $3, $6);
     }
     ;
 
 declaration:
     type ID SEMICOLON {
-		$$ = make_decl($1, $2);
+		$$ = AST::make_decl($1, $2);
     }
     | type ID LEFTBRACKET NUMBER RIGHTBRACKET SEMICOLON {
-        $$ = make_array_declaration($2, Type::IntArray($4));
+        $$ = AST::make_array_declaration($2, AST::Type::IntArray($4));
     }
     ;
 
 assignment:
     ID EQUAL expr SEMICOLON {
-        $$ = make_assignment($1, $3);
+        $$ = AST::make_assignment($1, $3);
     }
     ;
 
 print_stmt:
     PRINT LEFTPAR expr RIGHTPAR SEMICOLON {
-        $$ = make_print($3);
+        $$ = AST::make_print($3);
     }
     ;
 
 literal:
     STRING {
-        $$ = make_string_literal($1);
+        $$ = AST::make_string_literal($1);
     }
     | BOOL {
-        $$ = make_bool_literal($1);
+        $$ = AST::make_bool_literal($1);
     }
     ;
 
 expr:
     LEFTPAR expr RIGHTPAR { $$ = $2; }
     | function_call { $$ = $1; }
-    | expr PLUS expr { $$ = make_arith_op("+", $1, $3); }
-    | expr MINUS expr { $$ = make_arith_op("-", $1, $3); }
-    | expr MULTIPLY expr { $$ = make_arith_op("*", $1, $3); }
-    | expr DIVIDE expr { $$ = make_arith_op("/", $1, $3); }
-    | expr MOD expr { $$ = make_arith_op("%", $1, $3); }
-    | expr LESS expr { $$ = make_logic_op("<", $1, $3); }
-    | expr GREATER expr { $$ = make_logic_op(">", $1, $3); }
-    | ID { $$ = make_var($1); }
-    | ID LEFTBRACKET expr RIGHTBRACKET { $$ = make_array_access($1, $3); }
-    | NUMBER { $$ = make_integer($1); }
+    | expr PLUS expr { $$ = AST::make_arith_op("+", $1, $3); }
+    | expr MINUS expr { $$ = AST::make_arith_op("-", $1, $3); }
+    | expr MULTIPLY expr { $$ = AST::make_arith_op("*", $1, $3); }
+    | expr DIVIDE expr { $$ = AST::make_arith_op("/", $1, $3); }
+    | expr MOD expr { $$ = AST::make_arith_op("%", $1, $3); }
+    | expr LESS expr { $$ = AST::make_logic_op("<", $1, $3); }
+    | expr GREATER expr { $$ = AST::make_logic_op(">", $1, $3); }
+    | ID { $$ = AST::make_var($1); }
+    | ID LEFTBRACKET expr RIGHTBRACKET { $$ = AST::make_array_access($1, $3); }
+    | NUMBER { $$ = AST::make_integer($1); }
     | literal
     ;
 

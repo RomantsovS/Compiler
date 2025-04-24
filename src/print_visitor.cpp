@@ -20,50 +20,37 @@
 #include "ast/while.h"
 
 void PrintVisitor::visit(AST::Program* node) {
-    assert(result_stack_.size() >= node->globals.size());
-    std::string str;
+    os_ << "#include <iostream>\n\n";
 
-    std::stack<std::string> temp_st;
-    for (size_t i = 0; i < node->globals.size(); ++i) {
-        temp_st.push(result_stack_.top());
-        result_stack_.pop();
+    for (auto global : node->globals) {
+        global->accept(this);
+        os_ << "\n";
     }
-    for (size_t i = 0; i < node->globals.size(); ++i) {
-        if (i > 0) str += "\n";
-        str += temp_st.top();
-        temp_st.pop();
+    os_ << "\n";
+    for (auto function : node->functions) {
+        function->accept(this);
+        os_ << "\n\n";
     }
-    str += "\n";
-    result_deque_.push_front(str);
 }
 
 void PrintVisitor::visit(AST::Function* node) {
-    auto str = node->return_type.to_string() + " " + node->name + "(";
+    os_ << node->return_type.to_string() << " " << node->name << "(";
     for (size_t i = 0; i < node->args.size(); ++i) {
-        if (i > 0) str += ", ";
-        str += node->args[i].type.to_string() + " " + node->args[i].name;
+        if (i > 0) os_ << ", ";
+        os_ << node->args[i].type.to_string() << " " << node->args[i].name;
     }
-    str += ") {\n";
-    assert(result_stack_.size() >= node->body.size());
-    std::stack<std::string> temp_st;
-    for (size_t i = 0; i < node->body.size(); ++i) {
-        temp_st.push(result_stack_.top());
-        result_stack_.pop();
+    os_ << ") {\n";
+    for (auto stmt : node->body) {
+        stmt->accept(this);
+        os_ << "\n";
     }
-    for (size_t i = 0; i < node->body.size(); ++i) {
-        if (i > 0) str += "\n";
-        str += temp_st.top();
-        temp_st.pop();
-    }
-    str += "\n}";
-    result_deque_.push_back(str);
+    os_ << "}";
 }
 
 void PrintVisitor::visit(AST::Print* node) {
-    assert(!result_stack_.empty());
-    auto a = result_stack_.top();
-    result_stack_.pop();
-    result_stack_.push("std::cout << (" + a + ");");
+    os_ << "std::cout << (";
+    node->st->accept(this);
+    os_ << ");";
 }
 
 void PrintVisitor::visit(AST::FunCall* node) {
@@ -76,121 +63,99 @@ void PrintVisitor::visit(AST::FunCall* node) {
 
     auto str = node->name + "(";
     for (size_t i = 0; i < node->args.size(); ++i) {
-        if (i > 0) str += ", ";
-        str += temp_st.top();
-        temp_st.pop();
+        if (i > 0) os_ << ", ";
+        node->args[i]->accept(this);
     }
-    str += ")";
-    result_stack_.push(str);
+    os_ << ")";
 }
 
 void PrintVisitor::visit(AST::IfThenElse* node) {
-    assert(result_stack_.size() >= 3);
-    auto a = result_stack_.top();
-    result_stack_.pop();
-    auto b = result_stack_.top();
-    result_stack_.pop();
-    auto c = result_stack_.top();
-    result_stack_.pop();
-    result_stack_.push(std::string("if (") + c + ") { " + b + " } else { " + a +
-                       " }");
+    os_ << "if (";
+    node->condition->accept(this);
+    os_ << ") {\n";
+    node->then_branch->accept(this);
+    os_ << "\n}";
+    if (node->else_branch) {
+        os_ << " else {\n";
+        node->else_branch->accept(this);
+        os_ << "\n}";
+    }
 }
 
 void PrintVisitor::visit(AST::LogicOp* node) {
-    assert(result_stack_.size() >= 2);
-    auto a = result_stack_.top();
-    result_stack_.pop();
-    auto b = result_stack_.top();
-    result_stack_.pop();
-    result_stack_.push(b + " " + node->op + " " + a);
+    // os_ << "(";
+    node->lhs->accept(this);
+    // os_ << ")";
+    os_ << " " << node->op << " ";
+    // os_ << "(";
+    node->rhs->accept(this);
+    // os_ << ")";
 }
 
 void PrintVisitor::visit(AST::Return* node) {
-    assert(!result_stack_.empty());
-    auto a = result_stack_.top();
-    result_stack_.pop();
-    result_stack_.push("return " + a + ";");
+    os_ << "return ";
+    node->statement->accept(this);
+    os_ << ";";
 }
 
 void PrintVisitor::visit(AST::ArithOp* node) {
-    assert(result_stack_.size() >= 2);
-    auto a = result_stack_.top();
-    result_stack_.pop();
-    auto b = result_stack_.top();
-    result_stack_.pop();
-    result_stack_.push("(" + b + ") " + node->op + " (" + a + ")");
+    os_ << "(";
+    node->lhs->accept(this);
+    os_ << ")";
+    os_ << " " << node->op << " ";
+    os_ << "(";
+    node->rhs->accept(this);
+    os_ << ")";
 }
 
 void PrintVisitor::visit(AST::VarDef* node) {
-    result_stack_.push(node->type.to_string() + " " + node->name + ";");
+    os_ << node->type.to_string() << " " << node->name << ";";
 }
 
-void PrintVisitor::visit(AST::Var* node) { result_stack_.push(node->name); }
+void PrintVisitor::visit(AST::Var* node) { os_ << node->name; }
 
-void PrintVisitor::visit(AST::Integer* node) {
-    result_stack_.push(std::to_string(node->val));
-}
+void PrintVisitor::visit(AST::Integer* node) { os_ << node->val; }
 
 void PrintVisitor::visit(AST::Assign* node) {
-    assert(result_stack_.size() >= 1);
-    auto expr = result_stack_.top();
-    result_stack_.pop();
-    result_stack_.push(node->var + " = " + expr + ";");
+    os_ << node->var << " = ";
+    node->st->accept(this);
+    os_ << ";";
 }
 
 void PrintVisitor::visit(AST::While* node) {
-    assert(result_stack_.size() >= node->body.size() + 1);
-    auto cond = result_stack_.top();
-    result_stack_.pop();
-    std::stack<std::string> temp_st;
+    os_ << "while (";
+    node->condition->accept(this);
+    os_ << ") {\n";
     for (size_t i = 0; i < node->body.size(); ++i) {
-        temp_st.push(result_stack_.top());
-        result_stack_.pop();
+        if (i > 0) os_ << "\n";
+        node->body[i]->accept(this);
     }
-    auto str = "while (" + cond + ") {\n";
-    for (size_t i = 0; i < node->body.size(); ++i) {
-        if (i > 0) str += "\n";
-        str += temp_st.top();
-        temp_st.pop();
-    }
-    str += "\n}\n";
-    result_stack_.push(str);
+    os_ << "\n}\n";
 }
 
 void PrintVisitor::visit(AST::StringLiteral* node) {
-    result_stack_.push("\"" + node->value + "\"");
+    os_ << "\"" << node->value << "\"";
 }
 
 void PrintVisitor::visit(AST::BoolLiteral* node) {
-    result_stack_.push(node->value ? "true" : "false");
+    os_ << (node->value ? "true" : "false");
 }
 
 void PrintVisitor::visit(AST::ArrayDeclaration* node) {
-    result_stack_.push(node->type.to_string() + " " + node->name + "[" +
-                       std::to_string(node->type.array_size) + "];");
+    std::cout << node->type.to_string() << " " << node->name << "["
+              << node->type.array_size << "];";
 }
 
 void PrintVisitor::visit(AST::ArrayAccess* node) {
-    assert(result_stack_.size() >= 1);
-    auto expr = result_stack_.top();
-    result_stack_.pop();
-    result_stack_.push(node->name + "[" + expr + "]");
+    os_ << node->name << "[";
+    node->index->accept(this);
+    os_ << "]";
 }
 
 void PrintVisitor::visit(AST::ArrayAssignment* node) {
-    assert(result_stack_.size() >= 2);
-    auto value = result_stack_.top();
-    result_stack_.pop();
-    auto expr = result_stack_.top();
-    result_stack_.pop();
-    result_stack_.push(node->name + "[" + expr + "] = " + value + ";");
-}
-
-void PrintVisitor::Print(std::ostream& os) {
-    os << "#include <iostream>\n\n";
-
-    while (!result_deque_.empty()) {
-        os << result_deque_.front() << "\n\n";
-        result_deque_.pop_front();
-    }
+    os_ << node->name << "[";
+    node->index->accept(this);
+    os_ << "] = ";
+    node->value->accept(this);
+    os_ << ";";
 }

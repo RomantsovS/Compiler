@@ -9,6 +9,8 @@
 
 class PrintVisitor : public IASTVisitor {
    public:
+    PrintVisitor(std::ostream& os) : os_(os) {}
+
     void visit(AST::Program* node) override;
     void visit(AST::Function* node) override;
     void visit(AST::Print* node) override;
@@ -28,9 +30,8 @@ class PrintVisitor : public IASTVisitor {
     void visit(AST::ArrayAccess* node) override;
     void visit(AST::ArrayAssignment* node) override;
 
-    void Print(std::ostream& os);
-
    private:
     std::stack<std::string> result_stack_;
     std::deque<std::string> result_deque_;
+    std::ostream& os_;
 };

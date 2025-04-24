@@ -111,7 +111,7 @@ top_level_list:
     ;
 
 global:
-    stmt
+    declaration
     ;
 
 function:

@@ -27,6 +27,7 @@
 #include "pretty_print_visitor.h"
 #include "print_visitor.h"
 #include "scanner.h"
+#include "semantic_visitor.h"
 
 int main() {
     std::shared_ptr<AST::ASTNode> ast;
@@ -44,6 +45,9 @@ int main() {
 
     PrettyPrintVisitor pretty_print_visitor(std::cout);
     ast->accept(&pretty_print_visitor);
+
+    SemanticVisitor semantic_visitor;
+    ast->accept(&semantic_visitor);
 
     return 0;
 }

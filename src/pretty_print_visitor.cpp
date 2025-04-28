@@ -111,7 +111,7 @@ void PrettyPrintVisitor::visit(AST::Integer* node) { os_ << node->val; }
 
 void PrettyPrintVisitor::visit(AST::Assign* node) {
     os_ << node->var << " = ";
-    node->st->accept(this);
+    node->expr->accept(this);
     os_ << ";";
 }
 

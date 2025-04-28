@@ -5,10 +5,10 @@
 
 namespace AST {
 
-enum class BaseType { Void, Int };
+enum class BaseType { Unknown, Void, Int };
 
 struct Type {
-    BaseType base;
+    BaseType base = BaseType::Unknown;
     bool is_array = false;
     int array_size = 0;  // optional: 0 = unknown or dynamic size
 
@@ -31,6 +31,10 @@ struct Type {
 inline bool operator==(const Type& lhs, const Type& rhs) {
     return std::tuple(lhs.base, lhs.is_array, lhs.array_size) ==
            std::tuple(rhs.base, rhs.is_array, rhs.array_size);
+}
+
+inline bool operator!=(const Type& lhs, const Type& rhs) {
+    return !(lhs == rhs);
 }
 
 }  // namespace AST

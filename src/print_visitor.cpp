@@ -146,7 +146,7 @@ void PrintVisitor::visit(AST::Assign* node) {
     os_ << "Assign: " << node->var << " = (expr)\n";
     IndentRAII indent_raii(indent_);
 
-    node->st->accept(this);
+    node->expr->accept(this);
 }
 
 void PrintVisitor::visit(AST::While* node) {

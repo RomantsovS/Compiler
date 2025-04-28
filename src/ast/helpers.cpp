@@ -1,4 +1,4 @@
-#include "ast.h"
+#include "helpers.h"
 
 #include <iostream>
 #include <unordered_map>
@@ -7,6 +7,7 @@
 #include "array.h"
 #include "assign.h"
 #include "bool_literal.h"
+#include "expr.h"
 #include "fun_call.h"
 #include "function.h"
 #include "if_then_else.h"
@@ -160,17 +161,16 @@ std::shared_ptr<ASTNode> make_decl(Type type, const std::string& name) {
 
 std::shared_ptr<ASTNode> make_integer(uint64_t value) {
     std::cout << "create ast integer " << value << '\n';
-    auto node = std::make_shared<Integer>();
-    node->val = value;
+    auto node = std::make_shared<Integer>(value);
     return node;
 }
 
 std::shared_ptr<ASTNode> make_assignment(const std::string& var,
-                                         std::shared_ptr<ASTNode> st) {
+                                         std::shared_ptr<ASTNode> expr) {
     std::cout << "create ast assign " << var << '\n';
     auto node = std::make_shared<Assign>();
     node->var = var;
-    node->st = st;
+    node->expr = std::static_pointer_cast<Expr>(expr);
     return node;
 }
 
@@ -207,9 +207,9 @@ std::shared_ptr<ASTNode> make_arith_op(const std::string& op,
                                        std::shared_ptr<ASTNode> rhs) {
     std::cout << "create ast arith_op " << '\n';
     auto node = std::make_shared<ArithOp>();
-    node->lhs = lhs;
+    node->lhs = std::static_pointer_cast<Expr>(lhs);
     node->op = op;
-    node->rhs = rhs;
+    node->rhs = std::static_pointer_cast<Expr>(rhs);
 
     return node;
 }

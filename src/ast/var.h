@@ -4,11 +4,12 @@
 
 #include "../i_visitor.h"
 #include "ast.h"
+#include "expr.h"
 #include "type.h"
 
 namespace AST {
 
-struct Var : public ASTNode {
+struct Var : public Expr {
     void accept(IASTVisitor* visitor) override { visitor->visit(this); }
 
     std::string name;

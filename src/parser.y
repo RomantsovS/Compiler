@@ -15,6 +15,7 @@
     #include <stdint.h>
     #include "ast/ast.h"
     #include "ast/type.h"
+    #include "ast/helpers.h"
 
     using namespace std;
 

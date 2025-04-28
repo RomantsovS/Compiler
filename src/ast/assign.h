@@ -5,6 +5,7 @@
 
 #include "../i_visitor.h"
 #include "ast.h"
+#include "expr.h"
 
 namespace AST {
 
@@ -12,7 +13,7 @@ struct Assign : public ASTNode {
     void accept(IASTVisitor* visitor) override { visitor->visit(this); }
 
     std::string var;
-    std::shared_ptr<ASTNode> st;
+    std::shared_ptr<Expr> expr;
 };
 
 }  // namespace AST

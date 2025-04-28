@@ -54,12 +54,12 @@ void PrintVisitor::visit(AST::Print* node) {
 }
 
 void PrintVisitor::visit(AST::FunCall* node) {
-    auto str = node->name + "(";
+    os_ << node->name << "(";
     for (size_t i = 0; i < node->args.size(); ++i) {
         if (i > 0) os_ << ", ";
         node->args[i]->accept(this);
     }
-    os_ << ")";
+    os_ << ");";
 }
 
 void PrintVisitor::visit(AST::IfThenElse* node) {

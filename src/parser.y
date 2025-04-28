@@ -198,7 +198,7 @@ if:
 stmt:
     declaration
     | assignment
-    | expr
+    | expr SEMICOLON
     | while
     | if
     | print_stmt

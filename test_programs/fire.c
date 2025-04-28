@@ -37,8 +37,31 @@ int main() {
     print("\033[H");   // home
 
     int i;
-    i = 0;
     int j;
+    j = 1;
+
+    while (j < HEIGHT) {  // scroll up
+        i = 0;
+        while (i < WIDTH) {
+            fire[i + (j - 1) * WIDTH] = fire[i + j * WIDTH];
+            i = i + 1;
+        }
+        j = j + 1;
+    }
+
+    j = 0;
+    while (j < HEIGHT) {
+        line_blur(j * WIDTH, 1, WIDTH);
+        j = j + 1;
+    }
+
+    i = 0;
+    while (i < WIDTH) {
+        line_blur(i, WIDTH, HEIGHT);
+        i = i + 1;
+    }
+
+    i = 0;
     while (i < HEIGHT) {  // show the buffer
         j = 0;
         while (j < WIDTH) {

@@ -31,7 +31,5 @@ class PrintVisitor : public IASTVisitor {
     void visit(AST::ArrayAssignment* node) override;
 
    private:
-    std::stack<std::string> result_stack_;
-    std::deque<std::string> result_deque_;
     std::ostream& os_;
 };

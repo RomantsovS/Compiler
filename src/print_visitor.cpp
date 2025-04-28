@@ -54,13 +54,6 @@ void PrintVisitor::visit(AST::Print* node) {
 }
 
 void PrintVisitor::visit(AST::FunCall* node) {
-    assert(result_stack_.size() >= node->args.size());
-    std::stack<std::string> temp_st;
-    for (size_t i = 0; i < node->args.size(); ++i) {
-        temp_st.push(result_stack_.top());
-        result_stack_.pop();
-    }
-
     auto str = node->name + "(";
     for (size_t i = 0; i < node->args.size(); ++i) {
         if (i > 0) os_ << ", ";

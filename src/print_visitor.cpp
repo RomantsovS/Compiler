@@ -52,7 +52,7 @@ void PrintVisitor::visit(AST::Function* node) {
 
 void PrintVisitor::visit(AST::Print* node) {
     PrintIndent();
-    os_ << "Print (expr)\n";
+    os_ << "Print: (expr)\n";
     IndentRAII indent_raii(indent_);
 
     node->st->accept(this);
@@ -71,7 +71,7 @@ void PrintVisitor::visit(AST::FunCall* node) {
 
 void PrintVisitor::visit(AST::IfThenElse* node) {
     PrintIndent();
-    os_ << "if (expr) { stmt } else { stmt }\n";
+    os_ << "IfThenElse: (expr) { stmt } else { stmt }\n";
     IndentRAII indent_raii(indent_);
 
     node->condition->accept(this);
@@ -138,7 +138,7 @@ void PrintVisitor::visit(AST::Assign* node) {
 
 void PrintVisitor::visit(AST::While* node) {
     PrintIndent();
-    os_ << "while (expr) { stmt list }\n";
+    os_ << "While: (expr) { stmt list }\n";
     IndentRAII indent_raii(indent_);
 
     node->condition->accept(this);
@@ -176,7 +176,7 @@ void PrintVisitor::visit(AST::ArrayAccess* node) {
 
 void PrintVisitor::visit(AST::ArrayAssignment* node) {
     PrintIndent();
-    os_ << node->name << "[expr] = expr\n";
+    os_ << "ArrayAssignment: " << node->name << "[expr] = expr\n";
     IndentRAII indent_raii(indent_);
 
     node->index->accept(this);

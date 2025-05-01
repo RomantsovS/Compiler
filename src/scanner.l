@@ -98,8 +98,15 @@
                 return EzAquarii::Parser::make_RETURN(EzAquarii::location());
             }
 
-"true"      { return EzAquarii::Parser::make_BOOL(true, EzAquarii::location()); }
-"false"      { return EzAquarii::Parser::make_BOOL(false, EzAquarii::location()); }
+"true"      {
+                cout << "Scanner: 'true'" << endl;
+                return EzAquarii::Parser::make_BOOL(true, EzAquarii::location());
+            }
+
+"false"     {
+                cout << "Scanner: 'false'" << endl;
+                return EzAquarii::Parser::make_BOOL(false, EzAquarii::location());
+            }
 
 "//".*      { /* skip single-line comment */ }
 
@@ -199,7 +206,7 @@
                 //cout << "Scanner: whitechar (ignored)" << endl;
             }
 
-[0-9]+ {
+[0-9]+      {
                 cout << "Scanner: decimal number: " << yytext << endl;
                 uint64_t number = strtoull(yytext, 0, 10);
                 return EzAquarii::Parser::make_NUMBER(number, EzAquarii::location());

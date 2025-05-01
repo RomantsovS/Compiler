@@ -252,7 +252,6 @@ expr:
     | expr GREATER expr { $$ = AST::make_logic_op(">", $1, $3); }
     | ID { $$ = AST::make_var($1); }
     | ID LEFTBRACKET expr RIGHTBRACKET { $$ = AST::make_array_access($1, $3); }
-    | NUMBER { $$ = AST::make_integer($1); }
     | literal
     ;
 

@@ -7,9 +7,9 @@
 
 #include "i_visitor.h"
 
-class PrintVisitor : public IASTVisitor {
+class PrettyPrintVisitor : public IASTVisitor {
    public:
-    PrintVisitor(std::ostream& os) : os_(os) {}
+    PrettyPrintVisitor(std::ostream& os) : os_(os) {}
 
     void visit(AST::Program* node) override;
     void visit(AST::Function* node) override;

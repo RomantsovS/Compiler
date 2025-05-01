@@ -34,7 +34,7 @@ int main() {
     auto res = interpreter.parse();
     if (res) return res;
 
-    PrintVisitor print_visitor(std::cout);
+    PrettyPrintVisitor print_visitor(std::cout);
     ast->accept(&print_visitor);
 
     return 0;

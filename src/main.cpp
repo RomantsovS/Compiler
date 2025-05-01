@@ -24,7 +24,7 @@
 #include "ast/while.h"
 #include "interpreter.h"
 #include "parser.hpp"
-#include "print_visitor.h"
+#include "pretty_print_visitor.h"
 #include "scanner.h"
 
 int main() {

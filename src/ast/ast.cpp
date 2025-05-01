@@ -11,6 +11,7 @@
 #include "function.h"
 #include "if_then_else.h"
 #include "integer.h"
+#include "location.hh"
 #include "logic_op.h"
 #include "print.h"
 #include "program.h"
@@ -280,6 +281,13 @@ std::shared_ptr<ASTNode> make_array_assignment(const std::string& name,
     node->name = name;
     node->index = index;
     node->value = value;
+    return node;
+}
+
+std::shared_ptr<ASTNode> with_location(std::shared_ptr<ASTNode> node,
+                                       const EzAquarii::location& loc) {
+    node->loc.line = loc.begin.line;
+    node->loc.column = loc.begin.column;
     return node;
 }
 

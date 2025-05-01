@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "../i_visitor.h"
+#include "location.hh"
 #include "type.h"
 
 namespace AST {
@@ -11,9 +12,16 @@ namespace AST {
 struct NameType;
 // class IASTVisitor;
 
+struct Location {
+    int line;
+    int column;
+};
+
 struct ASTNode {
     virtual ~ASTNode() = default;
     virtual void accept(IASTVisitor* visitor) = 0;
+
+    Location loc;
 };
 
 using Statements = std::vector<std::shared_ptr<ASTNode>>;
@@ -99,5 +107,8 @@ std::shared_ptr<ASTNode> make_array_access(const std::string& name,
 std::shared_ptr<ASTNode> make_array_assignment(const std::string& name,
                                                std::shared_ptr<ASTNode> index,
                                                std::shared_ptr<ASTNode> value);
+
+std::shared_ptr<ASTNode> with_location(std::shared_ptr<ASTNode> node,
+                                       const EzAquarii::location& loc);
 
 }  // namespace AST

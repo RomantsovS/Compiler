@@ -215,7 +215,7 @@ declaration:
 		$$ = AST::make_decl($1, $2);
     }
     | type ID LEFTBRACKET NUMBER RIGHTBRACKET SEMICOLON {
-        $$ = AST::make_array_declaration($2, AST::Type::IntArray($4));
+        $$ = with_location(AST::make_array_declaration($2, AST::Type::IntArray($4)), @1);
     }
     ;
 

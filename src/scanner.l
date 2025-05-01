@@ -38,7 +38,7 @@
 
 	// Original yyterminate() macro returns int. Since we're using Bison 3 variants
 	// as tokens, we must redefine it to change type from `int` to `Parser::semantic_type`
-	#define yyterminate() EzAquarii::Parser::make_END(EzAquarii::location(nullptr, 1, driver_.location()));
+	#define yyterminate() EzAquarii::Parser::make_END(driver_.get_location());
 
 	// This will track current scanner location.
 	// Action is called when length of the token is known.
@@ -47,7 +47,7 @@
 	// !!!WARNING!!!
 	// Location API is used, but the location is not initialized, 'cause I'm lazy. When making
 	// a token with make_{something} method you can pass detailed token location. Current location
-	// is accessible with m_driver.location() method. All puzzle elements are there - just
+	// is accessible with m_driver.get_location() method. All puzzle elements are there - just
 	// pass location value in every action code block below. I'm going to waste more time writing
 	// this excuse than putting this boilerplate below...
 	//
@@ -65,47 +65,47 @@
 
 "int"       {
                 cout << "Scanner: int " << std::endl;
-                return EzAquarii::Parser::make_INT(EzAquarii::location(nullptr, 1, driver_.location())); 
+                return EzAquarii::Parser::make_INT(driver_.get_location()); 
             }
 
 "void"      {
                 cout << "Scanner: void " << std::endl;
-                return EzAquarii::Parser::make_VOID(EzAquarii::location(nullptr, 1, driver_.location())); 
+                return EzAquarii::Parser::make_VOID(driver_.get_location()); 
             }
 
 "print"     {
                 cout << "Scanner: print " << std::endl;
-                return EzAquarii::Parser::make_PRINT(EzAquarii::location(nullptr, 1, driver_.location())); 
+                return EzAquarii::Parser::make_PRINT(driver_.get_location()); 
             }
 
 "if"        {
                 cout << "Scanner: 'if'" << endl;
-                return EzAquarii::Parser::make_IF(EzAquarii::location(nullptr, 1, driver_.location()));
+                return EzAquarii::Parser::make_IF(driver_.get_location());
             }
 
 "else"      {
                 cout << "Scanner: 'else'" << endl;
-                return EzAquarii::Parser::make_ELSE(EzAquarii::location(nullptr, 1, driver_.location()));
+                return EzAquarii::Parser::make_ELSE(driver_.get_location());
             }
 
 "while"     {
                 cout << "Scanner: 'while'" << endl;
-                return EzAquarii::Parser::make_WHILE(EzAquarii::location(nullptr, 1, driver_.location()));
+                return EzAquarii::Parser::make_WHILE(driver_.get_location());
             }
 
 "return"    {
                 cout << "Scanner: 'return'" << endl;
-                return EzAquarii::Parser::make_RETURN(EzAquarii::location(nullptr, 1, driver_.location()));
+                return EzAquarii::Parser::make_RETURN(driver_.get_location());
             }
 
 "true"      {
                 cout << "Scanner: 'true'" << endl;
-                return EzAquarii::Parser::make_BOOL(true, EzAquarii::location(nullptr, 1, driver_.location()));
+                return EzAquarii::Parser::make_BOOL(true, driver_.get_location());
             }
 
 "false"     {
                 cout << "Scanner: 'false'" << endl;
-                return EzAquarii::Parser::make_BOOL(false, EzAquarii::location(nullptr, 1, driver_.location()));
+                return EzAquarii::Parser::make_BOOL(false, driver_.get_location());
             }
 
 "//".*      { /* skip single-line comment */ }
@@ -114,102 +114,106 @@
                 cout << "Scanner: 'string'" << endl;
                 std::string raw_str(yytext);
                 raw_str = raw_str.substr(1, raw_str.length() - 2); // Strip quotes
-                return EzAquarii::Parser::make_STRING(raw_str, EzAquarii::location(nullptr, 1, driver_.location()));
+                return EzAquarii::Parser::make_STRING(raw_str, driver_.get_location());
                 }
 
 [a-zA-Z_][a-zA-Z0-9_]*  {
 						cout << "Scanner: identifier [" << yytext << "]" << endl;
-                        return EzAquarii::Parser::make_ID(yytext, EzAquarii::location(nullptr, 1, driver_.location())); 
+                        return EzAquarii::Parser::make_ID(yytext, driver_.get_location()); 
                         }
             
 \(          {
                 cout << "Scanner: '('" << endl;
-                return EzAquarii::Parser::make_LEFTPAR(EzAquarii::location(nullptr, 1, driver_.location()));
+                return EzAquarii::Parser::make_LEFTPAR(driver_.get_location());
             }
             
 \)          { 
                 cout << "Scanner: ')'" << endl;
-                return EzAquarii::Parser::make_RIGHTPAR(EzAquarii::location(nullptr, 1, driver_.location()));
+                return EzAquarii::Parser::make_RIGHTPAR(driver_.get_location());
             }
 
 \{          {
                 cout << "Scanner: '{'" << endl;
-                return EzAquarii::Parser::make_LEFTFIGPAR(EzAquarii::location(nullptr, 1, driver_.location()));
+                return EzAquarii::Parser::make_LEFTFIGPAR(driver_.get_location());
             }
             
 \}          { 
                 cout << "Scanner: '}'" << endl;
-                return EzAquarii::Parser::make_RIGHTFIGPAR(EzAquarii::location(nullptr, 1, driver_.location()));
+                return EzAquarii::Parser::make_RIGHTFIGPAR(driver_.get_location());
             }
 
 "["         {
                 cout << "Scanner: '['" << endl;
-                return EzAquarii::Parser::make_LEFTBRACKET(EzAquarii::location(nullptr, 1, driver_.location()));
+                return EzAquarii::Parser::make_LEFTBRACKET(driver_.get_location());
             }
             
 "]"         { 
                 cout << "Scanner: ']'" << endl;
-                return EzAquarii::Parser::make_RIGHTBRACKET(EzAquarii::location(nullptr, 1, driver_.location()));
+                return EzAquarii::Parser::make_RIGHTBRACKET(driver_.get_location());
             }
             
 ;           {
                 cout << "Scanner: ';'" << endl;
-                return EzAquarii::Parser::make_SEMICOLON(EzAquarii::location(nullptr, 1, driver_.location()));
+                return EzAquarii::Parser::make_SEMICOLON(driver_.get_location());
             }
             
 ,           {
                 cout << "Scanner: ','" << endl;
-                return EzAquarii::Parser::make_COMMA(EzAquarii::location(nullptr, 1, driver_.location()));
+                return EzAquarii::Parser::make_COMMA(driver_.get_location());
             }
 
 =           {
                 cout << "Scanner: '='" << endl;
-                return EzAquarii::Parser::make_EQUAL(EzAquarii::location(nullptr, 1, driver_.location()));
+                return EzAquarii::Parser::make_EQUAL(driver_.get_location());
             }
 
 "+"         {
                 cout << "Scanner: '+'" << endl;
-                return EzAquarii::Parser::make_PLUS(EzAquarii::location(nullptr, 1, driver_.location()));
+                return EzAquarii::Parser::make_PLUS(driver_.get_location());
             }
 
 "-"         {
                 cout << "Scanner: '-'" << endl;
-                return EzAquarii::Parser::make_MINUS(EzAquarii::location(nullptr, 1, driver_.location()));
+                return EzAquarii::Parser::make_MINUS(driver_.get_location());
             }
 
 "*"         {
                 cout << "Scanner: '*'" << endl;
-                return EzAquarii::Parser::make_MULTIPLY(EzAquarii::location(nullptr, 1, driver_.location()));
+                return EzAquarii::Parser::make_MULTIPLY(driver_.get_location());
             }
 
 "/"         {
                 cout << "Scanner: '/'" << endl;
-                return EzAquarii::Parser::make_DIVIDE(EzAquarii::location(nullptr, 1, driver_.location()));
+                return EzAquarii::Parser::make_DIVIDE(driver_.get_location());
             }
 
 "%"         {
                 cout << "Scanner: '%'" << endl;
-                return EzAquarii::Parser::make_MOD(EzAquarii::location(nullptr, 1, driver_.location()));
+                return EzAquarii::Parser::make_MOD(driver_.get_location());
             }
 
 "<"         {
                 cout << "Scanner: '<'" << endl;
-                return EzAquarii::Parser::make_LESS(EzAquarii::location(nullptr, 1, driver_.location()));
+                return EzAquarii::Parser::make_LESS(driver_.get_location());
             }
 
 ">"         {
                 cout << "Scanner: '<'" << endl;
-                return EzAquarii::Parser::make_GREATER(EzAquarii::location(nullptr, 1, driver_.location()));
+                return EzAquarii::Parser::make_GREATER(driver_.get_location());
             }
             
-[\n\t ]     {
+[\t ]       {
                 //cout << "Scanner: whitechar (ignored)" << endl;
+            }
+
+[\n]        {
+                driver_.newline();
             }
 
 [0-9]+      {
                 cout << "Scanner: decimal number: " << yytext << endl;
                 uint64_t number = strtoull(yytext, 0, 10);
-                return EzAquarii::Parser::make_NUMBER(number, EzAquarii::location(nullptr, 1, driver_.location()));
+                return EzAquarii::Parser::make_NUMBER(number, driver_.get_location());
             }
 
 .           { 

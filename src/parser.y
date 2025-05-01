@@ -92,7 +92,7 @@
 
 program:
     top_level_list {
-        result = AST::make_program($1);
+        result = with_location(AST::make_program($1), @1);
     }
     ;
 
@@ -116,7 +116,7 @@ global:
 
 function:
     type ID LEFTPAR param_list RIGHTPAR block { 
-        $$ = AST::make_function($1, $2, $4, $6);
+        $$ = with_location(AST::make_function($1, $2, $4, $6), @1);
     }
     ;
 
@@ -146,7 +146,7 @@ param_list:
 
 function_call:
     ID LEFTPAR arg_list RIGHTPAR { 
-        $$ = AST::make_function_call($1, $3);
+        $$ = with_location(AST::make_function_call($1, $3), @1);
     }
     ;
 
@@ -179,19 +179,19 @@ stmt_list:
 
 while:
     WHILE LEFTPAR expr RIGHTPAR stmt {
-        $$ = AST::make_while($3, $5);
+        $$ = with_location(AST::make_while($3, $5), @1);
     }
     | WHILE LEFTPAR expr RIGHTPAR block {
-        $$ = AST::make_while($3, $5);
+        $$ = with_location(AST::make_while($3, $5), @1);
     }
     ;
 
 if:
     IF LEFTPAR expr RIGHTPAR stmt {
-        $$ = AST::make_if($3, $5, nullptr);
+        $$ = with_location(AST::make_if($3, $5, nullptr), @1);
     }
     | IF LEFTPAR expr RIGHTPAR stmt ELSE stmt {
-        $$ = AST::make_if($3, $5, $7);
+        $$ = with_location(AST::make_if($3, $5, $7), @1);
     }
     ;
 
@@ -203,16 +203,16 @@ stmt:
     | if
     | print_stmt
     | RETURN expr SEMICOLON {
-        $$ = AST::make_return($2);
+        $$ = with_location(AST::make_return($2), @1);
     }
     | ID LEFTBRACKET expr RIGHTBRACKET EQUAL expr SEMICOLON {
-        $$ = AST::make_array_assignment($1, $3, $6);
+        $$ = with_location(AST::make_array_assignment($1, $3, $6), @1);
     }
     ;
 
 declaration:
     type ID SEMICOLON {
-		$$ = AST::make_decl($1, $2);
+		$$ = with_location(AST::make_decl($1, $2), @1);
     }
     | type ID LEFTBRACKET NUMBER RIGHTBRACKET SEMICOLON {
         $$ = with_location(AST::make_array_declaration($2, AST::Type::IntArray($4)), @1);
@@ -221,40 +221,40 @@ declaration:
 
 assignment:
     ID EQUAL expr SEMICOLON {
-        $$ = AST::make_assignment($1, $3);
+        $$ = with_location(AST::make_assignment($1, $3), @1);
     }
     ;
 
 print_stmt:
     PRINT LEFTPAR expr RIGHTPAR SEMICOLON {
-        $$ = AST::make_print($3);
+        $$ = with_location(AST::make_print($3), @1);
     }
     ;
 
 literal:
     STRING {
-        $$ = AST::make_string_literal($1);
+        $$ = with_location(AST::make_string_literal($1), @1);
     }
     | BOOL {
-        $$ = AST::make_bool_literal($1);
+        $$ = with_location(AST::make_bool_literal($1), @1);
     }
     | NUMBER {
-        $$ = AST::make_integer($1);
+        $$ = with_location(AST::make_integer($1), @1);
     }
     ;
 
 expr:
     LEFTPAR expr RIGHTPAR { $$ = $2; }
     | function_call { $$ = $1; }
-    | expr PLUS expr { $$ = AST::make_arith_op("+", $1, $3); }
-    | expr MINUS expr { $$ = AST::make_arith_op("-", $1, $3); }
-    | expr MULTIPLY expr { $$ = AST::make_arith_op("*", $1, $3); }
-    | expr DIVIDE expr { $$ = AST::make_arith_op("/", $1, $3); }
-    | expr MOD expr { $$ = AST::make_arith_op("%", $1, $3); }
-    | expr LESS expr { $$ = AST::make_logic_op("<", $1, $3); }
-    | expr GREATER expr { $$ = AST::make_logic_op(">", $1, $3); }
-    | ID { $$ = AST::make_var($1); }
-    | ID LEFTBRACKET expr RIGHTBRACKET { $$ = AST::make_array_access($1, $3); }
+    | expr PLUS expr { $$ = with_location(AST::make_arith_op("+", $1, $3), @1); }
+    | expr MINUS expr { $$ = with_location(AST::make_arith_op("-", $1, $3), @1); }
+    | expr MULTIPLY expr { $$ = with_location(AST::make_arith_op("*", $1, $3), @1); }
+    | expr DIVIDE expr { $$ = with_location(AST::make_arith_op("/", $1, $3), @1); }
+    | expr MOD expr { $$ = with_location(AST::make_arith_op("%", $1, $3), @1); }
+    | expr LESS expr { $$ = with_location(AST::make_logic_op("<", $1, $3), @1); }
+    | expr GREATER expr { $$ = with_location(AST::make_logic_op(">", $1, $3), @1); }
+    | ID { $$ = with_location(AST::make_var($1), @1); }
+    | ID LEFTBRACKET expr RIGHTBRACKET { $$ = with_location(AST::make_array_access($1, $3), @1); }
     | literal
     ;
 
@@ -262,5 +262,5 @@ expr:
 
 // Bison expects us to provide implementation - otherwise linker complains
 void EzAquarii::Parser::error([[maybe_unused]] const location &loc , const std::string &message) {	
-    cout << "Error: " << message << endl << "Error location: " << driver.location() << endl;
+    cout << "Error: " << message << endl << "Error location: " << driver.get_location() << endl;
 }

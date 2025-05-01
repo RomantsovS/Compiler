@@ -20,6 +20,8 @@
 #include "ast/while.h"
 
 void PrintVisitor::visit(AST::Program* node) {
+    PrintIndent();
+    PrintLoc(node);
     os_ << "Program: \n";
     IndentRAII indent_raii(indent_);
 
@@ -35,6 +37,7 @@ void PrintVisitor::visit(AST::Program* node) {
 
 void PrintVisitor::visit(AST::Function* node) {
     PrintIndent();
+    PrintLoc(node);
     os_ << "Function: " << node->return_type.to_string() << " " << node->name
         << "(";
     for (size_t i = 0; i < node->args.size(); ++i) {
@@ -52,6 +55,7 @@ void PrintVisitor::visit(AST::Function* node) {
 
 void PrintVisitor::visit(AST::Print* node) {
     PrintIndent();
+    PrintLoc(node);
     os_ << "Print: (expr)\n";
     IndentRAII indent_raii(indent_);
 
@@ -60,6 +64,7 @@ void PrintVisitor::visit(AST::Print* node) {
 
 void PrintVisitor::visit(AST::FunCall* node) {
     PrintIndent();
+    PrintLoc(node);
     os_ << "FunCall: " << node->name << "(args)\n";
     IndentRAII indent_raii(indent_);
 
@@ -71,6 +76,7 @@ void PrintVisitor::visit(AST::FunCall* node) {
 
 void PrintVisitor::visit(AST::IfThenElse* node) {
     PrintIndent();
+    PrintLoc(node);
     os_ << "IfThenElse: (expr) { stmt } else { stmt }\n";
     IndentRAII indent_raii(indent_);
 
@@ -87,6 +93,7 @@ void PrintVisitor::visit(AST::IfThenElse* node) {
 
 void PrintVisitor::visit(AST::LogicOp* node) {
     PrintIndent();
+    PrintLoc(node);
     os_ << "LogicOp: (expr)" << " " << node->op << " (expr)\n";
     IndentRAII indent_raii(indent_);
 
@@ -97,6 +104,7 @@ void PrintVisitor::visit(AST::LogicOp* node) {
 
 void PrintVisitor::visit(AST::Return* node) {
     PrintIndent();
+    PrintLoc(node);
     os_ << "Return:\n";
     IndentRAII indent_raii(indent_);
 
@@ -105,6 +113,7 @@ void PrintVisitor::visit(AST::Return* node) {
 
 void PrintVisitor::visit(AST::ArithOp* node) {
     PrintIndent();
+    PrintLoc(node);
     os_ << "ArithOp: (expr)" << " " << node->op << " (expr)\n";
     IndentRAII indent_raii(indent_);
 
@@ -115,21 +124,25 @@ void PrintVisitor::visit(AST::ArithOp* node) {
 
 void PrintVisitor::visit(AST::VarDef* node) {
     PrintIndent();
+    PrintLoc(node);
     os_ << "VarDef: " << node->type.to_string() << " " << node->name;
 }
 
 void PrintVisitor::visit(AST::Var* node) {
     PrintIndent();
+    PrintLoc(node);
     os_ << "Var: " << node->name;
 }
 
 void PrintVisitor::visit(AST::Integer* node) {
     PrintIndent();
+    PrintLoc(node);
     os_ << "Integer: " << node->val;
 }
 
 void PrintVisitor::visit(AST::Assign* node) {
     PrintIndent();
+    PrintLoc(node);
     os_ << "Assign: " << node->var << " = (expr)\n";
     IndentRAII indent_raii(indent_);
 
@@ -138,6 +151,7 @@ void PrintVisitor::visit(AST::Assign* node) {
 
 void PrintVisitor::visit(AST::While* node) {
     PrintIndent();
+    PrintLoc(node);
     os_ << "While: (expr) { stmt list }\n";
     IndentRAII indent_raii(indent_);
 
@@ -152,22 +166,26 @@ void PrintVisitor::visit(AST::While* node) {
 
 void PrintVisitor::visit(AST::StringLiteral* node) {
     PrintIndent();
+    PrintLoc(node);
     os_ << "StringLiteral(" << node->value << ")";
 }
 
 void PrintVisitor::visit(AST::BoolLiteral* node) {
     PrintIndent();
+    PrintLoc(node);
     os_ << "BoolLiteral(" << (node->value ? "true" : "false") << ")";
 }
 
 void PrintVisitor::visit(AST::ArrayDeclaration* node) {
     PrintIndent();
+    PrintLoc(node);
     std::cout << "ArrayDeclaration: " << node->type.to_string() << " "
               << node->name << "[" << node->type.array_size << "];";
 }
 
 void PrintVisitor::visit(AST::ArrayAccess* node) {
     PrintIndent();
+    PrintLoc(node);
     os_ << "ArrayAccess: " << node->name << "[expr]\n";
     IndentRAII indent_raii(indent_);
 
@@ -176,6 +194,7 @@ void PrintVisitor::visit(AST::ArrayAccess* node) {
 
 void PrintVisitor::visit(AST::ArrayAssignment* node) {
     PrintIndent();
+    PrintLoc(node);
     os_ << "ArrayAssignment: " << node->name << "[expr] = expr\n";
     IndentRAII indent_raii(indent_);
 
@@ -185,3 +204,7 @@ void PrintVisitor::visit(AST::ArrayAssignment* node) {
 }
 
 void PrintVisitor::PrintIndent() { os_ << std::string(indent_, ' '); }
+
+inline void PrintVisitor::PrintLoc(AST::ASTNode* node) {
+    os_ << "(" << node->loc << ")";
+}

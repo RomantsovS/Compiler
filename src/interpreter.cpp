@@ -35,23 +35,23 @@
 using namespace EzAquarii;
 
 Interpreter::Interpreter(std::shared_ptr<AST::ASTNode>& ast)
-    : scanner_(*this), parser_(scanner_, *this, ast), m_location(0) {}
+    : scanner_(*this), parser_(scanner_, *this, ast) {}
 
 int Interpreter::parse() {
-    m_location = 0;
     // parser_.set_debug_level(1);
     return parser_.parse();
 }
-
-void Interpreter::clear() { m_location = 0; }
 
 void Interpreter::switchInputStream(std::istream* is) {
     scanner_.switch_streams(is, NULL);
 }
 
-void Interpreter::increaseLocation(unsigned int loc) {
-    m_location += loc;
-    cout << "increaseLocation(): " << loc << ", total = " << m_location << endl;
+void Interpreter::increaseLocation(unsigned int length) {
+    loc_.step();
+    loc_.columns(length);
+    cout << "increaseLocation(): " << loc_ << '\n';
 }
 
-unsigned int Interpreter::location() const { return m_location; }
+void Interpreter::newline() { loc_.lines(1); }
+
+const location& Interpreter::get_location() const { return loc_; }

@@ -1,6 +1,7 @@
 #pragma once
 
 namespace AST {
+struct ASTNode;
 struct Program;
 struct Function;
 struct Print;

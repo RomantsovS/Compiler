@@ -32,6 +32,7 @@ class PrintVisitor : public IASTVisitor {
 
    private:
     void PrintIndent();
+    void PrintLoc(AST::ASTNode* node);
 
     class IndentRAII {
        public:

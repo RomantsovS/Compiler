@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iostream>
 #include <memory>
 #include <vector>
 
@@ -16,6 +17,10 @@ struct Location {
     int line;
     int column;
 };
+
+inline std::ostream& operator<<(std::ostream& os, const Location& loc) {
+    return os << loc.line << ":" << loc.column;
+}
 
 struct ASTNode {
     virtual ~ASTNode() = default;

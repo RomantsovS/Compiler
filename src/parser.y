@@ -62,12 +62,12 @@
 %define api.token.prefix {TOKEN_}
 
 %token END 0 "end of file"
-%token <uint64_t> NUMBER "number";
+%token <uint64_t> NUMBER;
 %token LEFTPAR RIGHTPAR;
 %token LEFTFIGPAR RIGHTFIGPAR;
 %token LEFTBRACKET RIGHTBRACKET;
-%token SEMICOLON "semicolon";
-%token COMMA "comma";
+%token SEMICOLON;
+%token COMMA;
 %token EQUAL;
 %token PLUS MINUS MULTIPLY DIVIDE MOD;
 %token LESS GREATER;
@@ -237,6 +237,9 @@ literal:
     }
     | BOOL {
         $$ = AST::make_bool_literal($1);
+    }
+    | NUMBER {
+        $$ = AST::make_integer($1);
     }
     ;
 

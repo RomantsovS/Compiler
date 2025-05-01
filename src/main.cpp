@@ -25,6 +25,7 @@
 #include "interpreter.h"
 #include "parser.hpp"
 #include "pretty_print_visitor.h"
+#include "print_visitor.h"
 #include "scanner.h"
 
 int main() {
@@ -34,8 +35,15 @@ int main() {
     auto res = interpreter.parse();
     if (res) return res;
 
-    PrettyPrintVisitor print_visitor(std::cout);
+    std::cout << "\n\n";
+
+    PrintVisitor print_visitor(std::cout);
     ast->accept(&print_visitor);
+
+    std::cout << "\n\n";
+
+    PrettyPrintVisitor pretty_print_visitor(std::cout);
+    ast->accept(&pretty_print_visitor);
 
     return 0;
 }

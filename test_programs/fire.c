@@ -1,5 +1,12 @@
 int fire[256];
 
+int abs(int x) {
+    if (x < 0)
+        return (0) - (x);
+    else
+        return x;
+}
+
 void line_blur(int offset, int step, int nsteps) {
     int circ[3];
     circ[0] = 0;
@@ -11,7 +18,7 @@ void line_blur(int offset, int step, int nsteps) {
     i = 0;
     while (i < nsteps) {
         fire[offset] = (circ[0] + circ[1] + circ[2]) / 3;
-        if (i + 2 < nsteps)
+        if ((i + 2) < nsteps)
             circ[(beg + 2) % 3] = fire[offset + 2 * step];
         else
             circ[(beg + 2) % 3] = 0;
@@ -25,7 +32,7 @@ int main() {
     int HEIGHT;
     HEIGHT = 80;
     int WIDTH;
-    WIDTH = 25;
+    WIDTH = abs(25);
 
     int palette[256];
     palette[0] = 1;

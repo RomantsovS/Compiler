@@ -9,15 +9,40 @@
 #include "interpreter.h"
 #include "semantic_visitor.h"
 
-TEST(ASTTests, simplemain) {
+class CompilerTests : public ::testing::Test {
+   protected:
+    std::shared_ptr<AST::ASTNode> Init(std::istringstream& iss) {
+        std::shared_ptr<AST::ASTNode> ast;
+        EzAquarii::Interpreter interpreter(ast);
+
+        interpreter.switchInputStream(&iss);
+
+        auto res = interpreter.parse();
+        if (res) ast = nullptr;
+
+        return ast;
+    }
+};
+
+#define ExpectThrow(func, msg)                      \
+    do {                                            \
+        EXPECT_THROW(                               \
+            {                                       \
+                try {                               \
+                    func;                           \
+                } catch (const std::exception& e) { \
+                    EXPECT_STREQ(e.what(), msg);    \
+                    throw;                          \
+                }                                   \
+            },                                      \
+            std::runtime_error);                    \
+    } while (0)
+
+TEST_F(CompilerTests, SimpleMain) {
     std::istringstream iss(R"(int main() {})");
 
-    std::shared_ptr<AST::ASTNode> ast;
-    EzAquarii::Interpreter interpreter(ast);
-    interpreter.switchInputStream(&iss);
-
-    auto res = interpreter.parse();
-    ASSERT_EQ(res, 0);
+    auto ast = Init(iss);
+    ASSERT_TRUE(ast);
 
     auto prog = std::dynamic_pointer_cast<AST::Program>(ast);
     ASSERT_TRUE(prog);
@@ -32,19 +57,67 @@ TEST(ASTTests, simplemain) {
     EXPECT_EQ(main_func->body.size(), 0);
 }
 
-TEST(ASTTests, AssignCheckType) {
+TEST_F(CompilerTests, UndeclaredVariableCheck) {
+    std::istringstream iss(R"(int main() {
+        i = 1;
+}
+)");
+
+    auto ast = Init(iss);
+    ASSERT_TRUE(ast);
+
+    auto prog = std::dynamic_pointer_cast<AST::Program>(ast);
+    ASSERT_TRUE(prog);
+    ASSERT_EQ(prog->globals.size(), 0);
+    ASSERT_EQ(prog->functions.size(), 1);
+
+    auto main_func =
+        std::dynamic_pointer_cast<AST::Function>(prog->functions[0]);
+    EXPECT_EQ(main_func->name, "main");
+    EXPECT_EQ(main_func->return_type, AST::Type::Int());
+    EXPECT_EQ(main_func->args.size(), 0);
+    EXPECT_EQ(main_func->body.size(), 1);
+
+    SemanticVisitor semantic_visitor;
+
+    ExpectThrow(ast->accept(&semantic_visitor), "2:11: Undeclared variable i");
+}
+
+TEST_F(CompilerTests, UndeclaredFunctionCallCheck) {
+    std::istringstream iss(R"(int main() {
+        abs(1);
+}
+)");
+
+    auto ast = Init(iss);
+    ASSERT_TRUE(ast);
+
+    auto prog = std::dynamic_pointer_cast<AST::Program>(ast);
+    ASSERT_TRUE(prog);
+    ASSERT_EQ(prog->globals.size(), 0);
+    ASSERT_EQ(prog->functions.size(), 1);
+
+    auto main_func =
+        std::dynamic_pointer_cast<AST::Function>(prog->functions[0]);
+    EXPECT_EQ(main_func->name, "main");
+    EXPECT_EQ(main_func->return_type, AST::Type::Int());
+    EXPECT_EQ(main_func->args.size(), 0);
+    EXPECT_EQ(main_func->body.size(), 1);
+
+    SemanticVisitor semantic_visitor;
+
+    ExpectThrow(ast->accept(&semantic_visitor), "2:9: Undeclared func abs");
+}
+
+TEST_F(CompilerTests, AssignCheckType) {
     std::istringstream iss(R"(int main() {
         int i;
         i = true;
 }
 )");
 
-    std::shared_ptr<AST::ASTNode> ast;
-    EzAquarii::Interpreter interpreter(ast);
-    interpreter.switchInputStream(&iss);
-
-    auto res = interpreter.parse();
-    ASSERT_EQ(res, 0);
+    auto ast = Init(iss);
+    ASSERT_TRUE(ast);
 
     auto prog = std::dynamic_pointer_cast<AST::Program>(ast);
     ASSERT_TRUE(prog);
@@ -59,32 +132,20 @@ TEST(ASTTests, AssignCheckType) {
     EXPECT_EQ(main_func->body.size(), 2);
 
     SemanticVisitor semantic_visitor;
-    EXPECT_THROW(
-        {
-            try {
-                ast->accept(&semantic_visitor);
-            } catch (const std::exception& e) {
-                EXPECT_STREQ(e.what(),
-                             "3:11: Type mismatch: cannot assign bool to i");
-                throw;
-            }
-        },
-        std::runtime_error);
+
+    ExpectThrow(ast->accept(&semantic_visitor),
+                "3:11: Type mismatch: cannot assign bool to i");
 }
 
-TEST(ASTTests, ArrayAssignCheckType) {
+TEST_F(CompilerTests, ArrayAssignCheckType) {
     std::istringstream iss(R"(int main() {
         int i[2];
         i[0] = true;
 }
 )");
 
-    std::shared_ptr<AST::ASTNode> ast;
-    EzAquarii::Interpreter interpreter(ast);
-    interpreter.switchInputStream(&iss);
-
-    auto res = interpreter.parse();
-    ASSERT_EQ(res, 0);
+    auto ast = Init(iss);
+    ASSERT_TRUE(ast);
 
     auto prog = std::dynamic_pointer_cast<AST::Program>(ast);
     ASSERT_TRUE(prog);
@@ -99,15 +160,6 @@ TEST(ASTTests, ArrayAssignCheckType) {
     EXPECT_EQ(main_func->body.size(), 2);
 
     SemanticVisitor semantic_visitor;
-    EXPECT_THROW(
-        {
-            try {
-                ast->accept(&semantic_visitor);
-            } catch (const std::exception& e) {
-                EXPECT_STREQ(e.what(),
-                             "3:14: Type mismatch: cannot assign bool to i");
-                throw;
-            }
-        },
-        std::runtime_error);
+    ExpectThrow(ast->accept(&semantic_visitor),
+                "3:14: Type mismatch: cannot assign bool to i");
 }

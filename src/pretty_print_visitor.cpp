@@ -149,6 +149,6 @@ void PrettyPrintVisitor::visit(AST::ArrayAssignment* node) {
     os_ << node->name << "[";
     node->index->accept(this);
     os_ << "] = ";
-    node->value->accept(this);
+    node->expr->accept(this);
     os_ << ";";
 }

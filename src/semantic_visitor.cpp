@@ -160,7 +160,12 @@ void SemanticVisitor::visit(AST::ArrayAssignment* node) {
         Error(node, "Undeclared array variable " + node->name);
     }
     node->index->accept(this);
-    node->value->accept(this);
+    node->expr->accept(this);
+
+    if (entry->type != node->expr->type) {
+        Error(node, "Type mismatch: cannot assign " +
+                        node->expr->type.to_string() + " to " + node->name);
+    }
 }
 
 void SemanticVisitor::Error(AST::ASTNode* node, std::string_view msg) {

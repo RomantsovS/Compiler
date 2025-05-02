@@ -170,7 +170,10 @@ std::shared_ptr<ASTNode> make_assignment(const std::string& var,
     std::cout << "create ast assign " << var << '\n';
     auto node = std::make_shared<Assign>();
     node->var = var;
-    node->expr = std::static_pointer_cast<Expr>(expr);
+    node->expr = std::dynamic_pointer_cast<Expr>(expr);
+    if (!node->expr) {
+        throw std::runtime_error("expr is not Expr node");
+    }
     return node;
 }
 
@@ -289,12 +292,15 @@ std::shared_ptr<ASTNode> make_array_access(const std::string& name,
 
 std::shared_ptr<ASTNode> make_array_assignment(const std::string& name,
                                                std::shared_ptr<ASTNode> index,
-                                               std::shared_ptr<ASTNode> value) {
+                                               std::shared_ptr<ASTNode> expr) {
     std::cout << "create ast array assignment " << name << '\n';
     auto node = std::make_shared<ArrayAssignment>();
     node->name = name;
     node->index = index;
-    node->value = value;
+    node->expr = std::dynamic_pointer_cast<Expr>(expr);
+    if (!node->expr) {
+        throw std::runtime_error("expr is not Expr node");
+    }
     return node;
 }
 

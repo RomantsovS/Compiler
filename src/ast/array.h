@@ -27,7 +27,7 @@ struct ArrayAssignment : public ASTNode {
 
     std::string name;
     std::shared_ptr<ASTNode> index;
-    std::shared_ptr<ASTNode> value;
+    std::shared_ptr<Expr> expr;
 };
 
 }  // namespace AST

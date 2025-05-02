@@ -200,7 +200,7 @@ void PrintVisitor::visit(AST::ArrayAssignment* node) {
 
     node->index->accept(this);
     os_ << '\n';
-    node->value->accept(this);
+    node->expr->accept(this);
 }
 
 void PrintVisitor::PrintIndent() { os_ << std::string(indent_, ' '); }

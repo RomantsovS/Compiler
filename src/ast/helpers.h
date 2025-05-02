@@ -92,7 +92,7 @@ std::shared_ptr<ASTNode> make_array_access(const std::string& name,
 
 std::shared_ptr<ASTNode> make_array_assignment(const std::string& name,
                                                std::shared_ptr<ASTNode> index,
-                                               std::shared_ptr<ASTNode> value);
+                                               std::shared_ptr<ASTNode> expr);
 
 std::shared_ptr<ASTNode> with_location(std::shared_ptr<ASTNode> node,
                                        const EzAquarii::location& loc);

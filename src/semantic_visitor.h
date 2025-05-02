@@ -68,5 +68,7 @@ class SemanticVisitor : public IASTVisitor {
     void visit(AST::ArrayAssignment* node) override;
 
    private:
+    void Error(AST::ASTNode* node, std::string_view msg);
+
     Symtable symtable;
 };

@@ -2,6 +2,7 @@
 #include <deque>
 #include <iostream>
 #include <stack>
+#include <stdexcept>
 #include <typeinfo>
 #include <unordered_set>
 
@@ -47,7 +48,11 @@ int main() {
     ast->accept(&pretty_print_visitor);
 
     SemanticVisitor semantic_visitor;
-    ast->accept(&semantic_visitor);
+    try {
+        ast->accept(&semantic_visitor);
+    } catch (const std::exception& ex) {
+        std::cout << "\033[31mError: " << ex.what() << "\033[0m\n";
+    }
 
     return 0;
 }

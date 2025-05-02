@@ -1,6 +1,7 @@
 #include "semantic_visitor.h"
 
 #include <cassert>
+#include <sstream>
 #include <string>
 
 #include "ast/arithmetic_op.h"
@@ -30,13 +31,13 @@ void SemanticVisitor::visit(AST::Program* node) {
 
 void SemanticVisitor::visit(AST::Function* node) {
     if (!symtable.Declare(node->name, {node->return_type})) {
-        throw std::runtime_error("Redeclaration of " + node->name);
+        Error(node, "Redeclaration of " + node->name);
     }
     symtable.PushScope();
 
     for (size_t i = 0; i < node->args.size(); ++i) {
         if (!symtable.Declare(node->args[i].name, {node->args[i].type})) {
-            throw std::runtime_error("Redeclaration of " + node->args[i].name);
+            Error(node, "Redeclaration of " + node->args[i].name);
         }
     }
     for (auto stmt : node->body) {
@@ -49,7 +50,7 @@ void SemanticVisitor::visit(AST::Print* node) { node->st->accept(this); }
 void SemanticVisitor::visit(AST::FunCall* node) {
     auto* entry = symtable.Find(node->name);
     if (!entry) {
-        throw std::runtime_error("Undeclared func " + node->name);
+        Error(node, "Undeclared func " + node->name);
     }
     for (size_t i = 0; i < node->args.size(); ++i) {
         node->args[i]->accept(this);
@@ -78,9 +79,9 @@ void SemanticVisitor::visit(AST::ArithOp* node) {
     node->rhs->accept(this);
 
     if (node->lhs->type != node->rhs->type) {
-        throw std::runtime_error("Type mismatch: cannot perform " + node->op +
-                                 " for " + node->lhs->type.to_string() +
-                                 " and " + node->rhs->type.to_string());
+        Error(node, "Type mismatch: cannot perform " + node->op + " for " +
+                        node->lhs->type.to_string() + " and " +
+                        node->rhs->type.to_string());
     }
 
     node->type = node->lhs->type;
@@ -88,14 +89,14 @@ void SemanticVisitor::visit(AST::ArithOp* node) {
 
 void SemanticVisitor::visit(AST::VarDef* node) {
     if (!symtable.Declare(node->name, {node->type})) {
-        throw std::runtime_error("Redeclaration of " + node->name);
+        Error(node, "Redeclaration of " + node->name);
     }
 }
 
 void SemanticVisitor::visit(AST::Var* node) {
     auto* entry = symtable.Find(node->name);
     if (!entry) {
-        throw std::runtime_error("Undeclared variable " + node->name);
+        Error(node, "Undeclared variable " + node->name);
     }
     node->type = entry->type;
 }
@@ -105,13 +106,12 @@ void SemanticVisitor::visit(AST::Integer* node) {}
 void SemanticVisitor::visit(AST::Assign* node) {
     auto* entry = symtable.Find(node->var);
     if (!entry) {
-        throw std::runtime_error("Undeclared variable " + node->var);
+        Error(node, "Undeclared variable " + node->var);
     }
     node->expr->accept(this);
     if (entry->type != node->expr->type) {
-        throw std::runtime_error("Type mismatch: cannot assign " +
-                                 node->expr->type.to_string() + " to " +
-                                 node->var);
+        Error(node, "Type mismatch: cannot assign " +
+                        node->expr->type.to_string() + " to " + node->var);
     }
 }
 
@@ -128,14 +128,14 @@ void SemanticVisitor::visit(AST::BoolLiteral* node) {}
 
 void SemanticVisitor::visit(AST::ArrayDeclaration* node) {
     if (!symtable.Declare(node->name, {node->type})) {
-        throw std::runtime_error("Redeclaration of " + node->name);
+        Error(node, "Redeclaration of " + node->name);
     }
 }
 
 void SemanticVisitor::visit(AST::ArrayAccess* node) {
     auto* entry = symtable.Find(node->name);
     if (!entry) {
-        throw std::runtime_error("Undeclared array variable " + node->name);
+        Error(node, "Undeclared array variable " + node->name);
     }
     node->index->accept(this);
 }
@@ -143,8 +143,15 @@ void SemanticVisitor::visit(AST::ArrayAccess* node) {
 void SemanticVisitor::visit(AST::ArrayAssignment* node) {
     auto* entry = symtable.Find(node->name);
     if (!entry) {
-        throw std::runtime_error("Undeclared array variable " + node->name);
+        Error(node, "Undeclared array variable " + node->name);
     }
     node->index->accept(this);
     node->value->accept(this);
+}
+
+void SemanticVisitor::Error(AST::ASTNode* node, std::string_view msg) {
+    std::ostringstream oss;
+    oss << node->loc;
+    oss << ": " << msg;
+    throw std::runtime_error(oss.str());
 }

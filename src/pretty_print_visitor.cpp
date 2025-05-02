@@ -34,10 +34,10 @@ void PrettyPrintVisitor::visit(AST::Program* node) {
 }
 
 void PrettyPrintVisitor::visit(AST::Function* node) {
-    os_ << node->return_type.to_string() << " " << node->name << "(";
+    os_ << node->return_type << " " << node->name << "(";
     for (size_t i = 0; i < node->args.size(); ++i) {
         if (i > 0) os_ << ", ";
-        os_ << node->args[i].type.to_string() << " " << node->args[i].name;
+        os_ << node->args[i].type << " " << node->args[i].name;
     }
     os_ << ") {\n";
     for (auto stmt : node->body) {
@@ -102,7 +102,7 @@ void PrettyPrintVisitor::visit(AST::ArithOp* node) {
 }
 
 void PrettyPrintVisitor::visit(AST::VarDef* node) {
-    os_ << node->type.to_string() << " " << node->name << ";";
+    os_ << node->type << " " << node->name << ";";
 }
 
 void PrettyPrintVisitor::visit(AST::Var* node) { os_ << node->name; }
@@ -135,8 +135,8 @@ void PrettyPrintVisitor::visit(AST::BoolLiteral* node) {
 }
 
 void PrettyPrintVisitor::visit(AST::ArrayDeclaration* node) {
-    std::cout << node->type.to_string() << " " << node->name << "["
-              << node->type.array_size << "];";
+    std::cout << node->type << " " << node->name << "[" << node->type.array_size
+              << "];";
 }
 
 void PrettyPrintVisitor::visit(AST::ArrayAccess* node) {

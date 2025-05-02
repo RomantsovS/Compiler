@@ -13,19 +13,6 @@ struct Type {
     bool is_array = false;
     int array_size = 0;  // optional: 0 = unknown or dynamic size
 
-    std::string to_string() {
-        switch (base) {
-            case BaseType::Void:
-                return "void";
-            case BaseType::Int:
-                return "int";
-            case BaseType::Bool:
-                return "bool";
-            default:
-                return "Unknown";
-        }
-    }
-
     Type GetArrayBase() {
         assert(base == BaseType::Int);
         return Int();
@@ -44,6 +31,23 @@ inline bool operator==(const Type& lhs, const Type& rhs) {
 
 inline bool operator!=(const Type& lhs, const Type& rhs) {
     return !(lhs == rhs);
+}
+
+inline std::ostream& operator<<(std::ostream& os, const Type& type) {
+    switch (type.base) {
+        case BaseType::Void:
+            os << "void";
+            break;
+        case BaseType::Int:
+            os << "int";
+            break;
+        case BaseType::Bool:
+            os << "bool";
+            break;
+        default:
+            os << "Unknown";
+    }
+    return os;
 }
 
 }  // namespace AST

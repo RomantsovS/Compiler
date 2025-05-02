@@ -1,5 +1,6 @@
 #include "helpers.h"
 
+#include <algorithm>
 #include <iostream>
 #include <unordered_map>
 
@@ -77,7 +78,16 @@ std::shared_ptr<ASTNode> make_function_call(const std::string& name,
     auto node = std::make_shared<FunCall>();
 
     node->name = name;
-    node->args = *args;
+
+    node->args.resize(args->size());
+    std::transform(args->begin(), args->end(), node->args.begin(),
+                   [](const std::shared_ptr<ASTNode>& arg) {
+                       auto expr = std::dynamic_pointer_cast<Expr>(arg);
+                       if (!expr) {
+                           throw std::runtime_error("arg is not Expr node");
+                       }
+                       return expr;
+                   });
 
     return node;
 }

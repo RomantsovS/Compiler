@@ -38,11 +38,11 @@ void PrintVisitor::visit(AST::Program* node) {
 void PrintVisitor::visit(AST::Function* node) {
     PrintIndent();
     PrintLoc(node);
-    os_ << "Function: " << node->return_type.to_string() << " " << node->name
+    os_ << "Function: " << node->return_type << " " << node->name
         << "(";
     for (size_t i = 0; i < node->args.size(); ++i) {
         if (i > 0) os_ << ", ";
-        os_ << node->args[i].type.to_string() << " " << node->args[i].name;
+        os_ << node->args[i].type << " " << node->args[i].name;
     }
     os_ << ") {}\n";
     IndentRAII indent_raii(indent_);
@@ -125,7 +125,7 @@ void PrintVisitor::visit(AST::ArithOp* node) {
 void PrintVisitor::visit(AST::VarDef* node) {
     PrintIndent();
     PrintLoc(node);
-    os_ << "VarDef: " << node->type.to_string() << " " << node->name;
+    os_ << "VarDef: " << node->type << " " << node->name;
 }
 
 void PrintVisitor::visit(AST::Var* node) {
@@ -179,7 +179,7 @@ void PrintVisitor::visit(AST::BoolLiteral* node) {
 void PrintVisitor::visit(AST::ArrayDeclaration* node) {
     PrintIndent();
     PrintLoc(node);
-    std::cout << "ArrayDeclaration: " << node->type.to_string() << " "
+    std::cout << "ArrayDeclaration: " << node->type << " "
               << node->name << "[" << node->type.array_size << "];";
 }
 

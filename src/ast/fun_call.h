@@ -12,7 +12,7 @@ struct FunCall : public Expr {
     void accept(IASTVisitor* visitor) override { visitor->visit(this); }
 
     std::string name;
-    Statements args;
+    std::vector<std::shared_ptr<AST::Expr>> args;
 };
 
 }  // namespace AST

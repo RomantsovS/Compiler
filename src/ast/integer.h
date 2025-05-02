@@ -6,11 +6,11 @@
 namespace AST {
 
 struct Integer : public Expr {
-    Integer(int value) : val(value) { type = Type::Int(); }
+    Integer(int val) : value(val) { type = Type::Int(); }
 
     void accept(IASTVisitor* visitor) override { visitor->visit(this); }
 
-    int val;
+    int value;
 };
 
 }  // namespace AST

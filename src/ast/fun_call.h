@@ -4,11 +4,11 @@
 #include <vector>
 
 #include "../i_visitor.h"
-#include "ast.h"
+#include "expr.h"
 
 namespace AST {
 
-struct FunCall : public ASTNode {
+struct FunCall : public Expr {
     void accept(IASTVisitor* visitor) override { visitor->visit(this); }
 
     std::string name;

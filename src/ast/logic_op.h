@@ -4,15 +4,19 @@
 
 #include "../i_visitor.h"
 #include "ast.h"
+#include "expr.h"
+#include "type.h"
 
 namespace AST {
 
-struct LogicOp : public ASTNode {
+struct LogicOp : public Expr {
+    LogicOp() { type = Type::Bool(); }
+
     void accept(IASTVisitor* visitor) override { visitor->visit(this); }
 
     std::string op;
-    std::shared_ptr<ASTNode> lhs;
-    std::shared_ptr<ASTNode> rhs;
+    std::shared_ptr<Expr> lhs;
+    std::shared_ptr<Expr> rhs;
 };
 
 }  // namespace AST

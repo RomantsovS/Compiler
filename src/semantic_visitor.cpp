@@ -17,6 +17,7 @@
 #include "ast/program.h"
 #include "ast/return.h"
 #include "ast/string_literal.h"
+#include "ast/type.h"
 #include "ast/var.h"
 #include "ast/while.h"
 
@@ -52,6 +53,8 @@ void SemanticVisitor::visit(AST::FunCall* node) {
     if (!entry) {
         Error(node, "Undeclared func " + node->name);
     }
+    node->type = entry->type;
+
     for (size_t i = 0; i < node->args.size(); ++i) {
         node->args[i]->accept(this);
     }
@@ -59,6 +62,7 @@ void SemanticVisitor::visit(AST::FunCall* node) {
 
 void SemanticVisitor::visit(AST::IfThenElse* node) {
     node->condition->accept(this);
+
     node->then_branch->accept(this);
     if (node->else_branch) {
         node->else_branch->accept(this);
@@ -68,6 +72,13 @@ void SemanticVisitor::visit(AST::IfThenElse* node) {
 void SemanticVisitor::visit(AST::LogicOp* node) {
     node->lhs->accept(this);
     node->rhs->accept(this);
+
+    if (node->lhs->type.base == AST::BaseType::Unknown ||
+        node->lhs->type != node->rhs->type) {
+        Error(node, "Type mismatch: cannot perform " + node->op + " for " +
+                        node->lhs->type.to_string() + " and " +
+                        node->rhs->type.to_string());
+    }
 }
 
 void SemanticVisitor::visit(AST::Return* node) {
@@ -78,7 +89,8 @@ void SemanticVisitor::visit(AST::ArithOp* node) {
     node->lhs->accept(this);
     node->rhs->accept(this);
 
-    if (node->lhs->type != node->rhs->type) {
+    if (node->lhs->type.base == AST::BaseType::Unknown ||
+        node->lhs->type != node->rhs->type) {
         Error(node, "Type mismatch: cannot perform " + node->op + " for " +
                         node->lhs->type.to_string() + " and " +
                         node->rhs->type.to_string());
@@ -137,6 +149,8 @@ void SemanticVisitor::visit(AST::ArrayAccess* node) {
     if (!entry) {
         Error(node, "Undeclared array variable " + node->name);
     }
+    node->type = entry->type.GetArrayBase();
+
     node->index->accept(this);
 }
 

@@ -107,7 +107,7 @@ void PrettyPrintVisitor::visit(AST::VarDef* node) {
 
 void PrettyPrintVisitor::visit(AST::Var* node) { os_ << node->name; }
 
-void PrettyPrintVisitor::visit(AST::Integer* node) { os_ << node->val; }
+void PrettyPrintVisitor::visit(AST::Integer* node) { os_ << node->value; }
 
 void PrettyPrintVisitor::visit(AST::Assign* node) {
     os_ << node->var << " = ";

@@ -137,7 +137,7 @@ void PrintVisitor::visit(AST::Var* node) {
 void PrintVisitor::visit(AST::Integer* node) {
     PrintIndent();
     PrintLoc(node);
-    os_ << "Integer: " << node->val;
+    os_ << "Integer: " << node->value;
 }
 
 void PrintVisitor::visit(AST::Assign* node) {

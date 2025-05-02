@@ -190,8 +190,7 @@ std::shared_ptr<ASTNode> make_string_literal(const std::string& string) {
 
 std::shared_ptr<ASTNode> make_bool_literal(const bool value) {
     std::cout << "create ast bool literal " << value << '\n';
-    auto node = std::make_shared<BoolLiteral>();
-    node->value = value;
+    auto node = std::make_shared<BoolLiteral>(value);
     return node;
 }
 
@@ -207,9 +206,15 @@ std::shared_ptr<ASTNode> make_arith_op(const std::string& op,
                                        std::shared_ptr<ASTNode> rhs) {
     std::cout << "create ast arith_op " << '\n';
     auto node = std::make_shared<ArithOp>();
-    node->lhs = std::static_pointer_cast<Expr>(lhs);
+    node->lhs = std::dynamic_pointer_cast<Expr>(lhs);
+    if (!node->lhs) {
+        throw std::runtime_error("lhs is not Expr node");
+    }
     node->op = op;
     node->rhs = std::static_pointer_cast<Expr>(rhs);
+    if (!node->rhs) {
+        throw std::runtime_error("rhs is not Expr node");
+    }
 
     return node;
 }
@@ -219,9 +224,15 @@ std::shared_ptr<ASTNode> make_logic_op(const std::string& op,
                                        std::shared_ptr<ASTNode> rhs) {
     std::cout << "create ast logic_op " << '\n';
     auto node = std::make_shared<LogicOp>();
-    node->lhs = lhs;
+    node->lhs = std::dynamic_pointer_cast<Expr>(lhs);
+    if (!node->lhs) {
+        throw std::runtime_error("lhs is not Expr node");
+    }
     node->op = op;
-    node->rhs = rhs;
+    node->rhs = std::static_pointer_cast<Expr>(rhs);
+    if (!node->rhs) {
+        throw std::runtime_error("rhs is not Expr node");
+    }
 
     return node;
 }
@@ -231,7 +242,10 @@ std::shared_ptr<ASTNode> make_if(std::shared_ptr<ASTNode> condition,
                                  std::shared_ptr<ASTNode> else_branch) {
     std::cout << "create ast if_then_else " << '\n';
     auto node = std::make_shared<IfThenElse>();
-    node->condition = condition;
+    node->condition = std::dynamic_pointer_cast<Expr>(condition);
+    if (!node->condition) {
+        throw std::runtime_error("lhs is not Expr node");
+    }
     node->then_branch = then_branch;
     node->else_branch = else_branch;
     return node;

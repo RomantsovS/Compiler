@@ -63,14 +63,19 @@
 
 %%
 
+"void"      {
+                cout << "Scanner: void " << std::endl;
+                return EzAquarii::Parser::make_VOID(driver_.get_location()); 
+            }
+
 "int"       {
                 cout << "Scanner: int " << std::endl;
                 return EzAquarii::Parser::make_INT(driver_.get_location()); 
             }
 
-"void"      {
-                cout << "Scanner: void " << std::endl;
-                return EzAquarii::Parser::make_VOID(driver_.get_location()); 
+"bool"      {
+                cout << "Scanner: bool " << std::endl;
+                return EzAquarii::Parser::make_BOOL(driver_.get_location()); 
             }
 
 "print"     {
@@ -100,12 +105,12 @@
 
 "true"      {
                 cout << "Scanner: 'true'" << endl;
-                return EzAquarii::Parser::make_BOOL(true, driver_.get_location());
+                return EzAquarii::Parser::make_TRUE(true, driver_.get_location());
             }
 
 "false"     {
                 cout << "Scanner: 'false'" << endl;
-                return EzAquarii::Parser::make_BOOL(false, driver_.get_location());
+                return EzAquarii::Parser::make_FALSE(false, driver_.get_location());
             }
 
 "//".*      { /* skip single-line comment */ }

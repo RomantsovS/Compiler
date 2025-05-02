@@ -75,11 +75,11 @@
 %token IF ELSE;
 %token WHILE;
 %token <std::string> ID
-%token INT VOID
+%token VOID INT BOOL
 %token PRINT
 %token RETURN
 %token <std::string> STRING
-%token <bool> BOOL
+%token <bool> TRUE FALSE
 
 %type< AST::Type > type;
 %type< std::shared_ptr<AST::Statements> > stmt_list block top_level_list arg_list;
@@ -122,11 +122,14 @@ function:
     ;
 
 type:
-    INT {
+    VOID {
+        $$ = AST::Type::Void();
+    }
+    | INT {
         $$ = AST::Type::Int();
     }
-    | VOID {
-        $$ = AST::Type::Void();
+    | BOOL {
+        $$ = AST::Type::Bool();
     }
     | INT LEFTBRACKET NUMBER RIGHTBRACKET {
         $$ = AST::Type::IntArray($3);
@@ -236,7 +239,10 @@ literal:
     STRING {
         $$ = with_location(AST::make_string_literal($1), @1);
     }
-    | BOOL {
+    | TRUE {
+        $$ = with_location(AST::make_bool_literal($1), @1);
+    }
+    | FALSE {
         $$ = with_location(AST::make_bool_literal($1), @1);
     }
     | NUMBER {

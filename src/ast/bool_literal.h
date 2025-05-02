@@ -4,11 +4,13 @@
 #include <string>
 
 #include "../i_visitor.h"
-#include "ast.h"
+#include "expr.h"
 
 namespace AST {
 
-struct BoolLiteral : public ASTNode {
+struct BoolLiteral : public Expr {
+    BoolLiteral(int val) : value(val) { type = Type::Bool(); }
+
     void accept(IASTVisitor* visitor) override { visitor->visit(this); }
 
     bool value;

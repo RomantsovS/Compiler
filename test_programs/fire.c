@@ -8,6 +8,13 @@ int abs(int x) {
 }
 
 void line_blur(int offset, int step, int nsteps) {
+    if (true) fire[0] = 0;
+    if (false) fire[0] = 0;
+    bool b;
+    b = false;
+    b = true;
+    if (b) fire[0] = 0;
+
     int circ[3];
     circ[0] = 0;
     circ[1] = fire[offset];

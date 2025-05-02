@@ -1,11 +1,12 @@
 #pragma once
 
+#include <cassert>
 #include <string>
 #include <utility>
 
 namespace AST {
 
-enum class BaseType { Unknown, Void, Int };
+enum class BaseType { Unknown, Void, Int, Bool };
 
 struct Type {
     BaseType base = BaseType::Unknown;
@@ -18,13 +19,21 @@ struct Type {
                 return "void";
             case BaseType::Int:
                 return "int";
+            case BaseType::Bool:
+                return "bool";
             default:
                 return "Unknown";
         }
     }
 
-    static Type Int() { return {BaseType::Int}; }
+    Type GetArrayBase() {
+        assert(base == BaseType::Int);
+        return Int();
+    }
+
     static Type Void() { return {BaseType::Void}; }
+    static Type Int() { return {BaseType::Int}; }
+    static Type Bool() { return {BaseType::Bool}; }
     static Type IntArray(int size) { return {BaseType::Int, true, size}; }
 };
 

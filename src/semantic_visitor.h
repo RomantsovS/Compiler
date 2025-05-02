@@ -2,16 +2,19 @@
 
 #include <algorithm>
 #include <cassert>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
+#include "ast/ast.h"
 #include "ast/type.h"
 #include "i_visitor.h"
 
 struct SymbolEntry {
     AST::Type type;
+    std::vector<AST::Type> params;
 };
 
 class Symtable {
@@ -68,7 +71,14 @@ class SemanticVisitor : public IASTVisitor {
     void visit(AST::ArrayAssignment* node) override;
 
    private:
-    void Error(AST::ASTNode* node, std::string_view msg);
+    template <typename... Args>
+    void Error(AST::ASTNode* node, Args... args) {
+        std::ostringstream oss;
+        oss << node->loc;
+        oss << ": ";
+        (oss << ... << args);
+        throw std::runtime_error(oss.str());
+    }
 
     Symtable symtable;
 };

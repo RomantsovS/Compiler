@@ -109,6 +109,36 @@ TEST_F(CompilerTests, UndeclaredFunctionCallCheck) {
     ExpectThrow(ast->accept(&semantic_visitor), "2:9: Undeclared func abs");
 }
 
+TEST_F(CompilerTests, FunctionCallWrongNumberOfArgumentsCheck) {
+    std::istringstream iss(R"(
+        int abs(int i) {}
+        int main() {
+        abs(1, 2);
+}
+)");
+
+    auto ast = Init(iss);
+    ASSERT_TRUE(ast);
+
+    auto prog = std::dynamic_pointer_cast<AST::Program>(ast);
+    ASSERT_TRUE(prog);
+    ASSERT_EQ(prog->globals.size(), 0);
+    ASSERT_EQ(prog->functions.size(), 2);
+
+    auto main_func =
+        std::dynamic_pointer_cast<AST::Function>(prog->functions[1]);
+    EXPECT_EQ(main_func->name, "main");
+    EXPECT_EQ(main_func->return_type, AST::Type::Int());
+    EXPECT_EQ(main_func->args.size(), 0);
+    EXPECT_EQ(main_func->body.size(), 1);
+
+    SemanticVisitor semantic_visitor;
+
+    ExpectThrow(
+        ast->accept(&semantic_visitor),
+        "4:9: Incorrect arguments number to call abs. Expected 1 but got 2");
+}
+
 TEST_F(CompilerTests, AssignCheckType) {
     std::istringstream iss(R"(int main() {
         int i;

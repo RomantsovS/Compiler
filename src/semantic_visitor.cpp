@@ -1,8 +1,6 @@
 #include "semantic_visitor.h"
 
-#include <cassert>
-#include <sstream>
-#include <string>
+#include <algorithm>
 
 #include "ast/arithmetic_op.h"
 #include "ast/array.h"
@@ -31,7 +29,11 @@ void SemanticVisitor::visit(AST::Program* node) {
 }
 
 void SemanticVisitor::visit(AST::Function* node) {
-    if (!symtable.Declare(node->name, {node->return_type})) {
+    std::vector<AST::Type> params(node->args.size());
+    std::transform(
+        node->args.begin(), node->args.end(), params.begin(),
+        [](const AST::NameType name_type) { return name_type.type; });
+    if (!symtable.Declare(node->name, {node->return_type, params})) {
         Error(node, "Redeclaration of " + node->name);
     }
     symtable.PushScope();
@@ -54,6 +56,12 @@ void SemanticVisitor::visit(AST::FunCall* node) {
         Error(node, "Undeclared func " + node->name);
     }
     node->type = entry->type;
+
+    if (node->args.size() != entry->params.size()) {
+        Error(node, "Incorrect arguments number to call ", node->name,
+              ". Expected ", entry->params.size(), " but got ",
+              node->args.size());
+    }
 
     for (size_t i = 0; i < node->args.size(); ++i) {
         node->args[i]->accept(this);
@@ -166,11 +174,4 @@ void SemanticVisitor::visit(AST::ArrayAssignment* node) {
         Error(node, "Type mismatch: cannot assign " +
                         node->expr->type.to_string() + " to " + node->name);
     }
-}
-
-void SemanticVisitor::Error(AST::ASTNode* node, std::string_view msg) {
-    std::ostringstream oss;
-    oss << node->loc;
-    oss << ": " << msg;
-    throw std::runtime_error(oss.str());
 }

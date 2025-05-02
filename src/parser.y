@@ -206,7 +206,7 @@ stmt:
         $$ = with_location(AST::make_return($2), @1);
     }
     | ID LEFTBRACKET expr RIGHTBRACKET EQUAL expr SEMICOLON {
-        $$ = with_location(AST::make_array_assignment($1, $3, $6), @1);
+        $$ = with_location(AST::make_array_assignment($1, $3, $6), @5);
     }
     ;
 
@@ -221,7 +221,7 @@ declaration:
 
 assignment:
     ID EQUAL expr SEMICOLON {
-        $$ = with_location(AST::make_assignment($1, $3), @1);
+        $$ = with_location(AST::make_assignment($1, $3), @2);
     }
     ;
 
@@ -246,15 +246,15 @@ literal:
 expr:
     LEFTPAR expr RIGHTPAR { $$ = $2; }
     | function_call { $$ = $1; }
-    | expr PLUS expr { $$ = with_location(AST::make_arith_op("+", $1, $3), @1); }
-    | expr MINUS expr { $$ = with_location(AST::make_arith_op("-", $1, $3), @1); }
-    | expr MULTIPLY expr { $$ = with_location(AST::make_arith_op("*", $1, $3), @1); }
-    | expr DIVIDE expr { $$ = with_location(AST::make_arith_op("/", $1, $3), @1); }
-    | expr MOD expr { $$ = with_location(AST::make_arith_op("%", $1, $3), @1); }
-    | expr LESS expr { $$ = with_location(AST::make_logic_op("<", $1, $3), @1); }
-    | expr GREATER expr { $$ = with_location(AST::make_logic_op(">", $1, $3), @1); }
+    | expr PLUS expr { $$ = with_location(AST::make_arith_op("+", $1, $3), @2); }
+    | expr MINUS expr { $$ = with_location(AST::make_arith_op("-", $1, $3), @2); }
+    | expr MULTIPLY expr { $$ = with_location(AST::make_arith_op("*", $1, $3), @2); }
+    | expr DIVIDE expr { $$ = with_location(AST::make_arith_op("/", $1, $3), @2); }
+    | expr MOD expr { $$ = with_location(AST::make_arith_op("%", $1, $3), @2); }
+    | expr LESS expr { $$ = with_location(AST::make_logic_op("<", $1, $3), @2); }
+    | expr GREATER expr { $$ = with_location(AST::make_logic_op(">", $1, $3), @2); }
     | ID { $$ = with_location(AST::make_var($1), @1); }
-    | ID LEFTBRACKET expr RIGHTBRACKET { $$ = with_location(AST::make_array_access($1, $3), @1); }
+    | ID LEFTBRACKET expr RIGHTBRACKET { $$ = with_location(AST::make_array_access($1, $3), @2); }
     | literal
     ;
 

@@ -17,20 +17,27 @@ flex_target(Scanner src/scanner.l ${CMAKE_CURRENT_BINARY_DIR}/scanner.cpp)
 add_flex_bison_dependency(Scanner Parser)
 
 add_library(compiler_frontend
-            STATIC
-            ${FLEX_Scanner_OUTPUTS}
-            ${BISON_Parser_OUTPUTS}
+  STATIC
+  ${FLEX_Scanner_OUTPUTS}
+  ${BISON_Parser_OUTPUTS}
 )
 
 target_include_directories(compiler_frontend PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_include_directories(compiler_frontend PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
-file(GLOB_RECURSE SOURCES
-    src/*.cpp
+add_library(compiler_lib
+  "src/ast/ast.cpp"
+  "src/interpreter.cpp"
+  "src/pretty_print_visitor.cpp"
+  "src/print_visitor.cpp"
 )
 
-add_executable(compiler ${SOURCES})
+target_include_directories(compiler_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_include_directories(compiler_lib PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 
-target_include_directories(compiler PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
-target_include_directories(compiler PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
-target_link_libraries(compiler compiler_frontend)
+add_executable(compiler "src/main.cpp")
+
+target_link_libraries(compiler compiler_frontend compiler_lib)
+
+enable_testing()
+add_subdirectory(test)

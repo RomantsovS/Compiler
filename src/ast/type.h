@@ -47,6 +47,8 @@ inline std::ostream& operator<<(std::ostream& os, const Type& type) {
         default:
             os << "Unknown";
     }
+    if (type.array_size > 0) os << "[" << type.array_size << "]";
+
     return os;
 }
 

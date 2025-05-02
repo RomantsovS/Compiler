@@ -169,7 +169,7 @@ TEST_F(CompilerTests, FunctionCallWrongArgumentTypeCheck) {
                 "got bool");
 }
 
-TEST_F(CompilerTests, AssignCheckType) {
+TEST_F(CompilerTests, ValueAssignToValueCheckType) {
     std::istringstream iss(R"(int main() {
         int i;
         i = true;
@@ -197,7 +197,36 @@ TEST_F(CompilerTests, AssignCheckType) {
                 "3:11: Type mismatch: cannot assign bool to i");
 }
 
-TEST_F(CompilerTests, ArrayAssignCheckType) {
+TEST_F(CompilerTests, ArrayAssignToValueCheckType) {
+    std::istringstream iss(R"(int main() {
+        int i;
+        int j[2];
+        i = j;
+}
+)");
+
+    auto ast = Init(iss);
+    ASSERT_TRUE(ast);
+
+    auto prog = std::dynamic_pointer_cast<AST::Program>(ast);
+    ASSERT_TRUE(prog);
+    ASSERT_EQ(prog->globals.size(), 0);
+    ASSERT_EQ(prog->functions.size(), 1);
+
+    auto main_func =
+        std::dynamic_pointer_cast<AST::Function>(prog->functions[0]);
+    EXPECT_EQ(main_func->name, "main");
+    EXPECT_EQ(main_func->return_type, AST::Type::Int());
+    EXPECT_EQ(main_func->args.size(), 0);
+    EXPECT_EQ(main_func->body.size(), 3);
+
+    SemanticVisitor semantic_visitor;
+
+    ExpectThrow(ast->accept(&semantic_visitor),
+                "4:11: Type mismatch: cannot assign int[2] to i");
+}
+
+TEST_F(CompilerTests, ValueAssignToArrayCheckType) {
     std::istringstream iss(R"(int main() {
         int i[2];
         i[0] = true;
@@ -222,4 +251,31 @@ TEST_F(CompilerTests, ArrayAssignCheckType) {
     SemanticVisitor semantic_visitor;
     ExpectThrow(ast->accept(&semantic_visitor),
                 "3:14: Type mismatch: cannot assign bool to i");
+}
+
+TEST_F(CompilerTests, ArrayAssignToArrayCheckType) {
+    std::istringstream iss(R"(int main() {
+        int i[2];
+        i[0] = i;
+}
+)");
+
+    auto ast = Init(iss);
+    ASSERT_TRUE(ast);
+
+    auto prog = std::dynamic_pointer_cast<AST::Program>(ast);
+    ASSERT_TRUE(prog);
+    ASSERT_EQ(prog->globals.size(), 0);
+    ASSERT_EQ(prog->functions.size(), 1);
+
+    auto main_func =
+        std::dynamic_pointer_cast<AST::Function>(prog->functions[0]);
+    EXPECT_EQ(main_func->name, "main");
+    EXPECT_EQ(main_func->return_type, AST::Type::Int());
+    EXPECT_EQ(main_func->args.size(), 0);
+    EXPECT_EQ(main_func->body.size(), 2);
+
+    SemanticVisitor semantic_visitor;
+    ExpectThrow(ast->accept(&semantic_visitor),
+                "3:14: Type mismatch: cannot assign int[2] to i");
 }

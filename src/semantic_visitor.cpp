@@ -173,7 +173,8 @@ void SemanticVisitor::visit(AST::ArrayAssignment* node) {
     node->index->accept(this);
     node->expr->accept(this);
 
-    if (entry->type != node->expr->type) {
+    if (node->expr->type.is_array ||
+        entry->type.base != node->expr->type.base) {
         Error(node, "Type mismatch: cannot assign ", node->expr->type, " to ",
               node->name);
     }

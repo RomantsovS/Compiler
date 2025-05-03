@@ -31,6 +31,7 @@
 
 #include <memory>
 #include <string_view>
+#include <unordered_map>
 
 #include "location.hh"
 #include "scanner.h"
@@ -41,7 +42,7 @@
 
 namespace AST {
 class ASTNode;
-}
+}  // namespace AST
 
 namespace EzAquarii {
 
@@ -92,10 +93,107 @@ class Interpreter {
 
     void ScannerLog(std::string_view msg) const;
 
-   private:
+    // functions
+    std::shared_ptr<AST::ASTNode> make_program(
+        std::shared_ptr<AST::Statements> top_level_list);
+
+    std::shared_ptr<AST::Statements> make_empty_top_level_list();
+
+    std::shared_ptr<AST::Statements> append_top_level(
+        std::shared_ptr<AST::Statements> top_level_list,
+        std::shared_ptr<AST::ASTNode> stmt);
+
+    std::shared_ptr<AST::ASTNode> make_function(
+        AST::Type return_type, const std::string& name,
+        std::shared_ptr<AST::Params> params,
+        std::shared_ptr<AST::Statements> list);
+
+    std::shared_ptr<AST::ASTNode> make_function_call(
+        const std::string& name, std::shared_ptr<AST::Statements> args);
+
+    std::shared_ptr<AST::Statements> make_empty_arg_list();
+
+    std::shared_ptr<AST::Statements> make_arg_list(
+        std::shared_ptr<AST::ASTNode> stmt);
+
+    std::shared_ptr<AST::Statements> append_arg(
+        std::shared_ptr<AST::Statements> args,
+        std::shared_ptr<AST::ASTNode> stmt);
+
+    std::shared_ptr<AST::Statements> make_empty_stmt_list();
+
+    std::shared_ptr<AST::Statements> append_stmt(
+        std::shared_ptr<AST::Statements> list,
+        std::shared_ptr<AST::ASTNode> stmt);
+
+    std::shared_ptr<AST::Params> make_empty_param_list();
+
+    std::shared_ptr<AST::Params> make_param_list(AST::Type type,
+                                                 const std::string& name);
+
+    std::shared_ptr<AST::Params> append_param(
+        std::shared_ptr<AST::Params> params, AST::Type type,
+        const std::string& name);
+
+    std::shared_ptr<AST::ASTNode> make_return(
+        std::shared_ptr<AST::ASTNode> stmt);
+
+    std::shared_ptr<AST::ASTNode> make_decl(AST::Type type,
+                                            const std::string& name);
+
+    std::shared_ptr<AST::ASTNode> make_integer(uint64_t value);
+
+    std::shared_ptr<AST::ASTNode> make_assignment(
+        const std::string& var, std::shared_ptr<AST::ASTNode> st);
+
+    std::shared_ptr<AST::ASTNode> make_print(std::shared_ptr<AST::ASTNode> st);
+
+    std::shared_ptr<AST::ASTNode> make_string_literal(
+        const std::string& string);
+
+    std::shared_ptr<AST::ASTNode> make_bool_literal(const bool value);
+
+    std::shared_ptr<AST::ASTNode> make_var(const std::string& var);
+
+    std::shared_ptr<AST::ASTNode> make_arith_op(
+        const std::string& op, std::shared_ptr<AST::ASTNode> lhs,
+        std::shared_ptr<AST::ASTNode> rhs);
+
+    std::shared_ptr<AST::ASTNode> make_logic_op(
+        const std::string& op, std::shared_ptr<AST::ASTNode> lhs,
+        std::shared_ptr<AST::ASTNode> rhs);
+
+    std::shared_ptr<AST::ASTNode> make_if(
+        std::shared_ptr<AST::ASTNode> condition,
+        std::shared_ptr<AST::ASTNode> then_branch,
+        std::shared_ptr<AST::ASTNode> else_branch);
+
+    std::shared_ptr<AST::ASTNode> make_while(
+        std::shared_ptr<AST::ASTNode> condition,
+        std::shared_ptr<AST::ASTNode> stmt);
+
+    std::shared_ptr<AST::ASTNode> make_while(
+        std::shared_ptr<AST::ASTNode> condition,
+        std::shared_ptr<AST::Statements> list);
+
+    std::shared_ptr<AST::ASTNode> make_array_declaration(
+        const std::string& name, const AST::Type& type);
+
+    std::shared_ptr<AST::ASTNode> make_array_access(
+        const std::string& name, std::shared_ptr<AST::ASTNode> expr);
+
+    std::shared_ptr<AST::ASTNode> make_array_assignment(
+        const std::string& name, std::shared_ptr<AST::ASTNode> index,
+        std::shared_ptr<AST::ASTNode> expr);
+
+    std::shared_ptr<AST::ASTNode> with_location(
+        std::shared_ptr<AST::ASTNode> node, const EzAquarii::location& loc);
+
     Scanner scanner_;
     Parser parser_;
     location loc_;
+
+    std::unordered_map<std::string, std::shared_ptr<AST::ASTNode>> name_to_func;
 
     int scanner_debug_level = 0;
     int parser_debug_level = 0;

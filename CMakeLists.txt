@@ -26,7 +26,6 @@ target_include_directories(compiler_frontend PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
 target_include_directories(compiler_frontend PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
 add_library(compiler_lib
-  "src/ast/helpers.cpp"
   "src/interpreter.cpp"
   "src/pretty_print_visitor.cpp"
   "src/print_visitor.cpp"

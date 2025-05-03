@@ -15,7 +15,7 @@
     #include <stdint.h>
     #include "ast/ast.h"
     #include "ast/type.h"
-    #include "ast/helpers.h"
+    #include "ast/name_type.h"
 
     using namespace std;
 
@@ -93,7 +93,7 @@
 
 program:
     top_level_list {
-        result = with_location(AST::make_program($1), @1);
+        result = driver.with_location(driver.make_program($1), @1);
     }
     ;
 
@@ -104,10 +104,10 @@ top_level:
 
 top_level_list:
     top_level_list top_level {
-        $$ = AST::append_top_level($1, $2);
+        $$ = driver.append_top_level($1, $2);
     }
     | /* empty */ {
-        $$ = AST::make_empty_top_level_list();
+        $$ = driver.make_empty_top_level_list();
     }
     ;
 
@@ -117,7 +117,7 @@ global:
 
 function:
     type ID LEFTPAR param_list RIGHTPAR block { 
-        $$ = with_location(AST::make_function($1, $2, $4, $6), @1);
+        $$ = driver.with_location(driver.make_function($1, $2, $4, $6), @1);
     }
     ;
 
@@ -138,31 +138,31 @@ type:
 
 param_list:
     /* empty */ {
-        $$ = AST::make_empty_param_list();
+        $$ = driver.make_empty_param_list();
     }
     | type ID {
-        $$ = AST::make_param_list($1, $2);
+        $$ = driver.make_param_list($1, $2);
     }
     | param_list COMMA type ID {
-        $$ = AST::append_param($1, $3, $4);
+        $$ = driver.append_param($1, $3, $4);
     }
     ;
 
 function_call:
     ID LEFTPAR arg_list RIGHTPAR { 
-        $$ = with_location(AST::make_function_call($1, $3), @1);
+        $$ = driver.with_location(driver.make_function_call($1, $3), @1);
     }
     ;
 
 arg_list:
     /* empty */ {
-        $$ = AST::make_empty_arg_list();
+        $$ = driver.make_empty_arg_list();
     }
     | expr {
-        $$ = AST::make_arg_list($1);
+        $$ = driver.make_arg_list($1);
     }
     | arg_list COMMA expr {
-        $$ = AST::append_arg($1, $3);
+        $$ = driver.append_arg($1, $3);
     }
     ;
 
@@ -174,28 +174,28 @@ block:
 
 stmt_list:
     stmt_list stmt {
-        $$ = AST::append_stmt($1, $2);
+        $$ = driver.append_stmt($1, $2);
     }
     | /* empty */ {
-        $$ = AST::make_empty_stmt_list();
+        $$ = driver.make_empty_stmt_list();
     }
     ;
 
 while:
     WHILE LEFTPAR expr RIGHTPAR stmt {
-        $$ = with_location(AST::make_while($3, $5), @1);
+        $$ = driver.with_location(driver.make_while($3, $5), @1);
     }
     | WHILE LEFTPAR expr RIGHTPAR block {
-        $$ = with_location(AST::make_while($3, $5), @1);
+        $$ = driver.with_location(driver.make_while($3, $5), @1);
     }
     ;
 
 if:
     IF LEFTPAR expr RIGHTPAR stmt {
-        $$ = with_location(AST::make_if($3, $5, nullptr), @1);
+        $$ = driver.with_location(driver.make_if($3, $5, nullptr), @1);
     }
     | IF LEFTPAR expr RIGHTPAR stmt ELSE stmt {
-        $$ = with_location(AST::make_if($3, $5, $7), @1);
+        $$ = driver.with_location(driver.make_if($3, $5, $7), @1);
     }
     ;
 
@@ -207,61 +207,61 @@ stmt:
     | if
     | print_stmt
     | RETURN expr SEMICOLON {
-        $$ = with_location(AST::make_return($2), @1);
+        $$ = driver.with_location(driver.make_return($2), @1);
     }
     | ID LEFTBRACKET expr RIGHTBRACKET EQUAL expr SEMICOLON {
-        $$ = with_location(AST::make_array_assignment($1, $3, $6), @5);
+        $$ = driver.with_location(driver.make_array_assignment($1, $3, $6), @5);
     }
     ;
 
 declaration:
     type ID SEMICOLON {
-		$$ = with_location(AST::make_decl($1, $2), @1);
+		$$ = driver.with_location(driver.make_decl($1, $2), @1);
     }
     | type ID LEFTBRACKET NUMBER RIGHTBRACKET SEMICOLON {
-        $$ = with_location(AST::make_array_declaration($2, AST::Type::IntArray($4)), @1);
+        $$ = driver.with_location(driver.make_array_declaration($2, AST::Type::IntArray($4)), @1);
     }
     ;
 
 assignment:
     ID EQUAL expr SEMICOLON {
-        $$ = with_location(AST::make_assignment($1, $3), @2);
+        $$ = driver.with_location(driver.make_assignment($1, $3), @2);
     }
     ;
 
 print_stmt:
     PRINT LEFTPAR expr RIGHTPAR SEMICOLON {
-        $$ = with_location(AST::make_print($3), @1);
+        $$ = driver.with_location(driver.make_print($3), @1);
     }
     ;
 
 literal:
     STRING {
-        $$ = with_location(AST::make_string_literal($1), @1);
+        $$ = driver.with_location(driver.make_string_literal($1), @1);
     }
     | TRUE {
-        $$ = with_location(AST::make_bool_literal($1), @1);
+        $$ = driver.with_location(driver.make_bool_literal($1), @1);
     }
     | FALSE {
-        $$ = with_location(AST::make_bool_literal($1), @1);
+        $$ = driver.with_location(driver.make_bool_literal($1), @1);
     }
     | NUMBER {
-        $$ = with_location(AST::make_integer($1), @1);
+        $$ = driver.with_location(driver.make_integer($1), @1);
     }
     ;
 
 expr:
     LEFTPAR expr RIGHTPAR { $$ = $2; }
     | function_call { $$ = $1; }
-    | expr PLUS expr { $$ = with_location(AST::make_arith_op("+", $1, $3), @2); }
-    | expr MINUS expr { $$ = with_location(AST::make_arith_op("-", $1, $3), @2); }
-    | expr MULTIPLY expr { $$ = with_location(AST::make_arith_op("*", $1, $3), @2); }
-    | expr DIVIDE expr { $$ = with_location(AST::make_arith_op("/", $1, $3), @2); }
-    | expr MOD expr { $$ = with_location(AST::make_arith_op("%", $1, $3), @2); }
-    | expr LESS expr { $$ = with_location(AST::make_logic_op("<", $1, $3), @2); }
-    | expr GREATER expr { $$ = with_location(AST::make_logic_op(">", $1, $3), @2); }
-    | ID { $$ = with_location(AST::make_var($1), @1); }
-    | ID LEFTBRACKET expr RIGHTBRACKET { $$ = with_location(AST::make_array_access($1, $3), @2); }
+    | expr PLUS expr { $$ = driver.with_location(driver.make_arith_op("+", $1, $3), @2); }
+    | expr MINUS expr { $$ = driver.with_location(driver.make_arith_op("-", $1, $3), @2); }
+    | expr MULTIPLY expr { $$ = driver.with_location(driver.make_arith_op("*", $1, $3), @2); }
+    | expr DIVIDE expr { $$ = driver.with_location(driver.make_arith_op("/", $1, $3), @2); }
+    | expr MOD expr { $$ = driver.with_location(driver.make_arith_op("%", $1, $3), @2); }
+    | expr LESS expr { $$ = driver.with_location(driver.make_logic_op("<", $1, $3), @2); }
+    | expr GREATER expr { $$ = driver.with_location(driver.make_logic_op(">", $1, $3), @2); }
+    | ID { $$ = driver.with_location(driver.make_var($1), @1); }
+    | ID LEFTBRACKET expr RIGHTBRACKET { $$ = driver.with_location(driver.make_array_access($1, $3), @2); }
     | literal
     ;
 

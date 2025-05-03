@@ -42,8 +42,8 @@ void SemanticVisitor::visit(AST::Function* node) {
     symtable.PushScope();
 
     for (size_t i = 0; i < node->args.size(); ++i) {
-        if (auto* entry =
-                symtable.Declare(node->args[i].name, {node->args[i].type});
+        if (auto* entry = symtable.Declare(node->args[i].name,
+                                           {node->args[i].type, node->loc});
             entry) {
             Error(node, "Redeclaration of ", node->args[i].name,
                   ". Previously declared at ", entry->loc);
@@ -124,7 +124,8 @@ void SemanticVisitor::visit(AST::ArithOp* node) {
 }
 
 void SemanticVisitor::visit(AST::VarDef* node) {
-    if (auto* entry = symtable.Declare(node->name, {node->type}); entry) {
+    if (auto* entry = symtable.Declare(node->name, {node->type, node->loc});
+        entry) {
         Error(node, "Redeclaration of ", node->name,
               ". Previously declared at ", entry->loc);
     }

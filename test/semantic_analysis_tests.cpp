@@ -369,7 +369,7 @@ TEST_F(SemanticAnalysisTests, FunctionParamRedeclarationFail) {
 
     SemanticVisitor semantic_visitor;
     ExpectThrow(ast->accept(&semantic_visitor),
-                "2:9: Redeclaration of i. Previously declared at 0:0");
+                "2:9: Redeclaration of i. Previously declared at 2:9");
 }
 
 TEST_F(SemanticAnalysisTests, IfThenElseConditionTrueLiteralCheckTypeOK) {
@@ -549,4 +549,20 @@ TEST_F(SemanticAnalysisTests, ArithOpNumberAndBoolCheckTypeFail) {
     SemanticVisitor semantic_visitor;
     ExpectThrow(ast->accept(&semantic_visitor),
                 "2:11: Type mismatch: cannot perform + for int and bool");
+}
+
+TEST_F(SemanticAnalysisTests, VarDefRedeclarationFail) {
+    std::istringstream iss(R"(
+        int main() {
+        int i;
+        int i;
+}
+)");
+
+    auto ast = Init(iss);
+    ASSERT_TRUE(ast);
+
+    SemanticVisitor semantic_visitor;
+    ExpectThrow(ast->accept(&semantic_visitor),
+                "4:9: Redeclaration of i. Previously declared at 3:9");
 }

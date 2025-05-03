@@ -371,10 +371,10 @@ TEST_F(SemanticAnalysisTests, FunctionParamRedeclarationFail) {
     ExpectThrow(ast->accept(&semantic_visitor),
                 "2:9: Redeclaration of i. Previously declared at 0:0");
 }
-/*
-TEST_F(SemanticAnalysisTests, LogicOpTrueLiteralCheckTypeOK) {
+
+TEST_F(SemanticAnalysisTests, IfThenElseConditionTrueLiteralCheckTypeOK) {
     std::istringstream iss(R"(int main() {
-        if(true) {}
+        if(true) print(1);
 }
 )");
 
@@ -385,9 +385,9 @@ TEST_F(SemanticAnalysisTests, LogicOpTrueLiteralCheckTypeOK) {
     EXPECT_NO_THROW(ast->accept(&semantic_visitor));
 }
 
-TEST_F(SemanticAnalysisTests, LogicOpFalseLiteralCheckTypeOK) {
+TEST_F(SemanticAnalysisTests, IfThenElseConditionFalseLiteralCheckTypeOK) {
     std::istringstream iss(R"(int main() {
-        if(true) {}
+        if(false) print(1);
 }
 )");
 
@@ -398,10 +398,10 @@ TEST_F(SemanticAnalysisTests, LogicOpFalseLiteralCheckTypeOK) {
     EXPECT_NO_THROW(ast->accept(&semantic_visitor));
 }
 
-TEST_F(SemanticAnalysisTests, LogicOpVarCheckTypeOK) {
+TEST_F(SemanticAnalysisTests, IfThenElseConditionVarCheckTypeOK) {
     std::istringstream iss(R"(int main() {
         bool b;
-        if(b) {}
+        if(b) print(1);
 }
 )");
 
@@ -412,10 +412,10 @@ TEST_F(SemanticAnalysisTests, LogicOpVarCheckTypeOK) {
     EXPECT_NO_THROW(ast->accept(&semantic_visitor));
 }
 
-TEST_F(SemanticAnalysisTests, LogicOpVarCheckTypeFail) {
+TEST_F(SemanticAnalysisTests, IfThenElseConditionVarCheckTypeFail) {
     std::istringstream iss(R"(int main() {
         int i;
-        if(i) {}
+        if(i) print(1);
 }
 )");
 
@@ -424,12 +424,12 @@ TEST_F(SemanticAnalysisTests, LogicOpVarCheckTypeFail) {
 
     SemanticVisitor semantic_visitor;
     ExpectThrow(ast->accept(&semantic_visitor),
-                "3:11: Type mismatch: cannot assign bool to i");
+                "3:9: Type mismatch: condition is not bool");
 }
 
-TEST_F(SemanticAnalysisTests, LogicOpCheckTypeFail) {
+TEST_F(SemanticAnalysisTests, IfThenElseConditionNumberCheckTypeFail) {
     std::istringstream iss(R"(int main() {
-        if(1) {}
+        if(1) print(1);
 }
 )");
 
@@ -438,6 +438,5 @@ TEST_F(SemanticAnalysisTests, LogicOpCheckTypeFail) {
 
     SemanticVisitor semantic_visitor;
     ExpectThrow(ast->accept(&semantic_visitor),
-                "3:11: Type mismatch: cannot assign bool to i");
+                "2:9: Type mismatch: condition is not bool");
 }
-*/

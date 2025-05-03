@@ -84,6 +84,11 @@ void SemanticVisitor::visit(AST::FunCall* node) {
 void SemanticVisitor::visit(AST::IfThenElse* node) {
     node->condition->accept(this);
 
+    if (node->condition->type.is_array ||
+        node->condition->type.base != AST::BaseType::Bool) {
+        Error(node, "Type mismatch: condition is not bool");
+    }
+
     node->then_branch->accept(this);
     if (node->else_branch) {
         node->else_branch->accept(this);

@@ -46,6 +46,17 @@ TEST_F(ParserTests, SimpleMainOK) {
     EXPECT_EQ(main_func->body.size(), 0);
 }
 
+TEST_F(ParserTests, FunctionNestedFunctionDefinitionFail) {
+    std::istringstream iss(R"(
+        int main() {
+        int foo() {}
+}
+)");
+
+    auto ast = Init(iss);
+    ASSERT_FALSE(ast);
+}
+
 TEST_F(ParserTests, IfThenElseConditionTrueLiteralOK) {
     std::istringstream iss(R"(int main() {
         if(true) print(1);

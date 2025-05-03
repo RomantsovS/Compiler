@@ -51,6 +51,10 @@ void SemanticVisitor::visit(AST::Function* node) {
     }
     for (auto stmt : node->body) {
         stmt->accept(this);
+
+        if (std::dynamic_pointer_cast<AST::Function>(stmt)) {
+            Error(node, "Nested function definition is prohibited");
+        }
     }
 
     symtable.PopScope();

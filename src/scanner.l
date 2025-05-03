@@ -34,8 +34,6 @@
 	#include "parser.hpp"
 	#include "location.hh"
 
-	using namespace std;
-
 	// Original yyterminate() macro returns int. Since we're using Bison 3 variants
 	// as tokens, we must redefine it to change type from `int` to `Parser::semantic_type`
 	#define yyterminate() EzAquarii::Parser::make_END(driver_.get_location());

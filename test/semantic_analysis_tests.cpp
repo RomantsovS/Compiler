@@ -440,3 +440,58 @@ TEST_F(SemanticAnalysisTests, IfThenElseConditionNumberCheckTypeFail) {
     ExpectThrow(ast->accept(&semantic_visitor),
                 "2:9: Type mismatch: condition is not bool");
 }
+
+TEST_F(SemanticAnalysisTests, LogicOpTwoNumbersCheckTypeOK) {
+    std::istringstream iss(R"(int main() {
+        1 < 2;
+}
+)");
+
+    auto ast = Init(iss);
+    ASSERT_TRUE(ast);
+
+    SemanticVisitor semantic_visitor;
+    EXPECT_NO_THROW(ast->accept(&semantic_visitor));
+}
+
+TEST_F(SemanticAnalysisTests, LogicOpVarAndNumberCheckTypeOK) {
+    std::istringstream iss(R"(int main() {
+        int i;
+        i < 1;
+}
+)");
+
+    auto ast = Init(iss);
+    ASSERT_TRUE(ast);
+
+    SemanticVisitor semantic_visitor;
+    EXPECT_NO_THROW(ast->accept(&semantic_visitor));
+}
+
+TEST_F(SemanticAnalysisTests, LogicOpNumberAndVarCheckTypeOK) {
+    std::istringstream iss(R"(int main() {
+        int i;
+        i < 1;
+}
+)");
+
+    auto ast = Init(iss);
+    ASSERT_TRUE(ast);
+
+    SemanticVisitor semantic_visitor;
+    EXPECT_NO_THROW(ast->accept(&semantic_visitor));
+}
+
+TEST_F(SemanticAnalysisTests, LogicOpNumberAndBoolCheckTypeFail) {
+    std::istringstream iss(R"(int main() {
+        1 < true;
+}
+)");
+
+    auto ast = Init(iss);
+    ASSERT_TRUE(ast);
+
+    SemanticVisitor semantic_visitor;
+    ExpectThrow(ast->accept(&semantic_visitor),
+                "2:11: Type mismatch: cannot perform < for int and bool");
+}

@@ -33,19 +33,27 @@ void SemanticVisitor::visit(AST::Function* node) {
     std::transform(
         node->args.begin(), node->args.end(), params.begin(),
         [](const AST::NameType name_type) { return name_type.type; });
-    if (!symtable.Declare(node->name, {node->return_type, params})) {
-        Error(node, "Redeclaration of ", node->name);
+    if (auto* entry = symtable.Declare(node->name,
+                                       {node->return_type, node->loc, params});
+        entry) {
+        Error(node, "Redeclaration of ", node->name,
+              ". Previously declared at ", entry->loc);
     }
     symtable.PushScope();
 
     for (size_t i = 0; i < node->args.size(); ++i) {
-        if (!symtable.Declare(node->args[i].name, {node->args[i].type})) {
-            Error(node, "Redeclaration of ", node->args[i].name);
+        if (auto* entry =
+                symtable.Declare(node->args[i].name, {node->args[i].type});
+            entry) {
+            Error(node, "Redeclaration of ", node->args[i].name,
+                  ". Previously declared at ", entry->loc);
         }
     }
     for (auto stmt : node->body) {
         stmt->accept(this);
     }
+
+    symtable.PopScope();
 }
 
 void SemanticVisitor::visit(AST::Print* node) { node->st->accept(this); }
@@ -111,8 +119,9 @@ void SemanticVisitor::visit(AST::ArithOp* node) {
 }
 
 void SemanticVisitor::visit(AST::VarDef* node) {
-    if (!symtable.Declare(node->name, {node->type})) {
-        Error(node, "Redeclaration of ", node->name);
+    if (auto* entry = symtable.Declare(node->name, {node->type}); entry) {
+        Error(node, "Redeclaration of ", node->name,
+              ". Previously declared at ", entry->loc);
     }
 }
 
@@ -150,8 +159,9 @@ void SemanticVisitor::visit(AST::StringLiteral* node) {}
 void SemanticVisitor::visit(AST::BoolLiteral* node) {}
 
 void SemanticVisitor::visit(AST::ArrayDeclaration* node) {
-    if (!symtable.Declare(node->name, {node->type})) {
-        Error(node, "Redeclaration of ", node->name);
+    if (auto* entry = symtable.Declare(node->name, {node->type}); entry) {
+        Error(node, "Redeclaration of ", node->name,
+              ". Previously declared at ", entry->loc);
     }
 }
 

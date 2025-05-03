@@ -14,6 +14,7 @@
 
 struct SymbolEntry {
     AST::Type type;
+    AST::Location loc;
     std::vector<AST::Type> params;
 };
 
@@ -23,12 +24,12 @@ class Symtable {
 
     using ScopeMap = std::unordered_map<std::string, SymbolEntry>;
 
-    bool Declare(const std::string& name, const SymbolEntry& entry) {
-        if (scopes.back().count(name) != 0) {
-            return false;
+    SymbolEntry* Declare(const std::string& name, const SymbolEntry& entry) {
+        if (auto iter = scopes.back().find(name); iter != scopes.back().end()) {
+            return &iter->second;
         }
         scopes.back()[name] = entry;
-        return true;
+        return nullptr;
     }
 
     void PushScope() { scopes.push_back({}); }

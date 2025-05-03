@@ -264,7 +264,7 @@ TEST_F(SemanticAnalysisTests, AssignFromFunCallReturnCheckTypeFail) {
                 "5:11: Type mismatch: cannot assign bool to i");
 }
 
-TEST_F(SemanticAnalysisTests, ArrayAssignFromValueCheckTypeOK) {
+TEST_F(SemanticAnalysisTests, ArrayAssignmentFromValueCheckTypeOK) {
     std::istringstream iss(R"(int main() {
         int i[2];
         i[0] = 1;
@@ -278,7 +278,7 @@ TEST_F(SemanticAnalysisTests, ArrayAssignFromValueCheckTypeOK) {
     EXPECT_NO_THROW(ast->accept(&semantic_visitor));
 }
 
-TEST_F(SemanticAnalysisTests, ArrayAssignFromValueCheckTypeFail) {
+TEST_F(SemanticAnalysisTests, ArrayAssignmentFromValueCheckTypeFail) {
     std::istringstream iss(R"(int main() {
         int i[2];
         i[0] = true;
@@ -293,7 +293,7 @@ TEST_F(SemanticAnalysisTests, ArrayAssignFromValueCheckTypeFail) {
                 "3:14: Type mismatch: cannot assign bool to i");
 }
 
-TEST_F(SemanticAnalysisTests, ArrayAssignFromArrayCheckTypeFail) {
+TEST_F(SemanticAnalysisTests, ArrayAssignmentFromArrayCheckTypeFail) {
     std::istringstream iss(R"(int main() {
         int i[2];
         i[0] = i;
@@ -308,7 +308,7 @@ TEST_F(SemanticAnalysisTests, ArrayAssignFromArrayCheckTypeFail) {
                 "3:14: Type mismatch: cannot assign int[2] to i");
 }
 
-TEST_F(SemanticAnalysisTests, ArrayAssignFromFunCallReturnCheckTypeOK) {
+TEST_F(SemanticAnalysisTests, ArrayAssignmentFromFunCallReturnCheckTypeOK) {
     std::istringstream iss(R"(
         int abs() { return 1; }
         int main() {
@@ -324,7 +324,7 @@ TEST_F(SemanticAnalysisTests, ArrayAssignFromFunCallReturnCheckTypeOK) {
     EXPECT_NO_THROW(ast->accept(&semantic_visitor));
 }
 
-TEST_F(SemanticAnalysisTests, ArrayAssignFromFunCallReturnCheckTypeFail) {
+TEST_F(SemanticAnalysisTests, ArrayAssignmentFromFunCallReturnCheckTypeFail) {
     std::istringstream iss(R"(
         bool abs() { return true; }
         int main() {
@@ -339,6 +339,21 @@ TEST_F(SemanticAnalysisTests, ArrayAssignFromFunCallReturnCheckTypeFail) {
     SemanticVisitor semantic_visitor;
     ExpectThrow(ast->accept(&semantic_visitor),
                 "5:11: Type mismatch: cannot assign bool to i");
+}
+
+TEST_F(SemanticAnalysisTests, ArrayAssignmentUndeclaredFail) {
+    std::istringstream iss(R"(
+        int main() {
+        i[10] = 0;
+}
+)");
+
+    auto ast = Init(iss);
+    ASSERT_TRUE(ast);
+
+    SemanticVisitor semantic_visitor;
+    ExpectThrow(ast->accept(&semantic_visitor),
+                "3:15: Undeclared array variable i");
 }
 
 TEST_F(SemanticAnalysisTests, FunctionRedeclarationFail) {

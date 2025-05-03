@@ -49,12 +49,22 @@ void SemanticVisitor::visit(AST::Function* node) {
                   ". Previously declared at ", entry->loc);
         }
     }
+
+    bool has_return = false;
     for (auto stmt : node->body) {
         stmt->accept(this);
 
         if (std::dynamic_pointer_cast<AST::Function>(stmt)) {
             Error(node, "Nested function definition is prohibited");
         }
+        if (!has_return && std::dynamic_pointer_cast<AST::Return>(stmt)) {
+            has_return = true;
+        }
+    }
+
+    if (node->return_type.base != AST::BaseType::Void && !has_return) {
+        Error(node, "non-void function ", node->name,
+              " does not return a value");
     }
 
     symtable.PopScope();

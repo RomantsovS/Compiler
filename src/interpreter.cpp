@@ -46,12 +46,23 @@ void Interpreter::switchInputStream(std::istream* is) {
     scanner_.switch_streams(is, NULL);
 }
 
-void Interpreter::increaseLocation(unsigned int length) {
+void Interpreter::ScannerAction(unsigned int length, std::string_view text) {
     loc_.step();
     loc_.columns(length);
-    cout << "increaseLocation(): " << loc_ << '\n';
+    if (scanner_debug_level > 0) {
+        std::cout << "Scanner: " << text << '\n';
+        cout << "increaseLocation(): " << loc_ << '\n';
+    }
 }
 
 void Interpreter::newline() { loc_.lines(1); }
 
 const location& Interpreter::get_location() const { return loc_; }
+
+void Interpreter::SetScannerDebugLevel(int level) {
+    scanner_debug_level = level;
+}
+
+void Interpreter::SetParserDebugLevel(int level) { parser_debug_level = level; }
+
+void Interpreter::ScannerLog(std::string_view msg) const {}

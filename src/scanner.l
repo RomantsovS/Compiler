@@ -40,7 +40,7 @@
 
 	// This will track current scanner location.
 	// Action is called when length of the token is known.
-	#define YY_USER_ACTION driver_.increaseLocation(yyleng);
+	#define YY_USER_ACTION driver_.ScannerAction(yyleng, yytext);
 	
 	// !!!WARNING!!!
 	// Location API is used, but the location is not initialized, 'cause I'm lazy. When making
@@ -62,151 +62,122 @@
 %%
 
 "void"      {
-                cout << "Scanner: void " << std::endl;
                 return EzAquarii::Parser::make_VOID(driver_.get_location()); 
             }
 
 "int"       {
-                cout << "Scanner: int " << std::endl;
                 return EzAquarii::Parser::make_INT(driver_.get_location()); 
             }
 
 "bool"      {
-                cout << "Scanner: bool " << std::endl;
                 return EzAquarii::Parser::make_BOOL(driver_.get_location()); 
             }
 
 "print"     {
-                cout << "Scanner: print " << std::endl;
                 return EzAquarii::Parser::make_PRINT(driver_.get_location()); 
             }
 
 "if"        {
-                cout << "Scanner: 'if'" << endl;
                 return EzAquarii::Parser::make_IF(driver_.get_location());
             }
 
 "else"      {
-                cout << "Scanner: 'else'" << endl;
                 return EzAquarii::Parser::make_ELSE(driver_.get_location());
             }
 
 "while"     {
-                cout << "Scanner: 'while'" << endl;
                 return EzAquarii::Parser::make_WHILE(driver_.get_location());
             }
 
 "return"    {
-                cout << "Scanner: 'return'" << endl;
                 return EzAquarii::Parser::make_RETURN(driver_.get_location());
             }
 
 "true"      {
-                cout << "Scanner: 'true'" << endl;
                 return EzAquarii::Parser::make_TRUE(true, driver_.get_location());
             }
 
 "false"     {
-                cout << "Scanner: 'false'" << endl;
                 return EzAquarii::Parser::make_FALSE(false, driver_.get_location());
             }
 
 "//".*      { /* skip single-line comment */ }
 
 \"([^\\"]|\\.)*\" {
-                cout << "Scanner: 'string'" << endl;
                 std::string raw_str(yytext);
                 raw_str = raw_str.substr(1, raw_str.length() - 2); // Strip quotes
                 return EzAquarii::Parser::make_STRING(raw_str, driver_.get_location());
                 }
 
 [a-zA-Z_][a-zA-Z0-9_]*  {
-						cout << "Scanner: identifier [" << yytext << "]" << endl;
                         return EzAquarii::Parser::make_ID(yytext, driver_.get_location()); 
                         }
             
 \(          {
-                cout << "Scanner: '('" << endl;
                 return EzAquarii::Parser::make_LEFTPAR(driver_.get_location());
             }
             
 \)          { 
-                cout << "Scanner: ')'" << endl;
                 return EzAquarii::Parser::make_RIGHTPAR(driver_.get_location());
             }
 
 \{          {
-                cout << "Scanner: '{'" << endl;
                 return EzAquarii::Parser::make_LEFTFIGPAR(driver_.get_location());
             }
             
 \}          { 
-                cout << "Scanner: '}'" << endl;
                 return EzAquarii::Parser::make_RIGHTFIGPAR(driver_.get_location());
             }
 
 "["         {
-                cout << "Scanner: '['" << endl;
                 return EzAquarii::Parser::make_LEFTBRACKET(driver_.get_location());
             }
             
-"]"         { 
-                cout << "Scanner: ']'" << endl;
+"]"         {
                 return EzAquarii::Parser::make_RIGHTBRACKET(driver_.get_location());
             }
             
 ;           {
-                cout << "Scanner: ';'" << endl;
                 return EzAquarii::Parser::make_SEMICOLON(driver_.get_location());
             }
             
 ,           {
-                cout << "Scanner: ','" << endl;
                 return EzAquarii::Parser::make_COMMA(driver_.get_location());
             }
 
 =           {
-                cout << "Scanner: '='" << endl;
                 return EzAquarii::Parser::make_EQUAL(driver_.get_location());
             }
 
 "+"         {
-                cout << "Scanner: '+'" << endl;
                 return EzAquarii::Parser::make_PLUS(driver_.get_location());
             }
 
 "-"         {
-                cout << "Scanner: '-'" << endl;
                 return EzAquarii::Parser::make_MINUS(driver_.get_location());
             }
 
 "*"         {
-                cout << "Scanner: '*'" << endl;
                 return EzAquarii::Parser::make_MULTIPLY(driver_.get_location());
             }
 
 "/"         {
-                cout << "Scanner: '/'" << endl;
                 return EzAquarii::Parser::make_DIVIDE(driver_.get_location());
             }
 
 "%"         {
-                cout << "Scanner: '%'" << endl;
                 return EzAquarii::Parser::make_MOD(driver_.get_location());
             }
 
 "<"         {
-                cout << "Scanner: '<'" << endl;
                 return EzAquarii::Parser::make_LESS(driver_.get_location());
             }
 
 ">"         {
-                cout << "Scanner: '<'" << endl;
                 return EzAquarii::Parser::make_GREATER(driver_.get_location());
             }
             
 [\t ]       {
-                //cout << "Scanner: whitechar (ignored)" << endl;
             }
 
 [\n]        {
@@ -214,7 +185,6 @@
             }
 
 [0-9]+      {
-                cout << "Scanner: decimal number: " << yytext << endl;
                 uint64_t number = strtoull(yytext, 0, 10);
                 return EzAquarii::Parser::make_NUMBER(number, driver_.get_location());
             }

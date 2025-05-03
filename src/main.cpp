@@ -34,6 +34,8 @@ int main() {
     std::shared_ptr<AST::ASTNode> ast;
     EzAquarii::Interpreter interpreter(ast);
 
+    interpreter.SetScannerDebugLevel(1);
+
     auto res = interpreter.parse();
     if (res) return res;
 

@@ -30,6 +30,7 @@
 #define INTERPRETER_H
 
 #include <memory>
+#include <string_view>
 
 #include "location.hh"
 #include "scanner.h"
@@ -77,19 +78,27 @@ class Interpreter {
     friend class Parser;
     friend class Scanner;
 
+    void SetScannerDebugLevel(int level);
+    void SetParserDebugLevel(int level);
+
    private:
     // Used internally by Scanner YY_USER_ACTION to update location indicator
-    void increaseLocation(unsigned int length);
+    void ScannerAction(unsigned int length, std::string_view text);
 
     void newline();
 
     // Used to get last Scanner location. Used in error messages.
     const location& get_location() const;
 
+    void ScannerLog(std::string_view msg) const;
+
    private:
     Scanner scanner_;
     Parser parser_;
     location loc_;
+
+    int scanner_debug_level = 0;
+    int parser_debug_level = 0;
 };
 
 }  // namespace EzAquarii

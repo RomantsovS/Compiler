@@ -612,3 +612,31 @@ TEST_F(SemanticAnalysisTests, ArrayDeclarationHideParentScopeOK) {
     SemanticVisitor semantic_visitor;
     EXPECT_NO_THROW(ast->accept(&semantic_visitor));
 }
+
+TEST_F(SemanticAnalysisTests, ArrayAccessUndeclaredVariableCheckOK) {
+    std::istringstream iss(R"(int main() {
+            int i[10];
+            i[0] = 1;
+        }
+        )");
+
+    auto ast = Init(iss);
+    ASSERT_TRUE(ast);
+
+    SemanticVisitor semantic_visitor;
+    EXPECT_NO_THROW(ast->accept(&semantic_visitor));
+}
+
+TEST_F(SemanticAnalysisTests, ArrayAccessUndeclaredVariableCheckFail) {
+    std::istringstream iss(R"(int main() {
+            i[0] = 1;
+        }
+        )");
+
+    auto ast = Init(iss);
+    ASSERT_TRUE(ast);
+
+    SemanticVisitor semantic_visitor;
+    ExpectThrow(ast->accept(&semantic_visitor),
+                "2:18: Undeclared array variable i");
+}

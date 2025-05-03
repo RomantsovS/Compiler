@@ -1,10 +1,8 @@
 int fire[256];
 
 int abs(int x) {
-    if (x < 0)
-        return (0) - (x);
-    else
-        return x;
+    if (x < 0) return (0) - (x);
+    return x;
 }
 
 void line_blur(int offset, int step, int nsteps) {
@@ -86,4 +84,5 @@ int main() {
         i = i + 1;
     }
     // }
+    return 0;
 }

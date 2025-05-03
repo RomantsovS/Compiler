@@ -87,7 +87,7 @@ void PrettyPrintVisitor::visit(AST::LogicOp* node) {
 
 void PrettyPrintVisitor::visit(AST::Return* node) {
     os_ << "return ";
-    node->statement->accept(this);
+    node->expr->accept(this);
     os_ << ";";
 }
 

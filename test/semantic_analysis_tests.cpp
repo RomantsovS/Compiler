@@ -412,7 +412,8 @@ TEST_F(SemanticAnalysisTests, FunctionParamRedeclarationFail) {
 
 TEST_F(SemanticAnalysisTests, FunctionVoidWithoutReturnOK) {
     std::istringstream iss(R"(
-        void main() {
+        void foo() {}
+        int main() {
         return 0;
 }
 )");
@@ -450,6 +451,35 @@ TEST_F(SemanticAnalysisTests, FunctionNonVoidWithoutReturnFail) {
     SemanticVisitor semantic_visitor;
     ExpectThrow(ast->accept(&semantic_visitor),
                 "2:9: non-void function main does not return a value");
+}
+
+TEST_F(SemanticAnalysisTests, FunctionCheckReturnTypeOK) {
+    std::istringstream iss(R"(
+        int main() {
+        return 1;
+}
+)");
+
+    auto ast = Init(iss);
+    ASSERT_TRUE(ast);
+
+    SemanticVisitor semantic_visitor;
+    EXPECT_NO_THROW(ast->accept(&semantic_visitor));
+}
+
+TEST_F(SemanticAnalysisTests, FunctionCheckReturnTypeFail) {
+    std::istringstream iss(R"(
+        int main() {
+        return true;
+}
+)");
+
+    auto ast = Init(iss);
+    ASSERT_TRUE(ast);
+
+    SemanticVisitor semantic_visitor;
+    ExpectThrow(ast->accept(&semantic_visitor),
+                "3:9: Type mismatch: main return type is int but got bool");
 }
 
 TEST_F(SemanticAnalysisTests, IfThenElseConditionTrueLiteralCheckTypeOK) {

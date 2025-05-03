@@ -4,13 +4,14 @@
 
 #include "../i_visitor.h"
 #include "ast.h"
+#include "expr.h"
 
 namespace AST {
 
 struct Return : public ASTNode {
     void accept(IASTVisitor* visitor) override { visitor->visit(this); }
 
-    std::shared_ptr<ASTNode> statement;
+    std::shared_ptr<Expr> expr;
 };
 
 }  // namespace AST

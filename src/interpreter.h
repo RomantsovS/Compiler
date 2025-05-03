@@ -136,7 +136,7 @@ class Interpreter {
         const std::string& name);
 
     std::shared_ptr<AST::ASTNode> make_return(
-        std::shared_ptr<AST::ASTNode> stmt);
+        std::shared_ptr<AST::ASTNode> expr);
 
     std::shared_ptr<AST::ASTNode> make_decl(AST::Type type,
                                             const std::string& name);

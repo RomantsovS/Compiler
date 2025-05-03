@@ -57,8 +57,14 @@ void SemanticVisitor::visit(AST::Function* node) {
         if (std::dynamic_pointer_cast<AST::Function>(stmt)) {
             Error(node, "Nested function definition is prohibited");
         }
-        if (!has_return && std::dynamic_pointer_cast<AST::Return>(stmt)) {
+        if (auto return_node = std::dynamic_pointer_cast<AST::Return>(stmt);
+            return_node) {
             has_return = true;
+            if (return_node->expr->type != node->return_type) {
+                Error(return_node.get(), "Type mismatch: ", node->name,
+                      " return type is ", node->return_type, " but got ",
+                      return_node->expr->type);
+            }
         }
     }
 
@@ -120,9 +126,7 @@ void SemanticVisitor::visit(AST::LogicOp* node) {
     }
 }
 
-void SemanticVisitor::visit(AST::Return* node) {
-    node->statement->accept(this);
-}
+void SemanticVisitor::visit(AST::Return* node) { node->expr->accept(this); }
 
 void SemanticVisitor::visit(AST::ArithOp* node) {
     node->lhs->accept(this);

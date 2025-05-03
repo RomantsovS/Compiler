@@ -218,10 +218,13 @@ std::shared_ptr<Params> Interpreter::append_param(
 }
 
 std::shared_ptr<ASTNode> Interpreter::make_return(
-    std::shared_ptr<ASTNode> stmt) {
+    std::shared_ptr<ASTNode> expr) {
     std::cout << "create ast return " << '\n';
     auto node = std::make_shared<Return>();
-    node->statement = stmt;
+    node->expr = std::dynamic_pointer_cast<Expr>(expr);
+    if (!node->expr) {
+        throw std::runtime_error("expr is not Expr node");
+    }
     return node;
 }
 

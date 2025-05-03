@@ -165,7 +165,8 @@ void SemanticVisitor::visit(AST::StringLiteral* node) {}
 void SemanticVisitor::visit(AST::BoolLiteral* node) {}
 
 void SemanticVisitor::visit(AST::ArrayDeclaration* node) {
-    if (auto* entry = symtable.Declare(node->name, {node->type}); entry) {
+    if (auto* entry = symtable.Declare(node->name, {node->type, node->loc});
+        entry) {
         Error(node, "Redeclaration of ", node->name,
               ". Previously declared at ", entry->loc);
     }

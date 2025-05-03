@@ -581,3 +581,34 @@ TEST_F(SemanticAnalysisTests, VarDefHideParentScopeOK) {
     SemanticVisitor semantic_visitor;
     EXPECT_NO_THROW(ast->accept(&semantic_visitor));
 }
+
+TEST_F(SemanticAnalysisTests, ArrayDeclarationRedeclarationSameScopeFail) {
+    std::istringstream iss(R"(
+        int main() {
+        int i[10];
+        int i[1];
+}
+)");
+
+    auto ast = Init(iss);
+    ASSERT_TRUE(ast);
+
+    SemanticVisitor semantic_visitor;
+    ExpectThrow(ast->accept(&semantic_visitor),
+                "4:9: Redeclaration of i. Previously declared at 3:9");
+}
+
+TEST_F(SemanticAnalysisTests, ArrayDeclarationHideParentScopeOK) {
+    std::istringstream iss(R"(
+        int i[10];
+        int main() {
+        int i[1];
+}
+)");
+
+    auto ast = Init(iss);
+    ASSERT_TRUE(ast);
+
+    SemanticVisitor semantic_visitor;
+    EXPECT_NO_THROW(ast->accept(&semantic_visitor));
+}

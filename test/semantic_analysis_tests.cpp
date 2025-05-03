@@ -38,7 +38,36 @@ class SemanticAnalysisTests : public ::testing::Test {
             std::runtime_error);                    \
     } while (0)
 
-TEST_F(SemanticAnalysisTests, UndeclaredVariableCheckOK) {
+TEST_F(SemanticAnalysisTests, VarUndeclaredVariableCheckOK) {
+    std::istringstream iss(R"(int main() {
+            int i;
+            int j;
+            i = j;
+        }
+        )");
+
+    auto ast = Init(iss);
+    ASSERT_TRUE(ast);
+
+    SemanticVisitor semantic_visitor;
+    EXPECT_NO_THROW(ast->accept(&semantic_visitor));
+}
+
+TEST_F(SemanticAnalysisTests, VarUndeclaredVariableCheckFail) {
+    std::istringstream iss(R"(int main() {
+            int i;
+            i = j;
+        }
+        )");
+
+    auto ast = Init(iss);
+    ASSERT_TRUE(ast);
+
+    SemanticVisitor semantic_visitor;
+    ExpectThrow(ast->accept(&semantic_visitor), "3:17: Undeclared variable j");
+}
+
+TEST_F(SemanticAnalysisTests, AssignUndeclaredVariableCheckOK) {
     std::istringstream iss(R"(int main() {
         int i;
         i = 1;
@@ -52,7 +81,7 @@ TEST_F(SemanticAnalysisTests, UndeclaredVariableCheckOK) {
     EXPECT_NO_THROW(ast->accept(&semantic_visitor));
 }
 
-TEST_F(SemanticAnalysisTests, UndeclaredVariableCheckFail) {
+TEST_F(SemanticAnalysisTests, AssignUndeclaredVariableCheckFail) {
     std::istringstream iss(R"(int main() {
         i = 1;
 }
@@ -65,7 +94,7 @@ TEST_F(SemanticAnalysisTests, UndeclaredVariableCheckFail) {
     ExpectThrow(ast->accept(&semantic_visitor), "2:11: Undeclared variable i");
 }
 
-TEST_F(SemanticAnalysisTests, UndeclaredFunctionCallCheckOK) {
+TEST_F(SemanticAnalysisTests, FunCallUndeclaredFuncCheckOK) {
     std::istringstream iss(R"(
         int foo() {}
         int main() {
@@ -80,7 +109,7 @@ TEST_F(SemanticAnalysisTests, UndeclaredFunctionCallCheckOK) {
     EXPECT_NO_THROW(ast->accept(&semantic_visitor));
 }
 
-TEST_F(SemanticAnalysisTests, UndeclaredFunctionCallCheckFail) {
+TEST_F(SemanticAnalysisTests, FunCallUndeclaredFuncCheckFail) {
     std::istringstream iss(R"(int main() {
         foo();
 }
@@ -93,7 +122,7 @@ TEST_F(SemanticAnalysisTests, UndeclaredFunctionCallCheckFail) {
     ExpectThrow(ast->accept(&semantic_visitor), "2:9: Undeclared func foo");
 }
 
-TEST_F(SemanticAnalysisTests, FunctionCallWrongNumberOfArgumentsCheckOK) {
+TEST_F(SemanticAnalysisTests, FunCallWrongNumberOfArgumentsCheckOK) {
     std::istringstream iss(R"(
         int abs(int i, int j) {}
         int main() {
@@ -108,7 +137,7 @@ TEST_F(SemanticAnalysisTests, FunctionCallWrongNumberOfArgumentsCheckOK) {
     EXPECT_NO_THROW(ast->accept(&semantic_visitor));
 }
 
-TEST_F(SemanticAnalysisTests, FunctionCallWrongNumberOfArgumentsCheckFail) {
+TEST_F(SemanticAnalysisTests, FunCallWrongNumberOfArgumentsCheckFail) {
     std::istringstream iss(R"(
         int abs(int i) {}
         int main() {
@@ -125,7 +154,7 @@ TEST_F(SemanticAnalysisTests, FunctionCallWrongNumberOfArgumentsCheckFail) {
         "4:9: Incorrect arguments number to call abs. Expected 1 but got 2");
 }
 
-TEST_F(SemanticAnalysisTests, FunctionCallWrongArgumentTypeCheckOK) {
+TEST_F(SemanticAnalysisTests, FunCallWrongArgumentTypeCheckOK) {
     std::istringstream iss(R"(
         int abs(int i) {}
         int main() {
@@ -140,7 +169,7 @@ TEST_F(SemanticAnalysisTests, FunctionCallWrongArgumentTypeCheckOK) {
     EXPECT_NO_THROW(ast->accept(&semantic_visitor));
 }
 
-TEST_F(SemanticAnalysisTests, FunctionCallWrongArgumentTypeCheckFail) {
+TEST_F(SemanticAnalysisTests, FunCallWrongArgumentTypeCheckFail) {
     std::istringstream iss(R"(
         int abs(int i) {}
         int main() {
@@ -157,7 +186,7 @@ TEST_F(SemanticAnalysisTests, FunctionCallWrongArgumentTypeCheckFail) {
                 "got bool");
 }
 
-TEST_F(SemanticAnalysisTests, ValueAssignToValueCheckTypeOK) {
+TEST_F(SemanticAnalysisTests, AssignFromValueCheckTypeOK) {
     std::istringstream iss(R"(int main() {
         int i;
         i = 1;
@@ -171,7 +200,7 @@ TEST_F(SemanticAnalysisTests, ValueAssignToValueCheckTypeOK) {
     EXPECT_NO_THROW(ast->accept(&semantic_visitor));
 }
 
-TEST_F(SemanticAnalysisTests, ValueAssignToValueCheckTypeFail) {
+TEST_F(SemanticAnalysisTests, AssignFromValueCheckTypeFail) {
     std::istringstream iss(R"(int main() {
         int i;
         i = true;
@@ -186,7 +215,7 @@ TEST_F(SemanticAnalysisTests, ValueAssignToValueCheckTypeFail) {
                 "3:11: Type mismatch: cannot assign bool to i");
 }
 
-TEST_F(SemanticAnalysisTests, ArrayAssignToValueCheckTypeFail) {
+TEST_F(SemanticAnalysisTests, AssignFromArrayCheckTypeFail) {
     std::istringstream iss(R"(int main() {
         int i;
         int j[2];
@@ -202,51 +231,7 @@ TEST_F(SemanticAnalysisTests, ArrayAssignToValueCheckTypeFail) {
                 "4:11: Type mismatch: cannot assign int[2] to i");
 }
 
-TEST_F(SemanticAnalysisTests, ValueAssignToArrayCheckTypeOK) {
-    std::istringstream iss(R"(int main() {
-        int i[2];
-        i[0] = 1;
-}
-)");
-
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    EXPECT_NO_THROW(ast->accept(&semantic_visitor));
-}
-
-TEST_F(SemanticAnalysisTests, ValueAssignToArrayCheckTypeFail) {
-    std::istringstream iss(R"(int main() {
-        int i[2];
-        i[0] = true;
-}
-)");
-
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    ExpectThrow(ast->accept(&semantic_visitor),
-                "3:14: Type mismatch: cannot assign bool to i");
-}
-
-TEST_F(SemanticAnalysisTests, ArrayAssignToArrayCheckTypeFail) {
-    std::istringstream iss(R"(int main() {
-        int i[2];
-        i[0] = i;
-}
-)");
-
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    ExpectThrow(ast->accept(&semantic_visitor),
-                "3:14: Type mismatch: cannot assign int[2] to i");
-}
-
-TEST_F(SemanticAnalysisTests, FunctionCallReturnAssignToValueCheckTypeOK) {
+TEST_F(SemanticAnalysisTests, AssignFromFunCallReturnCheckTypeOK) {
     std::istringstream iss(R"(
         bool abs() { return true; }
         int main() {
@@ -262,11 +247,88 @@ TEST_F(SemanticAnalysisTests, FunctionCallReturnAssignToValueCheckTypeOK) {
     EXPECT_NO_THROW(ast->accept(&semantic_visitor));
 }
 
-TEST_F(SemanticAnalysisTests, FunctionCallReturnAssignToValueCheckTypeFail) {
+TEST_F(SemanticAnalysisTests, AssignFromFunCallReturnCheckTypeFail) {
     std::istringstream iss(R"(
         bool abs() { return true; }
         int main() {
         int i;
+        i = abs();
+}
+)");
+
+    auto ast = Init(iss);
+    ASSERT_TRUE(ast);
+
+    SemanticVisitor semantic_visitor;
+    ExpectThrow(ast->accept(&semantic_visitor),
+                "5:11: Type mismatch: cannot assign bool to i");
+}
+
+TEST_F(SemanticAnalysisTests, ArrayAssignFromValueCheckTypeOK) {
+    std::istringstream iss(R"(int main() {
+        int i[2];
+        i[0] = 1;
+}
+)");
+
+    auto ast = Init(iss);
+    ASSERT_TRUE(ast);
+
+    SemanticVisitor semantic_visitor;
+    EXPECT_NO_THROW(ast->accept(&semantic_visitor));
+}
+
+TEST_F(SemanticAnalysisTests, ArrayAssignFromValueCheckTypeFail) {
+    std::istringstream iss(R"(int main() {
+        int i[2];
+        i[0] = true;
+}
+)");
+
+    auto ast = Init(iss);
+    ASSERT_TRUE(ast);
+
+    SemanticVisitor semantic_visitor;
+    ExpectThrow(ast->accept(&semantic_visitor),
+                "3:14: Type mismatch: cannot assign bool to i");
+}
+
+TEST_F(SemanticAnalysisTests, ArrayAssignFromArrayCheckTypeFail) {
+    std::istringstream iss(R"(int main() {
+        int i[2];
+        i[0] = i;
+}
+)");
+
+    auto ast = Init(iss);
+    ASSERT_TRUE(ast);
+
+    SemanticVisitor semantic_visitor;
+    ExpectThrow(ast->accept(&semantic_visitor),
+                "3:14: Type mismatch: cannot assign int[2] to i");
+}
+
+TEST_F(SemanticAnalysisTests, ArrayAssignFromFunCallReturnCheckTypeOK) {
+    std::istringstream iss(R"(
+        int abs() { return 1; }
+        int main() {
+        int i[10];
+        i[0] = abs();
+}
+)");
+
+    auto ast = Init(iss);
+    ASSERT_TRUE(ast);
+
+    SemanticVisitor semantic_visitor;
+    EXPECT_NO_THROW(ast->accept(&semantic_visitor));
+}
+
+TEST_F(SemanticAnalysisTests, ArrayAssignFromFunCallReturnCheckTypeFail) {
+    std::istringstream iss(R"(
+        bool abs() { return true; }
+        int main() {
+        int i[10];
         i = abs();
 }
 )");

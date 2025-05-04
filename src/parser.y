@@ -21,7 +21,7 @@
 
     namespace EzAquarii {
         class Scanner;
-        class Interpreter;
+        class Driver;
     }
 }
 
@@ -35,7 +35,7 @@
     #include <iostream>
     #include "scanner.h"
     #include "parser.hpp"
-    #include "interpreter.h"
+    #include "driver.h"
     #include "location.hh"
     
     // yylex() arguments are defined in parser.y
@@ -53,7 +53,7 @@
 %lex-param { EzAquarii::Scanner &scanner }
 
 %parse-param { EzAquarii::Scanner &scanner }
-%parse-param { EzAquarii::Interpreter &driver }
+%parse-param { EzAquarii::Driver &driver }
 %parse-param { std::shared_ptr<AST::ASTNode>& result }
 
 %locations

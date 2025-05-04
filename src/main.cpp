@@ -23,7 +23,7 @@
 #include "ast/type.h"
 #include "ast/var.h"
 #include "ast/while.h"
-#include "interpreter.h"
+#include "driver.h"
 #include "parser.hpp"
 #include "pretty_print_visitor.h"
 #include "print_visitor.h"
@@ -32,12 +32,12 @@
 
 int main() {
     std::shared_ptr<AST::ASTNode> ast;
-    EzAquarii::Interpreter interpreter(ast);
+    EzAquarii::Driver driver(ast);
 
-    interpreter.SetScannerDebugLevel(1);
-    interpreter.SetParserDebugLevel(1);
+    driver.SetScannerDebugLevel(1);
+    driver.SetParserDebugLevel(1);
 
-    auto res = interpreter.parse();
+    auto res = driver.parse();
     if (res) return res;
 
     std::cout << "\n\n";

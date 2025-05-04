@@ -26,8 +26,8 @@
  *
  */
 
-#ifndef INTERPRETER_H
-#define INTERPRETER_H
+#ifndef DRIVER_H
+#define DRIVER_H
 
 #include <memory>
 #include <string_view>
@@ -56,9 +56,9 @@ namespace EzAquarii {
  * I know that the AST is a bit too strong word for a simple
  * vector with nodes, but this is only an example. Get off me.
  */
-class Interpreter {
+class Driver {
    public:
-    Interpreter(std::shared_ptr<AST::ASTNode>& ast);
+    Driver(std::shared_ptr<AST::ASTNode>& ast);
 
     /**
      * Run parser. Results are stored inside.
@@ -201,4 +201,4 @@ class Interpreter {
 
 }  // namespace EzAquarii
 
-#endif  // INTERPRETER_H
+#endif  // DRIVER_H

@@ -26,7 +26,7 @@
  *
  */
 
-#include "interpreter.h"
+#include "driver.h"
 
 #include <algorithm>
 #include <sstream>
@@ -55,19 +55,19 @@ namespace EzAquarii {
 
 using namespace AST;
 
-Interpreter::Interpreter(std::shared_ptr<ASTNode>& ast)
+Driver::Driver(std::shared_ptr<ASTNode>& ast)
     : scanner_(*this), parser_(scanner_, *this, ast) {}
 
-int Interpreter::parse() {
+int Driver::parse() {
     // parser_.set_debug_level(1);
     return parser_.parse();
 }
 
-void Interpreter::switchInputStream(std::istream* is) {
+void Driver::switchInputStream(std::istream* is) {
     scanner_.switch_streams(is, NULL);
 }
 
-void Interpreter::ScannerAction(unsigned int length, std::string_view text) {
+void Driver::ScannerAction(unsigned int length, std::string_view text) {
     loc_.step();
     loc_.columns(length);
     if (scanner_debug_level > 0) {
@@ -76,19 +76,17 @@ void Interpreter::ScannerAction(unsigned int length, std::string_view text) {
     }
 }
 
-void Interpreter::newline() { loc_.lines(1); }
+void Driver::newline() { loc_.lines(1); }
 
-const location& Interpreter::get_location() const { return loc_; }
+const location& Driver::get_location() const { return loc_; }
 
-void Interpreter::SetScannerDebugLevel(int level) {
-    scanner_debug_level = level;
-}
+void Driver::SetScannerDebugLevel(int level) { scanner_debug_level = level; }
 
-void Interpreter::SetParserDebugLevel(int level) { parser_debug_level = level; }
+void Driver::SetParserDebugLevel(int level) { parser_debug_level = level; }
 
-void Interpreter::ScannerLog(std::string_view msg) const {}
+void Driver::ScannerLog(std::string_view msg) const {}
 
-std::shared_ptr<ASTNode> Interpreter::make_program(
+std::shared_ptr<ASTNode> Driver::make_program(
     std::shared_ptr<Statements> top_level_list) {
     std::cout << "create ast program " << '\n';
     auto node = std::make_shared<Program>();
@@ -102,11 +100,11 @@ std::shared_ptr<ASTNode> Interpreter::make_program(
     return node;
 }
 
-std::shared_ptr<Statements> Interpreter::make_empty_top_level_list() {
+std::shared_ptr<Statements> Driver::make_empty_top_level_list() {
     return std::make_shared<Statements>();
 }
 
-std::shared_ptr<Statements> Interpreter::append_top_level(
+std::shared_ptr<Statements> Driver::append_top_level(
     std::shared_ptr<Statements> top_level_list, std::shared_ptr<ASTNode> stmt) {
     std::cout << "call ast append_function, functions initialized: "
               << static_cast<bool>(top_level_list) << '\n';
@@ -117,7 +115,7 @@ std::shared_ptr<Statements> Interpreter::append_top_level(
     return top_level_list;
 }
 
-std::shared_ptr<ASTNode> Interpreter::make_function(
+std::shared_ptr<ASTNode> Driver::make_function(
     Type return_type, const std::string& name, std::shared_ptr<Params> params,
     std::shared_ptr<Statements> list) {
     std::cout << "create ast function " << name << '\n';
@@ -133,7 +131,7 @@ std::shared_ptr<ASTNode> Interpreter::make_function(
     return node;
 }
 
-std::shared_ptr<ASTNode> Interpreter::make_function_call(
+std::shared_ptr<ASTNode> Driver::make_function_call(
     const std::string& name, std::shared_ptr<Statements> args) {
     std::cout << "create ast function call " << name << '\n';
     auto node = std::make_shared<FunCall>();
@@ -153,21 +151,21 @@ std::shared_ptr<ASTNode> Interpreter::make_function_call(
     return node;
 }
 
-std::shared_ptr<Statements> Interpreter::make_empty_arg_list() {
-    std::cout << "call ast Interpreter::make_empty_arg_list" << '\n';
+std::shared_ptr<Statements> Driver::make_empty_arg_list() {
+    std::cout << "call ast Driver::make_empty_arg_list" << '\n';
     return std::make_shared<Statements>();
 }
 
-std::shared_ptr<Statements> Interpreter::make_arg_list(
+std::shared_ptr<Statements> Driver::make_arg_list(
     std::shared_ptr<ASTNode> stmt) {
-    std::cout << "call ast Interpreter::make_arg_list" << '\n';
+    std::cout << "call ast Driver::make_arg_list" << '\n';
     auto args = make_empty_arg_list();
     args->push_back(stmt);
     return args;
 }
 
-std::shared_ptr<Statements> Interpreter::append_arg(
-    std::shared_ptr<Statements> args, std::shared_ptr<ASTNode> stmt) {
+std::shared_ptr<Statements> Driver::append_arg(std::shared_ptr<Statements> args,
+                                               std::shared_ptr<ASTNode> stmt) {
     std::cout << "call ast append_arg, args initialized: "
               << static_cast<bool>(args) << '\n';
     if (!args) {
@@ -177,12 +175,12 @@ std::shared_ptr<Statements> Interpreter::append_arg(
     return args;
 }
 
-std::shared_ptr<Statements> Interpreter::make_empty_stmt_list() {
-    std::cout << "call ast Interpreter::make_empty_stmt_list" << '\n';
+std::shared_ptr<Statements> Driver::make_empty_stmt_list() {
+    std::cout << "call ast Driver::make_empty_stmt_list" << '\n';
     return std::make_shared<Statements>();
 }
 
-std::shared_ptr<Statements> Interpreter::append_stmt(
+std::shared_ptr<Statements> Driver::append_stmt(
     std::shared_ptr<Statements> list, std::shared_ptr<ASTNode> stmt) {
     std::cout << "call ast append_stmt, list initialized: "
               << static_cast<bool>(list) << '\n';
@@ -193,21 +191,22 @@ std::shared_ptr<Statements> Interpreter::append_stmt(
     return list;
 }
 
-std::shared_ptr<Params> Interpreter::make_empty_param_list() {
-    std::cout << "call ast Interpreter::make_empty_param_list" << '\n';
+std::shared_ptr<Params> Driver::make_empty_param_list() {
+    std::cout << "call ast Driver::make_empty_param_list" << '\n';
     return std::make_shared<Params>();
 }
 
-std::shared_ptr<Params> Interpreter::make_param_list(Type type,
-                                                     const std::string& name) {
-    std::cout << "call ast Interpreter::make_param_list" << '\n';
-    auto params = Interpreter::make_empty_param_list();
+std::shared_ptr<Params> Driver::make_param_list(Type type,
+                                                const std::string& name) {
+    std::cout << "call ast Driver::make_param_list" << '\n';
+    auto params = Driver::make_empty_param_list();
     params->push_back({name, type});
     return params;
 }
 
-std::shared_ptr<Params> Interpreter::append_param(
-    std::shared_ptr<Params> params, Type type, const std::string& name) {
+std::shared_ptr<Params> Driver::append_param(std::shared_ptr<Params> params,
+                                             Type type,
+                                             const std::string& name) {
     std::cout << "call ast append_param, params initialized: "
               << static_cast<bool>(params) << '\n';
     if (!params) {
@@ -217,8 +216,7 @@ std::shared_ptr<Params> Interpreter::append_param(
     return params;
 }
 
-std::shared_ptr<ASTNode> Interpreter::make_return(
-    std::shared_ptr<ASTNode> expr) {
+std::shared_ptr<ASTNode> Driver::make_return(std::shared_ptr<ASTNode> expr) {
     std::cout << "create ast return " << '\n';
     auto node = std::make_shared<Return>();
     node->expr = std::dynamic_pointer_cast<Expr>(expr);
@@ -228,8 +226,7 @@ std::shared_ptr<ASTNode> Interpreter::make_return(
     return node;
 }
 
-std::shared_ptr<ASTNode> Interpreter::make_decl(Type type,
-                                                const std::string& name) {
+std::shared_ptr<ASTNode> Driver::make_decl(Type type, const std::string& name) {
     std::cout << "create ast decl " << name << '\n';
     auto node = std::make_shared<VarDef>();
     node->type = type;
@@ -237,13 +234,13 @@ std::shared_ptr<ASTNode> Interpreter::make_decl(Type type,
     return node;
 }
 
-std::shared_ptr<ASTNode> Interpreter::make_integer(uint64_t value) {
+std::shared_ptr<ASTNode> Driver::make_integer(uint64_t value) {
     std::cout << "create ast integer " << value << '\n';
     auto node = std::make_shared<Integer>(value);
     return node;
 }
 
-std::shared_ptr<ASTNode> Interpreter::make_assignment(
+std::shared_ptr<ASTNode> Driver::make_assignment(
     const std::string& var, std::shared_ptr<ASTNode> expr) {
     std::cout << "create ast assign " << var << '\n';
     auto node = std::make_shared<Assign>();
@@ -255,14 +252,14 @@ std::shared_ptr<ASTNode> Interpreter::make_assignment(
     return node;
 }
 
-std::shared_ptr<ASTNode> Interpreter::make_print(std::shared_ptr<ASTNode> st) {
+std::shared_ptr<ASTNode> Driver::make_print(std::shared_ptr<ASTNode> st) {
     std::cout << "create ast print " << '\n';
     auto node = std::make_shared<Print>();
     node->st = st;
     return node;
 }
 
-std::shared_ptr<ASTNode> Interpreter::make_string_literal(
+std::shared_ptr<ASTNode> Driver::make_string_literal(
     const std::string& string) {
     std::cout << "create ast string literal " << string << '\n';
     auto node = std::make_shared<StringLiteral>();
@@ -270,22 +267,22 @@ std::shared_ptr<ASTNode> Interpreter::make_string_literal(
     return node;
 }
 
-std::shared_ptr<ASTNode> Interpreter::make_bool_literal(const bool value) {
+std::shared_ptr<ASTNode> Driver::make_bool_literal(const bool value) {
     std::cout << "create ast bool literal " << value << '\n';
     auto node = std::make_shared<BoolLiteral>(value);
     return node;
 }
 
-std::shared_ptr<ASTNode> Interpreter::make_var(const std::string& var) {
+std::shared_ptr<ASTNode> Driver::make_var(const std::string& var) {
     std::cout << "create ast var " << var << '\n';
     auto node = std::make_shared<Var>();
     node->name = var;
     return node;
 }
 
-std::shared_ptr<ASTNode> Interpreter::make_arith_op(
-    const std::string& op, std::shared_ptr<ASTNode> lhs,
-    std::shared_ptr<ASTNode> rhs) {
+std::shared_ptr<ASTNode> Driver::make_arith_op(const std::string& op,
+                                               std::shared_ptr<ASTNode> lhs,
+                                               std::shared_ptr<ASTNode> rhs) {
     std::cout << "create ast arith_op " << '\n';
     auto node = std::make_shared<ArithOp>();
     node->lhs = std::dynamic_pointer_cast<Expr>(lhs);
@@ -301,9 +298,9 @@ std::shared_ptr<ASTNode> Interpreter::make_arith_op(
     return node;
 }
 
-std::shared_ptr<ASTNode> Interpreter::make_logic_op(
-    const std::string& op, std::shared_ptr<ASTNode> lhs,
-    std::shared_ptr<ASTNode> rhs) {
+std::shared_ptr<ASTNode> Driver::make_logic_op(const std::string& op,
+                                               std::shared_ptr<ASTNode> lhs,
+                                               std::shared_ptr<ASTNode> rhs) {
     std::cout << "create ast logic_op " << '\n';
     auto node = std::make_shared<LogicOp>();
     node->lhs = std::dynamic_pointer_cast<Expr>(lhs);
@@ -319,9 +316,9 @@ std::shared_ptr<ASTNode> Interpreter::make_logic_op(
     return node;
 }
 
-std::shared_ptr<ASTNode> Interpreter::make_if(
-    std::shared_ptr<ASTNode> condition, std::shared_ptr<ASTNode> then_branch,
-    std::shared_ptr<ASTNode> else_branch) {
+std::shared_ptr<ASTNode> Driver::make_if(std::shared_ptr<ASTNode> condition,
+                                         std::shared_ptr<ASTNode> then_branch,
+                                         std::shared_ptr<ASTNode> else_branch) {
     std::cout << "create ast if_then_else " << '\n';
     auto node = std::make_shared<IfThenElse>();
     node->condition = std::dynamic_pointer_cast<Expr>(condition);
@@ -333,7 +330,7 @@ std::shared_ptr<ASTNode> Interpreter::make_if(
     return node;
 }
 
-std::shared_ptr<ASTNode> Interpreter::make_while(
+std::shared_ptr<ASTNode> Driver::make_while(
     std::shared_ptr<ASTNode> condition, std::shared_ptr<ASTNode> statement) {
     std::cout << "create ast while " << '\n';
     auto node = std::make_shared<While>();
@@ -342,8 +339,8 @@ std::shared_ptr<ASTNode> Interpreter::make_while(
     return node;
 }
 
-std::shared_ptr<ASTNode> Interpreter::make_while(
-    std::shared_ptr<ASTNode> condition, std::shared_ptr<Statements> list) {
+std::shared_ptr<ASTNode> Driver::make_while(std::shared_ptr<ASTNode> condition,
+                                            std::shared_ptr<Statements> list) {
     std::cout << "create ast while with block " << '\n';
     auto node = std::make_shared<While>();
     node->condition = condition;
@@ -351,8 +348,8 @@ std::shared_ptr<ASTNode> Interpreter::make_while(
     return node;
 }
 
-std::shared_ptr<ASTNode> Interpreter::make_array_declaration(
-    const std::string& name, const Type& type) {
+std::shared_ptr<ASTNode> Driver::make_array_declaration(const std::string& name,
+                                                        const Type& type) {
     std::cout << "create ast array decl " << name << '\n';
     auto node = std::make_shared<ArrayDeclaration>();
     node->name = name;
@@ -360,7 +357,7 @@ std::shared_ptr<ASTNode> Interpreter::make_array_declaration(
     return node;
 }
 
-std::shared_ptr<ASTNode> Interpreter::make_array_access(
+std::shared_ptr<ASTNode> Driver::make_array_access(
     const std::string& name, std::shared_ptr<ASTNode> expr) {
     std::cout << "create ast array access " << name << '\n';
     auto node = std::make_shared<ArrayAccess>();
@@ -369,7 +366,7 @@ std::shared_ptr<ASTNode> Interpreter::make_array_access(
     return node;
 }
 
-std::shared_ptr<ASTNode> Interpreter::make_array_assignment(
+std::shared_ptr<ASTNode> Driver::make_array_assignment(
     const std::string& name, std::shared_ptr<ASTNode> index,
     std::shared_ptr<ASTNode> expr) {
     std::cout << "create ast array assignment " << name << '\n';
@@ -383,8 +380,8 @@ std::shared_ptr<ASTNode> Interpreter::make_array_assignment(
     return node;
 }
 
-std::shared_ptr<ASTNode> Interpreter::with_location(
-    std::shared_ptr<ASTNode> node, const EzAquarii::location& loc) {
+std::shared_ptr<ASTNode> Driver::with_location(std::shared_ptr<ASTNode> node,
+                                               const EzAquarii::location& loc) {
     node->loc.line = loc.begin.line;
     node->loc.column = loc.begin.column;
     return node;

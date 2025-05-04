@@ -30,7 +30,7 @@
 	#include <iostream>
 	#include <cstdlib>
 	#include "scanner.h"
-	#include "interpreter.h"
+	#include "driver.h"
 	#include "parser.hpp"
 	#include "location.hh"
 

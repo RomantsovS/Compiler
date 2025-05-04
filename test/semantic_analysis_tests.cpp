@@ -6,18 +6,18 @@
 #include "ast/function.h"
 #include "ast/program.h"
 #include "ast/type.h"
-#include "interpreter.h"
+#include "driver.h"
 #include "semantic_visitor.h"
 
 class SemanticAnalysisTests : public ::testing::Test {
    protected:
     std::shared_ptr<AST::ASTNode> Init(std::istringstream& iss) {
         std::shared_ptr<AST::ASTNode> ast;
-        EzAquarii::Interpreter interpreter(ast);
+        EzAquarii::Driver driver(ast);
 
-        interpreter.switchInputStream(&iss);
+        driver.switchInputStream(&iss);
 
-        auto res = interpreter.parse();
+        auto res = driver.parse();
         if (res) ast = nullptr;
 
         return ast;

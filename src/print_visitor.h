@@ -1,8 +1,6 @@
 #pragma once
 
-#include <deque>
 #include <iostream>
-#include <stack>
 #include <string>
 
 #include "i_visitor.h"

@@ -1,7 +1,6 @@
 ﻿#include <cassert>
 #include <deque>
 #include <iostream>
-#include <stack>
 #include <stdexcept>
 #include <typeinfo>
 #include <unordered_set>
@@ -24,6 +23,7 @@
 #include "ast/var.h"
 #include "ast/while.h"
 #include "driver.h"
+#include "interpreter_visitor.h"
 #include "parser.hpp"
 #include "pretty_print_visitor.h"
 #include "print_visitor.h"
@@ -56,6 +56,11 @@ int main() {
     } catch (const std::exception& ex) {
         std::cout << "\033[31mError: " << ex.what() << "\033[0m\n";
     }
+
+    std::cout << "\n\n";
+
+    InterpreterVisitor interpreter_visitor(std::cout);
+    ast->accept(&interpreter_visitor);
 
     return 0;
 }

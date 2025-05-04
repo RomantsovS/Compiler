@@ -1,6 +1,5 @@
 #include "pretty_print_visitor.h"
 
-#include <cassert>
 #include <string>
 
 #include "ast/arithmetic_op.h"
@@ -62,7 +61,7 @@ void PrettyPrintVisitor::visit(AST::Function* node) {
 
 void PrettyPrintVisitor::visit(AST::Print* node) {
     os_ << "std::cout << (";
-    node->st->accept(this);
+    node->expr->accept(this);
     os_ << ");";
 }
 

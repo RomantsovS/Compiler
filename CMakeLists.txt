@@ -30,6 +30,7 @@ add_library(compiler_lib
   "src/pretty_print_visitor.cpp"
   "src/print_visitor.cpp"
   "src/semantic_visitor.cpp"
+  "src/interpreter_visitor.cpp"
 )
 
 target_include_directories(compiler_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)

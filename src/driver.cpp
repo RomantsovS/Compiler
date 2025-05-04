@@ -252,10 +252,10 @@ std::shared_ptr<ASTNode> Driver::make_assignment(
     return node;
 }
 
-std::shared_ptr<ASTNode> Driver::make_print(std::shared_ptr<ASTNode> st) {
+std::shared_ptr<ASTNode> Driver::make_print(std::shared_ptr<ASTNode> expr) {
     std::cout << "create ast print " << '\n';
     auto node = std::make_shared<Print>();
-    node->st = st;
+    node->expr = expr;
     return node;
 }
 

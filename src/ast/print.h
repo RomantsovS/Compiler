@@ -11,7 +11,7 @@ namespace AST {
 struct Print : public ASTNode {
     void accept(IASTVisitor* visitor) override { visitor->visit(this); }
 
-    std::shared_ptr<ASTNode> st;
+    std::shared_ptr<ASTNode> expr;
 };
 
 }  // namespace AST

@@ -76,7 +76,7 @@ void SemanticVisitor::visit(AST::Function* node) {
     symtable.PopScope();
 }
 
-void SemanticVisitor::visit(AST::Print* node) { node->st->accept(this); }
+void SemanticVisitor::visit(AST::Print* node) { node->expr->accept(this); }
 
 void SemanticVisitor::visit(AST::FunCall* node) {
     auto* entry = symtable.Find(node->name);

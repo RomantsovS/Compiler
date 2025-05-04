@@ -146,7 +146,8 @@ class Driver {
     std::shared_ptr<AST::ASTNode> make_assignment(
         const std::string& var, std::shared_ptr<AST::ASTNode> st);
 
-    std::shared_ptr<AST::ASTNode> make_print(std::shared_ptr<AST::ASTNode> st);
+    std::shared_ptr<AST::ASTNode> make_print(
+        std::shared_ptr<AST::ASTNode> expr);
 
     std::shared_ptr<AST::ASTNode> make_string_literal(
         const std::string& string);

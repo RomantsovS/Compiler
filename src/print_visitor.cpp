@@ -58,7 +58,7 @@ void PrintVisitor::visit(AST::Print* node) {
     os_ << "Print: (expr)\n";
     IndentRAII indent_raii(indent_);
 
-    node->st->accept(this);
+    node->expr->accept(this);
 }
 
 void PrintVisitor::visit(AST::FunCall* node) {

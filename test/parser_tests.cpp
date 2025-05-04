@@ -12,8 +12,7 @@
 class ParserTests : public ::testing::Test {
    protected:
     std::shared_ptr<AST::ASTNode> Init(std::istringstream& iss) {
-        std::shared_ptr<AST::ASTNode> ast;
-        EzAquarii::Driver driver(ast);
+        EzAquarii::Driver driver;
 
         driver.SetScannerDebugLevel(1);
         driver.SetParserDebugLevel(1);
@@ -21,9 +20,9 @@ class ParserTests : public ::testing::Test {
         driver.switchInputStream(&iss);
 
         auto res = driver.parse();
-        if (res) ast = nullptr;
+        if (res) return nullptr;
 
-        return ast;
+        return driver.GetAST();
     }
 };
 

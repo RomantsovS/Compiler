@@ -8,35 +8,20 @@
 #include "ast/type.h"
 #include "driver.h"
 #include "semantic_visitor.h"
-
+#include "utils.h"
 class SemanticAnalysisTests : public ::testing::Test {
    protected:
     std::shared_ptr<AST::ASTNode> Init(std::istringstream& iss) {
-        std::shared_ptr<AST::ASTNode> ast;
-        EzAquarii::Driver driver(ast);
+        EzAquarii::Driver driver;
 
         driver.switchInputStream(&iss);
 
-        auto res = driver.parse();
-        if (res) ast = nullptr;
+        auto res = driver.Run();
+        if (res) return nullptr;
 
-        return ast;
+        return driver.GetAST();
     }
 };
-
-#define ExpectThrow(func, msg)                      \
-    do {                                            \
-        EXPECT_THROW(                               \
-            {                                       \
-                try {                               \
-                    func;                           \
-                } catch (const std::exception& e) { \
-                    EXPECT_STREQ(e.what(), msg);    \
-                    throw;                          \
-                }                                   \
-            },                                      \
-            std::runtime_error);                    \
-    } while (0)
 
 TEST_F(SemanticAnalysisTests, VarUndeclaredVariableCheckOK) {
     std::istringstream iss(R"(int main() {

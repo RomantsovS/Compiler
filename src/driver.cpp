@@ -50,13 +50,27 @@
 #include "ast/var.h"
 #include "ast/while.h"
 #include "location.hh"
+#include "semantic_visitor.h"
 
 namespace EzAquarii {
 
 using namespace AST;
 
-Driver::Driver(std::shared_ptr<ASTNode>& ast)
-    : scanner_(*this), parser_(scanner_, *this, ast) {}
+Driver::Driver() : scanner_(*this), parser_(scanner_, *this, ast_) {}
+
+int Driver::Run() {
+    int res = parser_.parse();
+    if (res) return res;
+
+    SemanticVisitor semantic_visitor;
+    try {
+        ast_->accept(&semantic_visitor);
+    } catch (const std::exception& ex) {
+        std::cout << "\033[31mError: " << ex.what() << "\033[0m\n";
+    }
+
+    return res;
+};
 
 int Driver::parse() {
     // parser_.set_debug_level(1);
@@ -83,6 +97,8 @@ const location& Driver::get_location() const { return loc_; }
 void Driver::SetScannerDebugLevel(int level) { scanner_debug_level = level; }
 
 void Driver::SetParserDebugLevel(int level) { parser_debug_level = level; }
+
+std::shared_ptr<AST::ASTNode> Driver::GetAST() { return ast_; }
 
 void Driver::ScannerLog(std::string_view msg) const {}
 

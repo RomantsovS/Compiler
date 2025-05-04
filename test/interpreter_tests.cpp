@@ -8,12 +8,12 @@
 #include "ast/type.h"
 #include "driver.h"
 #include "interpreter_visitor.h"
+#include "utils.h"
 
 class InterpreterTests : public ::testing::Test {
    protected:
     std::shared_ptr<AST::ASTNode> Init(std::istringstream& iss) {
-        std::shared_ptr<AST::ASTNode> ast;
-        EzAquarii::Driver driver(ast);
+        EzAquarii::Driver driver;
 
         driver.SetScannerDebugLevel(1);
         driver.SetParserDebugLevel(1);
@@ -21,9 +21,9 @@ class InterpreterTests : public ::testing::Test {
         driver.switchInputStream(&iss);
 
         auto res = driver.parse();
-        if (res) ast = nullptr;
+        if (res) return nullptr;
 
-        return ast;
+        return driver.GetAST();
     }
 
     void Exec(std::shared_ptr<AST::ASTNode> ast, std::ostringstream& oss) {

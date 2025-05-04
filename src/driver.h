@@ -58,7 +58,9 @@ namespace EzAquarii {
  */
 class Driver {
    public:
-    Driver(std::shared_ptr<AST::ASTNode>& ast);
+    Driver();
+
+    int Run();
 
     /**
      * Run parser. Results are stored inside.
@@ -81,6 +83,8 @@ class Driver {
 
     void SetScannerDebugLevel(int level);
     void SetParserDebugLevel(int level);
+
+    std::shared_ptr<AST::ASTNode> GetAST();
 
    private:
     // Used internally by Scanner YY_USER_ACTION to update location indicator
@@ -193,6 +197,8 @@ class Driver {
     Scanner scanner_;
     Parser parser_;
     location loc_;
+
+    std::shared_ptr<AST::ASTNode> ast_;
 
     std::unordered_map<std::string, std::shared_ptr<AST::ASTNode>> name_to_func;
 

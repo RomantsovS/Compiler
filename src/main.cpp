@@ -31,14 +31,15 @@
 #include "semantic_visitor.h"
 
 int main() {
-    std::shared_ptr<AST::ASTNode> ast;
-    EzAquarii::Driver driver(ast);
+    EzAquarii::Driver driver;
 
     driver.SetScannerDebugLevel(1);
     driver.SetParserDebugLevel(1);
 
-    auto res = driver.parse();
+    auto res = driver.Run();
     if (res) return res;
+
+    auto ast = driver.GetAST();
 
     std::cout << "\n\n";
 
@@ -49,13 +50,6 @@ int main() {
 
     PrettyPrintVisitor pretty_print_visitor(std::cout);
     ast->accept(&pretty_print_visitor);
-
-    SemanticVisitor semantic_visitor;
-    try {
-        ast->accept(&semantic_visitor);
-    } catch (const std::exception& ex) {
-        std::cout << "\033[31mError: " << ex.what() << "\033[0m\n";
-    }
 
     std::cout << "\n\n";
 

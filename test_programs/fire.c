@@ -1,18 +1,6 @@
-int fire[256];
-
-int abs(int x) {
-    if (x < 0) return (0) - (x);
-    return x;
-}
+int fire[320];
 
 void line_blur(int offset, int step, int nsteps) {
-    if (true) fire[0] = 0;
-    if (false) fire[0] = 0;
-    bool b;
-    b = false;
-    b = true;
-    if (b) fire[0] = 0;
-
     int circ[3];
     circ[0] = 0;
     circ[1] = fire[offset];
@@ -35,9 +23,9 @@ void line_blur(int offset, int step, int nsteps) {
 
 int main() {
     int HEIGHT;
-    HEIGHT = 80;
+    HEIGHT = 4;
     int WIDTH;
-    WIDTH = abs(25);
+    WIDTH = 80;
 
     int palette[256];
     palette[0] = 1;

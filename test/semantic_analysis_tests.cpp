@@ -707,6 +707,60 @@ TEST_F(SemanticAnalysisTests, VarDefHideParentScopeOK) {
     EXPECT_NO_THROW(ast->accept(&semantic_visitor));
 }
 
+TEST_F(SemanticAnalysisTests, VarDefDeclaredInOtherFunctionFail) {
+    std::istringstream iss(R"(
+        void foo() {
+        int i;
+        }
+        int main() {
+        i = 1;
+        return 0;
+}
+)");
+
+    auto ast = Init(iss);
+    ASSERT_TRUE(ast);
+
+    SemanticVisitor semantic_visitor;
+    ExpectThrow(ast->accept(&semantic_visitor), "6:11: Undeclared variable i");
+}
+
+TEST_F(SemanticAnalysisTests, VarDefDeclaredInWhileBlockSameScopeOk) {
+    std::istringstream iss(R"(
+        int main() {
+        while(true) {
+        int i;
+        i = 1;
+        }
+        return 0;
+}
+)");
+
+    auto ast = Init(iss);
+    ASSERT_TRUE(ast);
+
+    SemanticVisitor semantic_visitor;
+    EXPECT_NO_THROW(ast->accept(&semantic_visitor));
+}
+
+TEST_F(SemanticAnalysisTests, VarDefDeclaredInWhileBlockOtherScopeFail) {
+    std::istringstream iss(R"(
+        int main() {
+        while(true) {
+        int i;
+        }
+        i = 1;
+        return 0;
+}
+)");
+
+    auto ast = Init(iss);
+    ASSERT_TRUE(ast);
+
+    SemanticVisitor semantic_visitor;
+    ExpectThrow(ast->accept(&semantic_visitor), "6:11: Undeclared variable i");
+}
+
 TEST_F(SemanticAnalysisTests, ArrayDeclarationRedeclarationSameScopeFail) {
     std::istringstream iss(R"(
         int main() {

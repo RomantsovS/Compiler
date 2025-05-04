@@ -173,9 +173,14 @@ void SemanticVisitor::visit(AST::Assign* node) {
 
 void SemanticVisitor::visit(AST::While* node) {
     node->condition->accept(this);
+
+    symtable.PushScope();
+
     for (size_t i = 0; i < node->body.size(); ++i) {
         node->body[i]->accept(this);
     }
+
+    symtable.PopScope();
 }
 
 void SemanticVisitor::visit(AST::StringLiteral* node) {}

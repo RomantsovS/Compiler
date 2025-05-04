@@ -130,7 +130,7 @@ void InterpreterVisitor::visit(AST::ArrayAssignment* node) {
     auto index_obj = Eval(node->index);
     auto index_ptr = index_obj.TryAs<Number>();
     if (!index_ptr) {
-        throw std::runtime_error("Index expr is not int");
+        Error(node, "Index expr is not int");
     }
     ArrayObject arr;
     auto val = Eval(node->expr);
@@ -150,19 +150,27 @@ ObjectHolder InterpreterVisitor::Eval(std::shared_ptr<AST::ASTNode> node) {
         return Eval(arr_ac);
     }
 
-    throw std::runtime_error("unknown node");
+    Error(node.get(), "unknown node");
+    return {};
 }
 
 ObjectHolder InterpreterVisitor::Eval(std::shared_ptr<AST::Var> node) {
-    return variables.at(node->name);
+    auto iter = variables.find(node->name);
+    if (iter == variables.end()) {
+        Error(node.get(), "Variable ", node->name, " undefined");
+    }
+    return iter->second;
 }
 
 ObjectHolder InterpreterVisitor::Eval(std::shared_ptr<AST::ArrayAccess> node) {
     auto index_obj = Eval(node->index);
     auto index_ptr = index_obj.TryAs<Number>();
     if (!index_ptr) {
-        throw std::runtime_error("Index expr is not int");
+        Error(node.get(), "Index expr is not int");
     }
-    auto arr_holder = variables.at(node->name);
-    return arr_holder.TryAs<ArrayObject>()->GetObject(index_ptr->GetValue());
+    auto iter = variables.find(node->name);
+    if (iter == variables.end()) {
+        Error(node.get(), "Variable ", node->name, " undefined");
+    }
+    return iter->second.TryAs<ArrayObject>()->GetObject(index_ptr->GetValue());
 }

@@ -2,10 +2,12 @@
 
 #include <iostream>
 #include <memory>
+#include <sstream>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
+#include "ast/ast.h"
 #include "i_visitor.h"
 
 class Object;
@@ -36,10 +38,10 @@ class ObjectHolder {
         return dynamic_cast<T*>(this->Get());
     }
 
-    // template <typename T>
-    // const T* TryAs() const {
-    //     return dynamic_cast<const T*>(this->Get());
-    // }
+    template <typename T>
+    const T* TryAs() const {
+        return dynamic_cast<const T*>(this->Get());
+    }
 
    private:
     ObjectHolder(std::shared_ptr<Object> new_data)
@@ -75,7 +77,13 @@ class ArrayObject : public Object {
         throw std::runtime_error("call ArrayObject Print");
     }
 
-    const ObjectHolder GetObject(size_t i) const { return value[i]; }
+    const ObjectHolder GetObject(size_t i) const {
+        if (i >= value.size()) {
+            throw std::runtime_error("array access out of bounds");
+        }
+        return value[i];
+    }
+
     void SetObject(size_t ind, ObjectHolder val) {
         value.resize(std::max(value.size(), ind + 1));
         value.at(ind) = val;
@@ -112,6 +120,15 @@ class InterpreterVisitor : public IASTVisitor {
     ObjectHolder Eval(std::shared_ptr<AST::ASTNode> node);
     ObjectHolder Eval(std::shared_ptr<AST::Var> node);
     ObjectHolder Eval(std::shared_ptr<AST::ArrayAccess> node);
+
+    template <typename... Args>
+    void Error(AST::ASTNode* node, Args... args) {
+        std::ostringstream oss;
+        oss << node->loc;
+        oss << ": ";
+        (oss << ... << args);
+        throw std::runtime_error(oss.str());
+    }
 
     std::ostream& os_;
 

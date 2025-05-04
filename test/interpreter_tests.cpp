@@ -39,7 +39,7 @@ TEST_F(InterpreterTests, SimpleMainOK) {
     ASSERT_TRUE(ast);
 
     std::ostringstream oss;
-    Exec(ast, oss);
+    EXPECT_NO_THROW(Exec(ast, oss));
 
     const std::string expected(R"()");
     EXPECT_EQ(oss.str(), expected);
@@ -54,7 +54,7 @@ print (1);
     ASSERT_TRUE(ast);
 
     std::ostringstream oss;
-    Exec(ast, oss);
+    EXPECT_NO_THROW(Exec(ast, oss));
 
     const std::string expected(R"(1
 )");
@@ -70,7 +70,7 @@ print ("1");
     ASSERT_TRUE(ast);
 
     std::ostringstream oss;
-    Exec(ast, oss);
+    EXPECT_NO_THROW(Exec(ast, oss));
 
     const std::string expected(R"(1
 )");
@@ -88,11 +88,24 @@ print (i);
     ASSERT_TRUE(ast);
 
     std::ostringstream oss;
-    Exec(ast, oss);
+    EXPECT_NO_THROW(Exec(ast, oss));
 
     const std::string expected(R"(1
 )");
     EXPECT_EQ(oss.str(), expected);
+}
+
+TEST_F(InterpreterTests, PrintIntVarWithoutInitialization) {
+    std::istringstream iss(R"(int main() {
+int i;
+print (i);
+})");
+
+    auto ast = Init(iss);
+    ASSERT_TRUE(ast);
+
+    std::ostringstream oss;
+    ExpectThrow(Exec(ast, oss), "3:8: Variable i undefined");
 }
 
 TEST_F(InterpreterTests, PrintIntArray) {
@@ -106,9 +119,36 @@ print (i[0]);
     ASSERT_TRUE(ast);
 
     std::ostringstream oss;
-    Exec(ast, oss);
+    EXPECT_NO_THROW(Exec(ast, oss));
 
     const std::string expected(R"(1
 )");
     EXPECT_EQ(oss.str(), expected);
+}
+
+TEST_F(InterpreterTests, PrintIntArrayWithoutInitialization) {
+    std::istringstream iss(R"(int main() {
+int i[10];
+print (i[0]);
+})");
+
+    auto ast = Init(iss);
+    ASSERT_TRUE(ast);
+
+    std::ostringstream oss;
+    ExpectThrow(Exec(ast, oss), "3:9: Variable i undefined");
+}
+
+TEST_F(InterpreterTests, AccessIntArrayOutOfBoundsFail) {
+    std::istringstream iss(R"(int main() {
+int i[10];
+i[0] = 0;
+print (i[10]);
+})");
+
+    auto ast = Init(iss);
+    ASSERT_TRUE(ast);
+
+    std::ostringstream oss;
+    ExpectThrow(Exec(ast, oss), "array access out of bounds");
 }

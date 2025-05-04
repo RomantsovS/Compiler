@@ -53,8 +53,8 @@ int main() {
 
     std::cout << "\n\n";
 
-    InterpreterVisitor interpreter_visitor(std::cout);
-    ast->accept(&interpreter_visitor);
+    // InterpreterVisitor interpreter_visitor(std::cout);
+    // ast->accept(&interpreter_visitor);
 
     return 0;
 }

@@ -410,6 +410,53 @@ TEST_F(SemanticAnalysisTests, FunctionParamRedeclarationFail) {
                 "2:9: Redeclaration of i. Previously declared at 2:9");
 }
 
+TEST_F(SemanticAnalysisTests, FunctionParamUseSameScopeOK) {
+    std::istringstream iss(R"(
+        void foo(int i) { i = 1; }
+        int main() {
+        return 0;
+}
+)");
+
+    auto ast = Init(iss);
+    ASSERT_TRUE(ast);
+
+    SemanticVisitor semantic_visitor;
+    EXPECT_NO_THROW(ast->accept(&semantic_visitor));
+}
+
+TEST_F(SemanticAnalysisTests, FunctionParamUseOtherScopeFail) {
+    std::istringstream iss(R"(
+        void foo(int i) {}
+        int main() {
+        i = 1;
+        return 0;
+}
+)");
+
+    auto ast = Init(iss);
+    ASSERT_TRUE(ast);
+
+    SemanticVisitor semantic_visitor;
+    ExpectThrow(ast->accept(&semantic_visitor), "4:11: Undeclared variable i");
+}
+
+TEST_F(SemanticAnalysisTests, FunctionParamRedeclarationWithVarSameScopeFail) {
+    std::istringstream iss(R"(
+        void foo(int i) { int i;}
+        int main() {
+        return 0;
+}
+)");
+
+    auto ast = Init(iss);
+    ASSERT_TRUE(ast);
+
+    SemanticVisitor semantic_visitor;
+    ExpectThrow(ast->accept(&semantic_visitor),
+                "2:27: Redeclaration of i. Previously declared at 2:9");
+}
+
 TEST_F(SemanticAnalysisTests, FunctionVoidWithoutReturnOK) {
     std::istringstream iss(R"(
         void foo() {}

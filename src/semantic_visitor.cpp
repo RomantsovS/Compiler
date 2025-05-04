@@ -203,6 +203,13 @@ void SemanticVisitor::visit(AST::ArrayAccess* node) {
     node->type = entry->type.GetArrayBase();
 
     node->index->accept(this);
+
+    if (auto index = std::dynamic_pointer_cast<AST::Integer>(node->index);
+        index) {
+        if (index->value < 0 || index->value >= entry->type.array_size) {
+            Error(node, "Array assign out of bounds");
+        }
+    }
 }
 
 void SemanticVisitor::visit(AST::ArrayAssignment* node) {
@@ -211,6 +218,14 @@ void SemanticVisitor::visit(AST::ArrayAssignment* node) {
         Error(node, "Undeclared array variable ", node->name);
     }
     node->index->accept(this);
+
+    if (auto index = std::dynamic_pointer_cast<AST::Integer>(node->index);
+        index) {
+        if (index->value < 0 || index->value >= entry->type.array_size) {
+            Error(node, "Array assign out of bounds");
+        }
+    }
+
     node->expr->accept(this);
 
     if (node->expr->type.is_array ||

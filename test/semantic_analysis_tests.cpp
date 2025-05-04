@@ -377,6 +377,41 @@ TEST_F(SemanticAnalysisTests, ArrayAssignmentUndeclaredFail) {
                 "3:15: Undeclared array variable i");
 }
 
+TEST_F(SemanticAnalysisTests, ArrayAssignmenInBoundsOK) {
+    std::istringstream iss(R"(
+        int main() {
+        int i[3];
+        i[0] = 0;
+        i[1] = 1;
+        i[2] = 2;
+        return 0;
+}
+)");
+
+    auto ast = Init(iss);
+    ASSERT_TRUE(ast);
+
+    SemanticVisitor semantic_visitor;
+    EXPECT_NO_THROW(ast->accept(&semantic_visitor));
+}
+
+TEST_F(SemanticAnalysisTests, ArrayAssignmenOutOfBoundsPositiveFail) {
+    std::istringstream iss(R"(
+        int main() {
+        int i[3];
+        i[3] = 0;
+        return 0;
+}
+)");
+
+    auto ast = Init(iss);
+    ASSERT_TRUE(ast);
+
+    SemanticVisitor semantic_visitor;
+    ExpectThrow(ast->accept(&semantic_visitor),
+                "4:14: Array assign out of bounds");
+}
+
 TEST_F(SemanticAnalysisTests, FunctionRedeclarationFail) {
     std::istringstream iss(R"(
         bool abs() { return true; }
@@ -869,4 +904,41 @@ TEST_F(SemanticAnalysisTests, ArrayAccessUndeclaredVariableCheckFail) {
     SemanticVisitor semantic_visitor;
     ExpectThrow(ast->accept(&semantic_visitor),
                 "2:14: Undeclared array variable i");
+}
+
+TEST_F(SemanticAnalysisTests, ArrayAccessInBoundsOK) {
+    std::istringstream iss(R"(
+        int main() {
+        int i[3];
+        int j;
+        j = i[0];
+        j = i[1];
+        j = i[2];
+        return 0;
+}
+)");
+
+    auto ast = Init(iss);
+    ASSERT_TRUE(ast);
+
+    SemanticVisitor semantic_visitor;
+    EXPECT_NO_THROW(ast->accept(&semantic_visitor));
+}
+
+TEST_F(SemanticAnalysisTests, ArrayAccessOutOfBoundsFail) {
+    std::istringstream iss(R"(
+        int main() {
+        int i[3];
+        int j;
+        j = i[3];
+        return 0;
+}
+)");
+
+    auto ast = Init(iss);
+    ASSERT_TRUE(ast);
+
+    SemanticVisitor semantic_visitor;
+    ExpectThrow(ast->accept(&semantic_visitor),
+                "5:14: Array assign out of bounds");
 }

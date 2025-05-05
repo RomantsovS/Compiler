@@ -94,6 +94,9 @@ ObjectHolder Interpreter::Eval(std::shared_ptr<AST::ArithOp> node) {
     } else if (node->op == "/") {
         return ObjectHolder::Own(ValueObject(lhs.TryAs<Number>()->GetValue() /
                                              rhs.TryAs<Number>()->GetValue()));
+    } else if (node->op == "%") {
+        return ObjectHolder::Own(ValueObject(lhs.TryAs<Number>()->GetValue() %
+                                             rhs.TryAs<Number>()->GetValue()));
     } else {
         Error(node.get(), "Unknown arith op: ", node->op);
     }
@@ -124,11 +127,6 @@ void Interpreter::visit(AST::LogicOp* node) {
     // os_ << ")";
 }
 
-void Interpreter::visit(AST::VarDef* node) {}
-
-void Interpreter::visit(AST::Var* node) { os_ << node->name; }
-
-void Interpreter::visit(AST::Integer* node) { os_ << node->value; }
 */
 ObjectHolder Interpreter::Eval(std::shared_ptr<AST::Assign> node) {
     variables[node->var] = Eval(node->expr);

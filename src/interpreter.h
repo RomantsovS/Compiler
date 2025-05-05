@@ -102,21 +102,21 @@ class Interpreter {
     int Exec();
 
    private:
-    ObjectHolder Eval(std::shared_ptr<AST::ASTNode> node);
-    ObjectHolder Eval(std::shared_ptr<AST::VarDef> node);
-    ObjectHolder Eval(std::shared_ptr<AST::Var> node);
-    ObjectHolder Eval(std::shared_ptr<AST::ArrayDeclaration> node);
+    ObjectHolder Eval(std::shared_ptr<AST::ArithOp> node);
     ObjectHolder Eval(std::shared_ptr<AST::ArrayAccess> node);
     ObjectHolder Eval(std::shared_ptr<AST::ArrayAssignment> node);
-    ObjectHolder Eval(std::shared_ptr<AST::Program> node);
+    ObjectHolder Eval(std::shared_ptr<AST::ArrayDeclaration> node);
+    ObjectHolder Eval(std::shared_ptr<AST::Assign> node);
+    ObjectHolder Eval(std::shared_ptr<AST::ASTNode> node);
+    ObjectHolder Eval(std::shared_ptr<AST::FunCall> node);
     ObjectHolder Eval(std::shared_ptr<AST::Function> node,
                       std::vector<ObjectHolder> args);
-    ObjectHolder Eval(std::shared_ptr<AST::FunCall> node);
-    ObjectHolder Eval(std::shared_ptr<AST::Return> node);
-    ObjectHolder Eval(std::shared_ptr<AST::Print> node);
-    ObjectHolder Eval(std::shared_ptr<AST::Assign> node);
-    ObjectHolder Eval(std::shared_ptr<AST::ArithOp> node);
     ObjectHolder Eval(std::shared_ptr<AST::LogicOp> node);
+    ObjectHolder Eval(std::shared_ptr<AST::Print> node);
+    ObjectHolder Eval(std::shared_ptr<AST::Program> node);
+    ObjectHolder Eval(std::shared_ptr<AST::Return> node);
+    ObjectHolder Eval(std::shared_ptr<AST::Var> node);
+    ObjectHolder Eval(std::shared_ptr<AST::VarDef> node);
 
     template <typename... Args>
     void Error(AST::ASTNode* node, Args... args) {

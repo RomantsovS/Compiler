@@ -19,20 +19,102 @@
 #include "ast/var.h"
 #include "ast/while.h"
 
-void SemanticVisitor::visit(AST::Program* node) {
-    for (auto global : node->globals) {
-        global->accept(this);
+void SemanticVisitor::visit(AST::ArithOp* node) {
+    node->lhs->accept(this);
+    node->rhs->accept(this);
+
+    if (node->lhs->type.base == AST::BaseType::Unknown ||
+        node->lhs->type != node->rhs->type) {
+        Error(node, "Type mismatch: cannot perform ", node->op, " for ",
+              node->lhs->type, " and ", node->rhs->type);
     }
-    bool has_main = false;
-    for (auto function : node->functions) {
-        if (auto func = std::dynamic_pointer_cast<AST::Function>(function);
-            func->name == "main") {
-            has_main = true;
+
+    node->type = node->lhs->type;
+}
+
+void SemanticVisitor::visit(AST::ArrayAccess* node) {
+    auto* entry = symtable.Find(node->name);
+    if (!entry) {
+        Error(node, "Undeclared array variable ", node->name);
+    }
+    node->type = entry->type.GetArrayBase();
+
+    node->index->accept(this);
+
+    if (auto index = std::dynamic_pointer_cast<AST::Integer>(node->index);
+        index) {
+        if (index->value < 0 || index->value >= entry->type.array_size) {
+            Error(node, "Array assign out of bounds");
         }
-        function->accept(this);
     }
-    if (!has_main) {
-        Error(node, "Main function isn't found");
+}
+
+void SemanticVisitor::visit(AST::ArrayAssignment* node) {
+    auto* entry = symtable.Find(node->name);
+    if (!entry) {
+        Error(node, "Undeclared array variable ", node->name);
+    }
+    node->index->accept(this);
+
+    if (auto index = std::dynamic_pointer_cast<AST::Integer>(node->index);
+        index) {
+        if (index->value < 0 || index->value >= entry->type.array_size) {
+            Error(node, "Array assign out of bounds");
+        }
+    }
+
+    node->expr->accept(this);
+
+    if (node->expr->type.is_array ||
+        entry->type.base != node->expr->type.base) {
+        Error(node, "Type mismatch: cannot assign ", node->expr->type, " to ",
+              node->name);
+    }
+}
+
+void SemanticVisitor::visit(AST::ArrayDeclaration* node) {
+    if (auto* entry = symtable.Declare(node->name, {node->type, node->loc});
+        entry) {
+        Error(node, "Redeclaration of ", node->name,
+              ". Previously declared at ", entry->loc);
+    }
+    ir_->AddSymbol(node->name, {node->type});
+}
+
+void SemanticVisitor::visit(AST::Assign* node) {
+    auto* entry = symtable.Find(node->var);
+    if (!entry) {
+        Error(node, "Undeclared variable ", node->var);
+    }
+    node->expr->accept(this);
+    if (entry->type != node->expr->type) {
+        Error(node, "Type mismatch: cannot assign ", node->expr->type, " to ",
+              node->var);
+    }
+}
+
+void SemanticVisitor::visit(AST::BoolLiteral* node) {}
+
+void SemanticVisitor::visit(AST::FunCall* node) {
+    auto* entry = symtable.Find(node->name);
+    if (!entry) {
+        Error(node, "Undeclared func ", node->name);
+    }
+    node->type = entry->type;
+
+    if (node->args.size() != entry->params.size()) {
+        Error(node, "Incorrect arguments number to call ", node->name,
+              ". Expected ", entry->params.size(), " but got ",
+              node->args.size());
+    }
+
+    for (size_t i = 0; i < node->args.size(); ++i) {
+        node->args[i]->accept(this);
+        if (node->args[i]->type != entry->params[i]) {
+            Error(node, "Incorrect argument ", i, " type to call ", node->name,
+                  ". Expected ", entry->params[i], " but got ",
+                  node->args[i]->type);
+        }
     }
 }
 
@@ -87,31 +169,6 @@ void SemanticVisitor::visit(AST::Function* node) {
     symtable.PopScope();
 }
 
-void SemanticVisitor::visit(AST::Print* node) { node->expr->accept(this); }
-
-void SemanticVisitor::visit(AST::FunCall* node) {
-    auto* entry = symtable.Find(node->name);
-    if (!entry) {
-        Error(node, "Undeclared func ", node->name);
-    }
-    node->type = entry->type;
-
-    if (node->args.size() != entry->params.size()) {
-        Error(node, "Incorrect arguments number to call ", node->name,
-              ". Expected ", entry->params.size(), " but got ",
-              node->args.size());
-    }
-
-    for (size_t i = 0; i < node->args.size(); ++i) {
-        node->args[i]->accept(this);
-        if (node->args[i]->type != entry->params[i]) {
-            Error(node, "Incorrect argument ", i, " type to call ", node->name,
-                  ". Expected ", entry->params[i], " but got ",
-                  node->args[i]->type);
-        }
-    }
-}
-
 void SemanticVisitor::visit(AST::IfThenElse* node) {
     node->condition->accept(this);
 
@@ -126,6 +183,8 @@ void SemanticVisitor::visit(AST::IfThenElse* node) {
     }
 }
 
+void SemanticVisitor::visit(AST::Integer* node) {}
+
 void SemanticVisitor::visit(AST::LogicOp* node) {
     node->lhs->accept(this);
     node->rhs->accept(this);
@@ -137,29 +196,28 @@ void SemanticVisitor::visit(AST::LogicOp* node) {
     }
 }
 
+void SemanticVisitor::visit(AST::Print* node) { node->expr->accept(this); }
+
+void SemanticVisitor::visit(AST::Program* node) {
+    for (auto global : node->globals) {
+        global->accept(this);
+    }
+    bool has_main = false;
+    for (auto function : node->functions) {
+        if (auto func = std::dynamic_pointer_cast<AST::Function>(function);
+            func->name == "main") {
+            has_main = true;
+        }
+        function->accept(this);
+    }
+    if (!has_main) {
+        Error(node, "Main function isn't found");
+    }
+}
+
 void SemanticVisitor::visit(AST::Return* node) { node->expr->accept(this); }
 
-void SemanticVisitor::visit(AST::ArithOp* node) {
-    node->lhs->accept(this);
-    node->rhs->accept(this);
-
-    if (node->lhs->type.base == AST::BaseType::Unknown ||
-        node->lhs->type != node->rhs->type) {
-        Error(node, "Type mismatch: cannot perform ", node->op, " for ",
-              node->lhs->type, " and ", node->rhs->type);
-    }
-
-    node->type = node->lhs->type;
-}
-
-void SemanticVisitor::visit(AST::VarDef* node) {
-    if (auto* entry = symtable.Declare(node->name, {node->type, node->loc});
-        entry) {
-        Error(node, "Redeclaration of ", node->name,
-              ". Previously declared at ", entry->loc);
-    }
-    ir_->AddSymbol(node->name, {node->type});
-}
+void SemanticVisitor::visit(AST::StringLiteral* node) {}
 
 void SemanticVisitor::visit(AST::Var* node) {
     auto* entry = symtable.Find(node->name);
@@ -169,18 +227,13 @@ void SemanticVisitor::visit(AST::Var* node) {
     node->type = entry->type;
 }
 
-void SemanticVisitor::visit(AST::Integer* node) {}
-
-void SemanticVisitor::visit(AST::Assign* node) {
-    auto* entry = symtable.Find(node->var);
-    if (!entry) {
-        Error(node, "Undeclared variable ", node->var);
+void SemanticVisitor::visit(AST::VarDef* node) {
+    if (auto* entry = symtable.Declare(node->name, {node->type, node->loc});
+        entry) {
+        Error(node, "Redeclaration of ", node->name,
+              ". Previously declared at ", entry->loc);
     }
-    node->expr->accept(this);
-    if (entry->type != node->expr->type) {
-        Error(node, "Type mismatch: cannot assign ", node->expr->type, " to ",
-              node->var);
-    }
+    ir_->AddSymbol(node->name, {node->type});
 }
 
 void SemanticVisitor::visit(AST::While* node) {
@@ -193,57 +246,4 @@ void SemanticVisitor::visit(AST::While* node) {
     }
 
     symtable.PopScope();
-}
-
-void SemanticVisitor::visit(AST::StringLiteral* node) {}
-
-void SemanticVisitor::visit(AST::BoolLiteral* node) {}
-
-void SemanticVisitor::visit(AST::ArrayDeclaration* node) {
-    if (auto* entry = symtable.Declare(node->name, {node->type, node->loc});
-        entry) {
-        Error(node, "Redeclaration of ", node->name,
-              ". Previously declared at ", entry->loc);
-    }
-    ir_->AddSymbol(node->name, {node->type});
-}
-
-void SemanticVisitor::visit(AST::ArrayAccess* node) {
-    auto* entry = symtable.Find(node->name);
-    if (!entry) {
-        Error(node, "Undeclared array variable ", node->name);
-    }
-    node->type = entry->type.GetArrayBase();
-
-    node->index->accept(this);
-
-    if (auto index = std::dynamic_pointer_cast<AST::Integer>(node->index);
-        index) {
-        if (index->value < 0 || index->value >= entry->type.array_size) {
-            Error(node, "Array assign out of bounds");
-        }
-    }
-}
-
-void SemanticVisitor::visit(AST::ArrayAssignment* node) {
-    auto* entry = symtable.Find(node->name);
-    if (!entry) {
-        Error(node, "Undeclared array variable ", node->name);
-    }
-    node->index->accept(this);
-
-    if (auto index = std::dynamic_pointer_cast<AST::Integer>(node->index);
-        index) {
-        if (index->value < 0 || index->value >= entry->type.array_size) {
-            Error(node, "Array assign out of bounds");
-        }
-    }
-
-    node->expr->accept(this);
-
-    if (node->expr->type.is_array ||
-        entry->type.base != node->expr->type.base) {
-        Error(node, "Type mismatch: cannot assign ", node->expr->type, " to ",
-              node->name);
-    }
 }

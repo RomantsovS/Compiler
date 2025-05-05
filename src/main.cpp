@@ -55,7 +55,7 @@ int main() {
     try {
         interpreter.Exec();
     } catch (const std::exception& ex) {
-        std::cout << "\033[31mError: " << ex.what() << "\033[0m\n";
+        std::cout << "\033[31mInterpreter error: " << ex.what() << "\033[0m\n";
     }
 
     return 0;

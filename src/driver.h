@@ -95,8 +95,6 @@ class Driver {
     // Used to get last Scanner location. Used in error messages.
     const location& get_location() const;
 
-    void ScannerLog(std::string_view msg) const;
-
     // functions
     std::shared_ptr<AST::ASTNode> make_program(
         std::shared_ptr<AST::Statements> top_level_list);
@@ -194,6 +192,13 @@ class Driver {
     std::shared_ptr<AST::ASTNode> with_location(
         std::shared_ptr<AST::ASTNode> node, const EzAquarii::location& loc);
 
+    template <typename... Args>
+    void ParserLog(Args... args) {
+        if (parser_debug_level_ == 0) return;
+        std::ostringstream oss;
+        (oss << ... << args);
+    }
+
     Scanner scanner_;
     Parser parser_;
     location loc_;
@@ -202,8 +207,8 @@ class Driver {
 
     std::unordered_map<std::string, std::shared_ptr<AST::ASTNode>> name_to_func;
 
-    int scanner_debug_level = 0;
-    int parser_debug_level = 0;
+    int scanner_debug_level_ = 0;
+    int parser_debug_level_ = 0;
 };
 
 }  // namespace EzAquarii

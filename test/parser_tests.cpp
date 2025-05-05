@@ -14,8 +14,8 @@ class ParserTests : public ::testing::Test {
     std::shared_ptr<AST::ASTNode> Init(std::istringstream& iss) {
         EzAquarii::Driver driver;
 
-        driver.SetScannerDebugLevel(1);
-        driver.SetParserDebugLevel(1);
+        // driver.SetScannerDebugLevel(1);
+        // driver.SetParserDebugLevel(1);
 
         driver.switchInputStream(&iss);
 

@@ -144,3 +144,31 @@ foo(1);
 )");
     EXPECT_EQ(oss.str(), expected);
 }
+
+TEST_F(InterpreterTests, PrintIntLiteralPlusIntLiteralOK) {
+    std::istringstream iss(R"(void main() {
+print(1 + 2);
+})");
+
+    std::ostringstream oss;
+    EXPECT_NO_THROW(Exec(iss, oss));
+
+    const std::string expected(R"(3
+)");
+    EXPECT_EQ(oss.str(), expected);
+}
+
+TEST_F(InterpreterTests, PrintIntVarPlusIntLiteralOK) {
+    std::istringstream iss(R"(void main() {
+int i;
+i = 1;
+print(i + 2);
+})");
+
+    std::ostringstream oss;
+    EXPECT_NO_THROW(Exec(iss, oss));
+
+    const std::string expected(R"(3
+)");
+    EXPECT_EQ(oss.str(), expected);
+}

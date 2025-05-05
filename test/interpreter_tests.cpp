@@ -68,6 +68,32 @@ print ("1");
     EXPECT_EQ(oss.str(), expected);
 }
 
+TEST_F(InterpreterTests, PrintBoolLiteralTrueOK) {
+    std::istringstream iss(R"(void main() {
+print (true);
+})");
+
+    std::ostringstream oss;
+    EXPECT_NO_THROW(Exec(iss, oss));
+
+    const std::string expected(R"(1
+)");
+    EXPECT_EQ(oss.str(), expected);
+}
+
+TEST_F(InterpreterTests, PrintBoolLiteralFalseOK) {
+    std::istringstream iss(R"(void main() {
+print (false);
+})");
+
+    std::ostringstream oss;
+    EXPECT_NO_THROW(Exec(iss, oss));
+
+    const std::string expected(R"(0
+)");
+    EXPECT_EQ(oss.str(), expected);
+}
+
 TEST_F(InterpreterTests, AccessIntVarOK) {
     std::istringstream iss(R"(void main() {
 int i;
@@ -141,6 +167,26 @@ foo(1);
     EXPECT_NO_THROW(Exec(iss, oss));
 
     const std::string expected(R"(1
+)");
+    EXPECT_EQ(oss.str(), expected);
+}
+
+TEST_F(InterpreterTests, FuncCallWithMultipleArgumentsOK) {
+    std::istringstream iss(R"(void foo(int i, int j, bool b) {
+print (i);
+print (j);
+print (b);
+}
+void main() {
+foo(3, 2, true);
+})");
+
+    std::ostringstream oss;
+    EXPECT_NO_THROW(Exec(iss, oss));
+
+    const std::string expected(R"(3
+2
+1
 )");
     EXPECT_EQ(oss.str(), expected);
 }

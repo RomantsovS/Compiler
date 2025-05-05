@@ -224,6 +224,8 @@ ObjectHolder Interpreter::Eval(std::shared_ptr<AST::ASTNode> node) {
     } else if (auto str_lit =
                    std::dynamic_pointer_cast<AST::StringLiteral>(node)) {
         return ObjectHolder::Own(ValueObject(str_lit->value));
+    } else if (auto b_lit = std::dynamic_pointer_cast<AST::BoolLiteral>(node)) {
+        return ObjectHolder::Own(ValueObject(b_lit->value));
     } else if (auto var_def = std::dynamic_pointer_cast<AST::VarDef>(node)) {
         return Eval(var_def);
     } else if (auto var = std::dynamic_pointer_cast<AST::Var>(node)) {

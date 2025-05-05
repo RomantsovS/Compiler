@@ -47,6 +47,9 @@ void SemanticVisitor::visit(AST::Function* node) {
         Error(node, "Redeclaration of ", node->name,
               ". Previously declared at ", entry->loc);
     }
+    ir_->AddFunction(node->name, std::dynamic_pointer_cast<AST::Function>(
+                                     node->shared_from_this()));
+
     symtable.PushScope();
 
     for (size_t i = 0; i < node->args.size(); ++i) {
@@ -155,6 +158,7 @@ void SemanticVisitor::visit(AST::VarDef* node) {
         Error(node, "Redeclaration of ", node->name,
               ". Previously declared at ", entry->loc);
     }
+    ir_->AddSymbol(node->name, {node->type});
 }
 
 void SemanticVisitor::visit(AST::Var* node) {
@@ -201,6 +205,7 @@ void SemanticVisitor::visit(AST::ArrayDeclaration* node) {
         Error(node, "Redeclaration of ", node->name,
               ". Previously declared at ", entry->loc);
     }
+    ir_->AddSymbol(node->name, {node->type});
 }
 
 void SemanticVisitor::visit(AST::ArrayAccess* node) {

@@ -6,23 +6,22 @@
 #include "ast/function.h"
 #include "ast/program.h"
 #include "ast/type.h"
-#include "driver.h"
-#include "semantic_visitor.h"
+#include "parser_driver.h"
 
 class ParserTests : public ::testing::Test {
    protected:
     std::shared_ptr<AST::ASTNode> Init(std::istringstream& iss) {
-        EzAquarii::Driver driver;
+        EzAquarii::ParserDriver parser_driver;
 
         // driver.SetScannerDebugLevel(1);
         // driver.SetParserDebugLevel(1);
 
-        driver.switchInputStream(&iss);
+        parser_driver.switchInputStream(&iss);
 
-        auto res = driver.parse();
+        auto res = parser_driver.parse();
         if (res) return nullptr;
 
-        return driver.GetAST();
+        return parser_driver.GetAST();
     }
 };
 

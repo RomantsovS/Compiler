@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "ast/ast.h"
+#include "ir.h"
 
 class Object;
 
@@ -98,7 +99,7 @@ class Interpreter {
    public:
     Interpreter(std::ostream& os) : os_(os) {}
 
-    int Exec(std::shared_ptr<AST::ASTNode> node);
+    int Exec(IR ir);
 
    private:
     ObjectHolder Eval(std::shared_ptr<AST::ASTNode> node);

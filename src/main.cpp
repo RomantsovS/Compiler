@@ -23,7 +23,7 @@
 #include "ast/var.h"
 #include "ast/while.h"
 #include "driver.h"
-#include "interpreter_visitor.h"
+#include "interpreter.h"
 #include "parser.hpp"
 #include "pretty_print_visitor.h"
 #include "print_visitor.h"
@@ -31,32 +31,29 @@
 #include "semantic_visitor.h"
 
 int main() {
-    EzAquarii::Driver driver;
+    Driver driver;
 
-    driver.SetScannerDebugLevel(1);
-    driver.SetParserDebugLevel(1);
-
-    auto res = driver.Run();
+    auto res = driver.Run(std::cin);
     if (res) return res;
 
-    auto ast = driver.GetAST();
+    auto ir = driver.GetIR();
 
     std::cout << "\n\n";
 
     PrintVisitor print_visitor(std::cout);
-    ast->accept(&print_visitor);
+    ir.GetAST()->accept(&print_visitor);
 
     std::cout << "\n\n";
 
     PrettyPrintVisitor pretty_print_visitor(std::cout);
-    ast->accept(&pretty_print_visitor);
+    ir.GetAST()->accept(&pretty_print_visitor);
 
     std::cout << "\n\n";
 
     Interpreter interpreter(std::cout);
 
     try {
-        interpreter.Exec(ast);
+        interpreter.Exec(ir);
     } catch (const std::exception& ex) {
         std::cout << "\033[31mError: " << ex.what() << "\033[0m\n";
     }

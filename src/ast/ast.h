@@ -18,7 +18,7 @@ inline std::ostream& operator<<(std::ostream& os, const Location& loc) {
     return os << loc.line << ":" << loc.column;
 }
 
-struct ASTNode {
+struct ASTNode : public std::enable_shared_from_this<ASTNode> {
     virtual ~ASTNode() = default;
     virtual void accept(IASTVisitor* visitor) = 0;
 

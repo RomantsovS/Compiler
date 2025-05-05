@@ -11,6 +11,7 @@
 #include "ast/ast.h"
 #include "ast/type.h"
 #include "i_visitor.h"
+#include "ir.h"
 
 struct SymbolEntry {
     AST::Type type;
@@ -52,6 +53,8 @@ class Symtable {
 
 class SemanticVisitor : public IASTVisitor {
    public:
+    SemanticVisitor(IR* ir) : ir_(ir) {}
+
     void visit(AST::Program* node) override;
     void visit(AST::Function* node) override;
     void visit(AST::Print* node) override;
@@ -82,4 +85,5 @@ class SemanticVisitor : public IASTVisitor {
     }
 
     Symtable symtable;
+    IR* ir_;
 };

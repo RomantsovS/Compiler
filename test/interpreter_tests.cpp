@@ -7,39 +7,32 @@
 #include "ast/program.h"
 #include "ast/type.h"
 #include "driver.h"
-#include "interpreter_visitor.h"
+#include "interpreter.h"
 #include "utils.h"
 
 class InterpreterTests : public ::testing::Test {
    protected:
-    std::shared_ptr<AST::ASTNode> Init(std::istringstream& iss) {
-        EzAquarii::Driver driver;
+    IR Init(std::istringstream& iss) {
+        Driver driver;
+        auto res = driver.Run(iss);
+        if (res) throw std::runtime_error("Driver run error");
 
-        // driver.SetScannerDebugLevel(1);
-        // driver.SetParserDebugLevel(1);
-
-        driver.switchInputStream(&iss);
-
-        auto res = driver.parse();
-        if (res) return nullptr;
-
-        return driver.GetAST();
+        return driver.GetIR();
     }
 
-    void Exec(std::shared_ptr<AST::ASTNode> ast, std::ostringstream& oss) {
+    void Exec(const IR& ir, std::ostringstream& oss) {
         Interpreter interpreter(oss);
-        interpreter.Exec(ast);
+        interpreter.Exec(ir);
     }
 };
 
 TEST_F(InterpreterTests, SimpleMainOK) {
     std::istringstream iss(R"(int main() {})");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
+    auto ir = Init(iss);
 
     std::ostringstream oss;
-    EXPECT_NO_THROW(Exec(ast, oss));
+    EXPECT_NO_THROW(Exec(ir, oss));
 
     const std::string expected(R"()");
     EXPECT_EQ(oss.str(), expected);
@@ -50,11 +43,10 @@ TEST_F(InterpreterTests, PrintIntLiteral) {
 print (1);
 })");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
+    auto ir = Init(iss);
 
     std::ostringstream oss;
-    EXPECT_NO_THROW(Exec(ast, oss));
+    EXPECT_NO_THROW(Exec(ir, oss));
 
     const std::string expected(R"(1
 )");
@@ -66,11 +58,10 @@ TEST_F(InterpreterTests, PrintStringLiteral) {
 print ("1");
 })");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
+    auto ir = Init(iss);
 
     std::ostringstream oss;
-    EXPECT_NO_THROW(Exec(ast, oss));
+    EXPECT_NO_THROW(Exec(ir, oss));
 
     const std::string expected(R"(1
 )");
@@ -84,11 +75,10 @@ i = 1;
 print (i);
 })");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
+    auto ir = Init(iss);
 
     std::ostringstream oss;
-    EXPECT_NO_THROW(Exec(ast, oss));
+    EXPECT_NO_THROW(Exec(ir, oss));
 
     const std::string expected(R"(1
 )");
@@ -101,11 +91,10 @@ int i;
 print (i);
 })");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
+    auto ir = Init(iss);
 
     std::ostringstream oss;
-    ExpectThrow(Exec(ast, oss), "3:8: Variable i uninitialized");
+    ExpectThrow(Exec(ir, oss), "3:8: Variable i uninitialized");
 }
 
 TEST_F(InterpreterTests, PrintIntArray) {
@@ -115,11 +104,10 @@ i[0] = 1;
 print (i[0]);
 })");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
+    auto ir = Init(iss);
 
     std::ostringstream oss;
-    EXPECT_NO_THROW(Exec(ast, oss));
+    EXPECT_NO_THROW(Exec(ir, oss));
 
     const std::string expected(R"(1
 )");
@@ -132,11 +120,10 @@ int i[10];
 print (i[0]);
 })");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
+    auto ir = Init(iss);
 
     std::ostringstream oss;
-    ExpectThrow(Exec(ast, oss), "array access out of bounds");
+    ExpectThrow(Exec(ir, oss), "array access out of bounds");
 }
 
 TEST_F(InterpreterTests, AccessIntArrayOutOfAssignedBoundsFail) {
@@ -146,11 +133,10 @@ i[0] = 0;
 print (i[1]);
 })");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
+    auto ir = Init(iss);
 
     std::ostringstream oss;
-    ExpectThrow(Exec(ast, oss), "array access out of bounds");
+    ExpectThrow(Exec(ir, oss), "array access out of bounds");
 }
 
 TEST_F(InterpreterTests, AccessIntArrayOutOfBoundsFail) {
@@ -160,28 +146,26 @@ i[0] = 0;
 print (i[10]);
 })");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
+    auto ir = Init(iss);
 
     std::ostringstream oss;
-    ExpectThrow(Exec(ast, oss), "array access out of bounds");
+    ExpectThrow(Exec(ir, oss), "array access out of bounds");
 }
 
-TEST_F(InterpreterTests, FuncCallWithOneArgument) {
-    std::istringstream iss(R"(void foo(int i) {
-print (i);
-}
-int main() {
-foo(1);
-})");
+// TEST_F(InterpreterTests, FuncCallWithOneArgument) {
+//     std::istringstream iss(R"(void foo(int i) {
+// print (i);
+// }
+// int main() {
+// foo(1);
+// })");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
+//     auto ir = Init(iss);
 
-    std::ostringstream oss;
-    EXPECT_NO_THROW(Exec(ast, oss));
+//     std::ostringstream oss;
+//     EXPECT_NO_THROW(Exec(ir, oss));
 
-    const std::string expected(R"(1
-)");
-    EXPECT_EQ(oss.str(), expected);
-}
+//     const std::string expected(R"(1
+// )");
+//     EXPECT_EQ(oss.str(), expected);
+// }

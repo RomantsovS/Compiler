@@ -58,16 +58,16 @@ namespace EzAquarii {
 
 // Forward declare driver to avoid include. Header is added inimplementation
 // file.
-class Driver;
+class ParserDriver;
 
 class Scanner : public yyFlexLexer {
    public:
-    Scanner(Driver& driver) : driver_(driver) {}
+    Scanner(ParserDriver& driver) : driver_(driver) {}
     virtual ~Scanner() {}
     virtual EzAquarii::Parser::symbol_type get_next_token();
 
    private:
-    Driver& driver_;
+    ParserDriver& driver_;
 };
 
 }  // namespace EzAquarii

@@ -26,11 +26,12 @@ target_include_directories(compiler_frontend PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
 target_include_directories(compiler_frontend PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
 add_library(compiler_lib
-  "src/driver.cpp"
+  "src/parser_driver.cpp"
   "src/pretty_print_visitor.cpp"
   "src/print_visitor.cpp"
   "src/semantic_visitor.cpp"
-  "src/interpreter_visitor.cpp"
+  "src/driver.cpp"
+  "src/interpreter.cpp"
 )
 
 target_include_directories(compiler_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)

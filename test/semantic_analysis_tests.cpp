@@ -6,34 +6,53 @@
 #include "ast/function.h"
 #include "ast/program.h"
 #include "ast/type.h"
-#include "driver.h"
+#include "parser_driver.h"
 #include "semantic_visitor.h"
 #include "utils.h"
+
 class SemanticAnalysisTests : public ::testing::Test {
    protected:
     std::shared_ptr<AST::ASTNode> Init(std::istringstream& iss) {
-        EzAquarii::Driver driver;
+        EzAquarii::ParserDriver parser_driver;
 
-        driver.switchInputStream(&iss);
+        parser_driver.switchInputStream(&iss);
 
-        auto res = driver.Run();
+        auto res = parser_driver.parse();
         if (res) return nullptr;
 
-        return driver.GetAST();
+        return parser_driver.GetAST();
+    }
+
+    void CallNoThrow(std::istringstream& iss) {
+        auto ast = Init(iss);
+        ASSERT_TRUE(ast);
+
+        IR ir;
+        ir.SetAST(ast);
+
+        SemanticVisitor semantic_visitor(&ir);
+        EXPECT_NO_THROW(ast->accept(&semantic_visitor));
+    }
+
+    void CallThrow(std::istringstream& iss, const std::string& msg) {
+        auto ast = Init(iss);
+        ASSERT_TRUE(ast);
+
+        IR ir;
+        ir.SetAST(ast);
+
+        SemanticVisitor semantic_visitor(&ir);
+        ExpectThrow(ast->accept(&semantic_visitor), msg.c_str());
     }
 };
 
 TEST_F(SemanticAnalysisTests, ProgramMainFunctionOK) {
     std::istringstream iss(R"(int main() {
-            return 0;
-        }
-        )");
+        return 0;
+    }
+    )");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    EXPECT_NO_THROW(ast->accept(&semantic_visitor));
+    CallNoThrow(iss);
 }
 
 TEST_F(SemanticAnalysisTests, ProgramMainFunctionFail) {
@@ -42,12 +61,7 @@ TEST_F(SemanticAnalysisTests, ProgramMainFunctionFail) {
         }
         )");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    ExpectThrow(ast->accept(&semantic_visitor),
-                "1:1: Main function isn't found");
+    CallThrow(iss, "1:1: Main function isn't found");
 }
 
 TEST_F(SemanticAnalysisTests, VarUndeclaredVariableCheckOK) {
@@ -59,11 +73,7 @@ TEST_F(SemanticAnalysisTests, VarUndeclaredVariableCheckOK) {
         }
         )");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    EXPECT_NO_THROW(ast->accept(&semantic_visitor));
+    CallNoThrow(iss);
 }
 
 TEST_F(SemanticAnalysisTests, VarUndeclaredVariableCheckFail) {
@@ -74,11 +84,7 @@ TEST_F(SemanticAnalysisTests, VarUndeclaredVariableCheckFail) {
         }
         )");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    ExpectThrow(ast->accept(&semantic_visitor), "3:17: Undeclared variable j");
+    CallThrow(iss, "3:17: Undeclared variable j");
 }
 
 TEST_F(SemanticAnalysisTests, AssignUndeclaredVariableCheckOK) {
@@ -89,11 +95,7 @@ TEST_F(SemanticAnalysisTests, AssignUndeclaredVariableCheckOK) {
     }
     )");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    EXPECT_NO_THROW(ast->accept(&semantic_visitor));
+    CallNoThrow(iss);
 }
 
 TEST_F(SemanticAnalysisTests, AssignUndeclaredVariableCheckFail) {
@@ -103,11 +105,7 @@ TEST_F(SemanticAnalysisTests, AssignUndeclaredVariableCheckFail) {
 }
 )");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    ExpectThrow(ast->accept(&semantic_visitor), "2:11: Undeclared variable i");
+    CallThrow(iss, "2:11: Undeclared variable i");
 }
 
 TEST_F(SemanticAnalysisTests, FunCallUndeclaredFuncCheckOK) {
@@ -119,11 +117,7 @@ TEST_F(SemanticAnalysisTests, FunCallUndeclaredFuncCheckOK) {
 }
 )");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    EXPECT_NO_THROW(ast->accept(&semantic_visitor));
+    CallNoThrow(iss);
 }
 
 TEST_F(SemanticAnalysisTests, FunCallUndeclaredFuncCheckFail) {
@@ -133,11 +127,7 @@ TEST_F(SemanticAnalysisTests, FunCallUndeclaredFuncCheckFail) {
 }
 )");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    ExpectThrow(ast->accept(&semantic_visitor), "2:9: Undeclared func foo");
+    CallThrow(iss, "2:9: Undeclared func foo");
 }
 
 TEST_F(SemanticAnalysisTests, FunCallWrongNumberOfArgumentsCheckOK) {
@@ -149,11 +139,7 @@ TEST_F(SemanticAnalysisTests, FunCallWrongNumberOfArgumentsCheckOK) {
 }
 )");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    EXPECT_NO_THROW(ast->accept(&semantic_visitor));
+    CallNoThrow(iss);
 }
 
 TEST_F(SemanticAnalysisTests, FunCallWrongNumberOfArgumentsCheckFail) {
@@ -165,12 +151,8 @@ TEST_F(SemanticAnalysisTests, FunCallWrongNumberOfArgumentsCheckFail) {
 }
 )");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    ExpectThrow(
-        ast->accept(&semantic_visitor),
+    CallThrow(
+        iss,
         "4:9: Incorrect arguments number to call abs. Expected 1 but got 2");
 }
 
@@ -183,11 +165,7 @@ TEST_F(SemanticAnalysisTests, FunCallWrongArgumentTypeCheckOK) {
 }
 )");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    EXPECT_NO_THROW(ast->accept(&semantic_visitor));
+    CallNoThrow(iss);
 }
 
 TEST_F(SemanticAnalysisTests, FunCallWrongArgumentTypeCheckFail) {
@@ -199,13 +177,9 @@ TEST_F(SemanticAnalysisTests, FunCallWrongArgumentTypeCheckFail) {
 }
 )");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    ExpectThrow(ast->accept(&semantic_visitor),
-                "4:9: Incorrect argument 0 type to call abs. Expected int but "
-                "got bool");
+    CallThrow(iss,
+              "4:9: Incorrect argument 0 type to call abs. Expected int but "
+              "got bool");
 }
 
 TEST_F(SemanticAnalysisTests, AssignFromValueCheckTypeOK) {
@@ -216,11 +190,7 @@ TEST_F(SemanticAnalysisTests, AssignFromValueCheckTypeOK) {
 }
 )");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    EXPECT_NO_THROW(ast->accept(&semantic_visitor));
+    CallNoThrow(iss);
 }
 
 TEST_F(SemanticAnalysisTests, AssignFromValueCheckTypeFail) {
@@ -231,12 +201,7 @@ TEST_F(SemanticAnalysisTests, AssignFromValueCheckTypeFail) {
 }
 )");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    ExpectThrow(ast->accept(&semantic_visitor),
-                "3:11: Type mismatch: cannot assign bool to i");
+    CallThrow(iss, "3:11: Type mismatch: cannot assign bool to i");
 }
 
 TEST_F(SemanticAnalysisTests, AssignFromArrayCheckTypeFail) {
@@ -248,12 +213,7 @@ TEST_F(SemanticAnalysisTests, AssignFromArrayCheckTypeFail) {
 }
 )");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    ExpectThrow(ast->accept(&semantic_visitor),
-                "4:11: Type mismatch: cannot assign int[2] to i");
+    CallThrow(iss, "4:11: Type mismatch: cannot assign int[2] to i");
 }
 
 TEST_F(SemanticAnalysisTests, AssignFromFunCallReturnCheckTypeOK) {
@@ -266,11 +226,7 @@ TEST_F(SemanticAnalysisTests, AssignFromFunCallReturnCheckTypeOK) {
 }
 )");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    EXPECT_NO_THROW(ast->accept(&semantic_visitor));
+    CallNoThrow(iss);
 }
 
 TEST_F(SemanticAnalysisTests, AssignFromFunCallReturnCheckTypeFail) {
@@ -283,12 +239,7 @@ TEST_F(SemanticAnalysisTests, AssignFromFunCallReturnCheckTypeFail) {
 }
 )");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    ExpectThrow(ast->accept(&semantic_visitor),
-                "5:11: Type mismatch: cannot assign bool to i");
+    CallThrow(iss, "5:11: Type mismatch: cannot assign bool to i");
 }
 
 TEST_F(SemanticAnalysisTests, ArrayAssignmentFromValueCheckTypeOK) {
@@ -299,11 +250,7 @@ TEST_F(SemanticAnalysisTests, ArrayAssignmentFromValueCheckTypeOK) {
 }
 )");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    EXPECT_NO_THROW(ast->accept(&semantic_visitor));
+    CallNoThrow(iss);
 }
 
 TEST_F(SemanticAnalysisTests, ArrayAssignmentFromValueCheckTypeFail) {
@@ -314,12 +261,7 @@ TEST_F(SemanticAnalysisTests, ArrayAssignmentFromValueCheckTypeFail) {
 }
 )");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    ExpectThrow(ast->accept(&semantic_visitor),
-                "3:14: Type mismatch: cannot assign bool to i");
+    CallThrow(iss, "3:14: Type mismatch: cannot assign bool to i");
 }
 
 TEST_F(SemanticAnalysisTests, ArrayAssignmentFromArrayCheckTypeFail) {
@@ -330,12 +272,7 @@ TEST_F(SemanticAnalysisTests, ArrayAssignmentFromArrayCheckTypeFail) {
 }
 )");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    ExpectThrow(ast->accept(&semantic_visitor),
-                "3:14: Type mismatch: cannot assign int[2] to i");
+    CallThrow(iss, "3:14: Type mismatch: cannot assign int[2] to i");
 }
 
 TEST_F(SemanticAnalysisTests, ArrayAssignmentFromFunCallReturnCheckTypeOK) {
@@ -348,11 +285,7 @@ TEST_F(SemanticAnalysisTests, ArrayAssignmentFromFunCallReturnCheckTypeOK) {
 }
 )");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    EXPECT_NO_THROW(ast->accept(&semantic_visitor));
+    CallNoThrow(iss);
 }
 
 TEST_F(SemanticAnalysisTests, ArrayAssignmentFromFunCallReturnCheckTypeFail) {
@@ -365,12 +298,7 @@ TEST_F(SemanticAnalysisTests, ArrayAssignmentFromFunCallReturnCheckTypeFail) {
 }
 )");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    ExpectThrow(ast->accept(&semantic_visitor),
-                "5:11: Type mismatch: cannot assign bool to i");
+    CallThrow(iss, "5:11: Type mismatch: cannot assign bool to i");
 }
 
 TEST_F(SemanticAnalysisTests, ArrayAssignmentUndeclaredFail) {
@@ -381,12 +309,7 @@ TEST_F(SemanticAnalysisTests, ArrayAssignmentUndeclaredFail) {
 }
 )");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    ExpectThrow(ast->accept(&semantic_visitor),
-                "3:15: Undeclared array variable i");
+    CallThrow(iss, "3:15: Undeclared array variable i");
 }
 
 TEST_F(SemanticAnalysisTests, ArrayAssignmenInBoundsOK) {
@@ -400,11 +323,7 @@ TEST_F(SemanticAnalysisTests, ArrayAssignmenInBoundsOK) {
 }
 )");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    EXPECT_NO_THROW(ast->accept(&semantic_visitor));
+    CallNoThrow(iss);
 }
 
 TEST_F(SemanticAnalysisTests, ArrayAssignmenOutOfBoundsPositiveFail) {
@@ -416,12 +335,7 @@ TEST_F(SemanticAnalysisTests, ArrayAssignmenOutOfBoundsPositiveFail) {
 }
 )");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    ExpectThrow(ast->accept(&semantic_visitor),
-                "4:14: Array assign out of bounds");
+    CallThrow(iss, "4:14: Array assign out of bounds");
 }
 
 TEST_F(SemanticAnalysisTests, FunctionRedeclarationFail) {
@@ -433,12 +347,7 @@ TEST_F(SemanticAnalysisTests, FunctionRedeclarationFail) {
 }
 )");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    ExpectThrow(ast->accept(&semantic_visitor),
-                "3:9: Redeclaration of abs. Previously declared at 2:9");
+    CallThrow(iss, "3:9: Redeclaration of abs. Previously declared at 2:9");
 }
 
 TEST_F(SemanticAnalysisTests, FunctionParamRedeclarationFail) {
@@ -449,12 +358,7 @@ TEST_F(SemanticAnalysisTests, FunctionParamRedeclarationFail) {
 }
 )");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    ExpectThrow(ast->accept(&semantic_visitor),
-                "2:9: Redeclaration of i. Previously declared at 2:9");
+    CallThrow(iss, "2:9: Redeclaration of i. Previously declared at 2:9");
 }
 
 TEST_F(SemanticAnalysisTests, FunctionParamUseSameScopeOK) {
@@ -465,11 +369,7 @@ TEST_F(SemanticAnalysisTests, FunctionParamUseSameScopeOK) {
 }
 )");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    EXPECT_NO_THROW(ast->accept(&semantic_visitor));
+    CallNoThrow(iss);
 }
 
 TEST_F(SemanticAnalysisTests, FunctionParamUseOtherScopeFail) {
@@ -481,11 +381,7 @@ TEST_F(SemanticAnalysisTests, FunctionParamUseOtherScopeFail) {
 }
 )");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    ExpectThrow(ast->accept(&semantic_visitor), "4:11: Undeclared variable i");
+    CallThrow(iss, "4:11: Undeclared variable i");
 }
 
 TEST_F(SemanticAnalysisTests, FunctionParamRedeclarationWithVarSameScopeFail) {
@@ -496,12 +392,7 @@ TEST_F(SemanticAnalysisTests, FunctionParamRedeclarationWithVarSameScopeFail) {
 }
 )");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    ExpectThrow(ast->accept(&semantic_visitor),
-                "2:27: Redeclaration of i. Previously declared at 2:9");
+    CallThrow(iss, "2:27: Redeclaration of i. Previously declared at 2:9");
 }
 
 TEST_F(SemanticAnalysisTests, FunctionVoidWithoutReturnOK) {
@@ -512,11 +403,7 @@ TEST_F(SemanticAnalysisTests, FunctionVoidWithoutReturnOK) {
 }
 )");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    EXPECT_NO_THROW(ast->accept(&semantic_visitor));
+    CallNoThrow(iss);
 }
 
 TEST_F(SemanticAnalysisTests, FunctionNonVoidWithReturnOK) {
@@ -526,11 +413,7 @@ TEST_F(SemanticAnalysisTests, FunctionNonVoidWithReturnOK) {
 }
 )");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    EXPECT_NO_THROW(ast->accept(&semantic_visitor));
+    CallNoThrow(iss);
 }
 
 TEST_F(SemanticAnalysisTests, FunctionNonVoidWithoutReturnFail) {
@@ -539,12 +422,7 @@ TEST_F(SemanticAnalysisTests, FunctionNonVoidWithoutReturnFail) {
 }
 )");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    ExpectThrow(ast->accept(&semantic_visitor),
-                "2:9: non-void function main does not return a value");
+    CallThrow(iss, "2:9: non-void function main does not return a value");
 }
 
 TEST_F(SemanticAnalysisTests, FunctionCheckReturnTypeOK) {
@@ -554,11 +432,7 @@ TEST_F(SemanticAnalysisTests, FunctionCheckReturnTypeOK) {
 }
 )");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    EXPECT_NO_THROW(ast->accept(&semantic_visitor));
+    CallNoThrow(iss);
 }
 
 TEST_F(SemanticAnalysisTests, FunctionCheckReturnTypeFail) {
@@ -568,12 +442,7 @@ TEST_F(SemanticAnalysisTests, FunctionCheckReturnTypeFail) {
 }
 )");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    ExpectThrow(ast->accept(&semantic_visitor),
-                "3:9: Type mismatch: main return type is int but got bool");
+    CallThrow(iss, "3:9: Type mismatch: main return type is int but got bool");
 }
 
 TEST_F(SemanticAnalysisTests, IfThenElseConditionTrueLiteralCheckTypeOK) {
@@ -583,11 +452,7 @@ TEST_F(SemanticAnalysisTests, IfThenElseConditionTrueLiteralCheckTypeOK) {
 }
 )");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    EXPECT_NO_THROW(ast->accept(&semantic_visitor));
+    CallNoThrow(iss);
 }
 
 TEST_F(SemanticAnalysisTests, IfThenElseConditionFalseLiteralCheckTypeOK) {
@@ -597,11 +462,7 @@ TEST_F(SemanticAnalysisTests, IfThenElseConditionFalseLiteralCheckTypeOK) {
 }
 )");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    EXPECT_NO_THROW(ast->accept(&semantic_visitor));
+    CallNoThrow(iss);
 }
 
 TEST_F(SemanticAnalysisTests, IfThenElseConditionVarCheckTypeOK) {
@@ -612,11 +473,7 @@ TEST_F(SemanticAnalysisTests, IfThenElseConditionVarCheckTypeOK) {
 }
 )");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    EXPECT_NO_THROW(ast->accept(&semantic_visitor));
+    CallNoThrow(iss);
 }
 
 TEST_F(SemanticAnalysisTests, IfThenElseConditionVarCheckTypeFail) {
@@ -627,12 +484,7 @@ TEST_F(SemanticAnalysisTests, IfThenElseConditionVarCheckTypeFail) {
 }
 )");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    ExpectThrow(ast->accept(&semantic_visitor),
-                "3:9: Type mismatch: condition is not bool");
+    CallThrow(iss, "3:9: Type mismatch: condition is not bool");
 }
 
 TEST_F(SemanticAnalysisTests, IfThenElseConditionNumberCheckTypeFail) {
@@ -642,12 +494,7 @@ TEST_F(SemanticAnalysisTests, IfThenElseConditionNumberCheckTypeFail) {
 }
 )");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    ExpectThrow(ast->accept(&semantic_visitor),
-                "2:9: Type mismatch: condition is not bool");
+    CallThrow(iss, "2:9: Type mismatch: condition is not bool");
 }
 
 TEST_F(SemanticAnalysisTests, LogicOpTwoNumbersCheckTypeOK) {
@@ -657,11 +504,7 @@ TEST_F(SemanticAnalysisTests, LogicOpTwoNumbersCheckTypeOK) {
 }
 )");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    EXPECT_NO_THROW(ast->accept(&semantic_visitor));
+    CallNoThrow(iss);
 }
 
 TEST_F(SemanticAnalysisTests, LogicOpVarAndNumberCheckTypeOK) {
@@ -672,11 +515,7 @@ TEST_F(SemanticAnalysisTests, LogicOpVarAndNumberCheckTypeOK) {
 }
 )");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    EXPECT_NO_THROW(ast->accept(&semantic_visitor));
+    CallNoThrow(iss);
 }
 
 TEST_F(SemanticAnalysisTests, LogicOpNumberAndVarCheckTypeOK) {
@@ -687,11 +526,7 @@ TEST_F(SemanticAnalysisTests, LogicOpNumberAndVarCheckTypeOK) {
 }
 )");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    EXPECT_NO_THROW(ast->accept(&semantic_visitor));
+    CallNoThrow(iss);
 }
 
 TEST_F(SemanticAnalysisTests, LogicOpNumberAndBoolCheckTypeFail) {
@@ -701,12 +536,7 @@ TEST_F(SemanticAnalysisTests, LogicOpNumberAndBoolCheckTypeFail) {
 }
 )");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    ExpectThrow(ast->accept(&semantic_visitor),
-                "2:11: Type mismatch: cannot perform < for int and bool");
+    CallThrow(iss, "2:11: Type mismatch: cannot perform < for int and bool");
 }
 
 TEST_F(SemanticAnalysisTests, ArithOpTwoNumbersCheckTypeOK) {
@@ -716,11 +546,7 @@ TEST_F(SemanticAnalysisTests, ArithOpTwoNumbersCheckTypeOK) {
 }
 )");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    EXPECT_NO_THROW(ast->accept(&semantic_visitor));
+    CallNoThrow(iss);
 }
 
 TEST_F(SemanticAnalysisTests, ArithOpVarAndNumberCheckTypeOK) {
@@ -731,11 +557,7 @@ TEST_F(SemanticAnalysisTests, ArithOpVarAndNumberCheckTypeOK) {
 }
 )");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    EXPECT_NO_THROW(ast->accept(&semantic_visitor));
+    CallNoThrow(iss);
 }
 
 TEST_F(SemanticAnalysisTests, ArithOpNumberAndVarCheckTypeOK) {
@@ -746,11 +568,7 @@ TEST_F(SemanticAnalysisTests, ArithOpNumberAndVarCheckTypeOK) {
 }
 )");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    EXPECT_NO_THROW(ast->accept(&semantic_visitor));
+    CallNoThrow(iss);
 }
 
 TEST_F(SemanticAnalysisTests, ArithOpNumberAndBoolCheckTypeFail) {
@@ -760,12 +578,7 @@ TEST_F(SemanticAnalysisTests, ArithOpNumberAndBoolCheckTypeFail) {
 }
 )");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    ExpectThrow(ast->accept(&semantic_visitor),
-                "2:11: Type mismatch: cannot perform + for int and bool");
+    CallThrow(iss, "2:11: Type mismatch: cannot perform + for int and bool");
 }
 
 TEST_F(SemanticAnalysisTests, VarDefRedeclarationSameScopeFail) {
@@ -777,12 +590,7 @@ TEST_F(SemanticAnalysisTests, VarDefRedeclarationSameScopeFail) {
 }
 )");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    ExpectThrow(ast->accept(&semantic_visitor),
-                "4:9: Redeclaration of i. Previously declared at 3:9");
+    CallThrow(iss, "4:9: Redeclaration of i. Previously declared at 3:9");
 }
 
 TEST_F(SemanticAnalysisTests, VarDefHideParentScopeOK) {
@@ -794,11 +602,7 @@ TEST_F(SemanticAnalysisTests, VarDefHideParentScopeOK) {
 }
 )");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    EXPECT_NO_THROW(ast->accept(&semantic_visitor));
+    CallNoThrow(iss);
 }
 
 TEST_F(SemanticAnalysisTests, VarDefDeclaredInOtherFunctionFail) {
@@ -812,11 +616,7 @@ TEST_F(SemanticAnalysisTests, VarDefDeclaredInOtherFunctionFail) {
 }
 )");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    ExpectThrow(ast->accept(&semantic_visitor), "6:11: Undeclared variable i");
+    CallThrow(iss, "6:11: Undeclared variable i");
 }
 
 TEST_F(SemanticAnalysisTests, VarDefDeclaredInWhileBlockSameScopeOk) {
@@ -830,11 +630,7 @@ TEST_F(SemanticAnalysisTests, VarDefDeclaredInWhileBlockSameScopeOk) {
 }
 )");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    EXPECT_NO_THROW(ast->accept(&semantic_visitor));
+    CallNoThrow(iss);
 }
 
 TEST_F(SemanticAnalysisTests, VarDefDeclaredInWhileBlockOtherScopeFail) {
@@ -848,11 +644,7 @@ TEST_F(SemanticAnalysisTests, VarDefDeclaredInWhileBlockOtherScopeFail) {
 }
 )");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    ExpectThrow(ast->accept(&semantic_visitor), "6:11: Undeclared variable i");
+    CallThrow(iss, "6:11: Undeclared variable i");
 }
 
 TEST_F(SemanticAnalysisTests, ArrayDeclarationRedeclarationSameScopeFail) {
@@ -864,12 +656,7 @@ TEST_F(SemanticAnalysisTests, ArrayDeclarationRedeclarationSameScopeFail) {
 }
 )");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    ExpectThrow(ast->accept(&semantic_visitor),
-                "4:9: Redeclaration of i. Previously declared at 3:9");
+    CallThrow(iss, "4:9: Redeclaration of i. Previously declared at 3:9");
 }
 
 TEST_F(SemanticAnalysisTests, ArrayDeclarationHideParentScopeOK) {
@@ -881,11 +668,7 @@ TEST_F(SemanticAnalysisTests, ArrayDeclarationHideParentScopeOK) {
 }
 )");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    EXPECT_NO_THROW(ast->accept(&semantic_visitor));
+    CallNoThrow(iss);
 }
 
 TEST_F(SemanticAnalysisTests, ArrayAccessUndeclaredVariableCheckOK) {
@@ -896,11 +679,7 @@ TEST_F(SemanticAnalysisTests, ArrayAccessUndeclaredVariableCheckOK) {
 }
 )");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    EXPECT_NO_THROW(ast->accept(&semantic_visitor));
+    CallNoThrow(iss);
 }
 
 TEST_F(SemanticAnalysisTests, ArrayAccessUndeclaredVariableCheckFail) {
@@ -910,12 +689,7 @@ TEST_F(SemanticAnalysisTests, ArrayAccessUndeclaredVariableCheckFail) {
 }
 )");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    ExpectThrow(ast->accept(&semantic_visitor),
-                "2:14: Undeclared array variable i");
+    CallThrow(iss, "2:14: Undeclared array variable i");
 }
 
 TEST_F(SemanticAnalysisTests, ArrayAccessInBoundsOK) {
@@ -930,11 +704,7 @@ TEST_F(SemanticAnalysisTests, ArrayAccessInBoundsOK) {
 }
 )");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    EXPECT_NO_THROW(ast->accept(&semantic_visitor));
+    CallNoThrow(iss);
 }
 
 TEST_F(SemanticAnalysisTests, ArrayAccessOutOfBoundsFail) {
@@ -947,10 +717,5 @@ TEST_F(SemanticAnalysisTests, ArrayAccessOutOfBoundsFail) {
 }
 )");
 
-    auto ast = Init(iss);
-    ASSERT_TRUE(ast);
-
-    SemanticVisitor semantic_visitor;
-    ExpectThrow(ast->accept(&semantic_visitor),
-                "5:14: Array assign out of bounds");
+    CallThrow(iss, "5:14: Array assign out of bounds");
 }

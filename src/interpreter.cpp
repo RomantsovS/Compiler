@@ -1,4 +1,4 @@
-#include "interpreter_visitor.h"
+#include "interpreter.h"
 
 #include <algorithm>
 #include <string>
@@ -18,9 +18,10 @@
 #include "ast/string_literal.h"
 #include "ast/var.h"
 #include "ast/while.h"
+#include "ir.h"
 
-int Interpreter::Exec(std::shared_ptr<AST::ASTNode> node) {
-    auto obj = Eval(node);
+int Interpreter::Exec(IR ir) {
+    auto obj = Eval(ir.GetAST());
 
     auto number_ptr = obj.TryAs<Number>();
     if (number_ptr) return number_ptr->GetValue();

@@ -103,6 +103,22 @@ ObjectHolder Interpreter::Eval(std::shared_ptr<AST::ArithOp> node) {
     return {};
 }
 
+ObjectHolder Interpreter::Eval(std::shared_ptr<AST::LogicOp> node) {
+    auto lhs = Eval(node->lhs);
+    auto rhs = Eval(node->rhs);
+
+    if (node->op == "<") {
+        return ObjectHolder::Own(ValueObject(lhs.TryAs<Number>()->GetValue() <
+                                             rhs.TryAs<Number>()->GetValue()));
+    } else if (node->op == ">") {
+        return ObjectHolder::Own(ValueObject(lhs.TryAs<Number>()->GetValue() >
+                                             rhs.TryAs<Number>()->GetValue()));
+    } else {
+        Error(node.get(), "Unknown arith op: ", node->op);
+    }
+    return {};
+}
+
 /*
 void Interpreter::visit(AST::IfThenElse* node) {
     os_ << "if (";
@@ -115,16 +131,6 @@ void Interpreter::visit(AST::IfThenElse* node) {
         node->else_branch->accept(this);
         os_ << "\n}";
     }
-}
-
-void Interpreter::visit(AST::LogicOp* node) {
-    // os_ << "(";
-    node->lhs->accept(this);
-    // os_ << ")";
-    os_ << " " << node->op << " ";
-    // os_ << "(";
-    node->rhs->accept(this);
-    // os_ << ")";
 }
 
 */
@@ -243,6 +249,8 @@ ObjectHolder Interpreter::Eval(std::shared_ptr<AST::ASTNode> node) {
         return Eval(assign);
     } else if (auto ar_op = std::dynamic_pointer_cast<AST::ArithOp>(node)) {
         return Eval(ar_op);
+    } else if (auto l_op = std::dynamic_pointer_cast<AST::LogicOp>(node)) {
+        return Eval(l_op);
     }
 
     Error(node.get(), "unknown node");

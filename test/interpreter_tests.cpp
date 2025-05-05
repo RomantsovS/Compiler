@@ -271,6 +271,73 @@ print(i + 2);
     EXPECT_EQ(oss.str(), expected);
 }
 
+TEST_F(InterpreterTests, IntLiteralLessIntLiteralTrueOK) {
+    std::istringstream iss(R"(void main() {
+print(1 < 2);
+})");
+
+    std::ostringstream oss;
+    EXPECT_NO_THROW(Exec(iss, oss));
+
+    const std::string expected(R"(1
+)");
+    EXPECT_EQ(oss.str(), expected);
+}
+
+TEST_F(InterpreterTests, IntLiteralLessIntLiteralFalseOK) {
+    std::istringstream iss(R"(void main() {
+print(1 > 2);
+})");
+
+    std::ostringstream oss;
+    EXPECT_NO_THROW(Exec(iss, oss));
+
+    const std::string expected(R"(0
+)");
+    EXPECT_EQ(oss.str(), expected);
+}
+
+TEST_F(InterpreterTests, IntLiteralGreaterIntLiteralTrueOK) {
+    std::istringstream iss(R"(void main() {
+print(10 > 2);
+})");
+
+    std::ostringstream oss;
+    EXPECT_NO_THROW(Exec(iss, oss));
+
+    const std::string expected(R"(1
+)");
+    EXPECT_EQ(oss.str(), expected);
+}
+
+TEST_F(InterpreterTests, IntLiteralGreaterIntLiteralFalseOK) {
+    std::istringstream iss(R"(void main() {
+print(10 < 2);
+})");
+
+    std::ostringstream oss;
+    EXPECT_NO_THROW(Exec(iss, oss));
+
+    const std::string expected(R"(0
+)");
+    EXPECT_EQ(oss.str(), expected);
+}
+
+TEST_F(InterpreterTests, IntVarLessIntLiteralOK) {
+    std::istringstream iss(R"(void main() {
+int i;
+i = 1;
+print(i < 2);
+})");
+
+    std::ostringstream oss;
+    EXPECT_NO_THROW(Exec(iss, oss));
+
+    const std::string expected(R"(1
+)");
+    EXPECT_EQ(oss.str(), expected);
+}
+
 TEST_F(InterpreterTests, ReassignIntVarOK) {
     std::istringstream iss(R"(void main() {
 int i;

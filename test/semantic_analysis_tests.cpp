@@ -23,6 +23,33 @@ class SemanticAnalysisTests : public ::testing::Test {
     }
 };
 
+TEST_F(SemanticAnalysisTests, ProgramMainFunctionOK) {
+    std::istringstream iss(R"(int main() {
+            return 0;
+        }
+        )");
+
+    auto ast = Init(iss);
+    ASSERT_TRUE(ast);
+
+    SemanticVisitor semantic_visitor;
+    EXPECT_NO_THROW(ast->accept(&semantic_visitor));
+}
+
+TEST_F(SemanticAnalysisTests, ProgramMainFunctionFail) {
+    std::istringstream iss(R"(int foo() {
+            return 0;
+        }
+        )");
+
+    auto ast = Init(iss);
+    ASSERT_TRUE(ast);
+
+    SemanticVisitor semantic_visitor;
+    ExpectThrow(ast->accept(&semantic_visitor),
+                "1:1: Main function isn't found");
+}
+
 TEST_F(SemanticAnalysisTests, VarUndeclaredVariableCheckOK) {
     std::istringstream iss(R"(int main() {
             int i;

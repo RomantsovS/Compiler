@@ -23,8 +23,16 @@ void SemanticVisitor::visit(AST::Program* node) {
     for (auto global : node->globals) {
         global->accept(this);
     }
+    bool has_main = false;
     for (auto function : node->functions) {
+        if (auto func = std::dynamic_pointer_cast<AST::Function>(function);
+            func->name == "main") {
+            has_main = true;
+        }
         function->accept(this);
+    }
+    if (!has_main) {
+        Error(node, "Main function isn't found");
     }
 }
 

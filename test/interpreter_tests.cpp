@@ -12,160 +12,135 @@
 
 class InterpreterTests : public ::testing::Test {
    protected:
-    IR Init(std::istringstream& iss) {
+    void Exec(std::istringstream& iss, std::ostringstream& oss) {
         Driver driver;
         auto res = driver.Run(iss);
         if (res) throw std::runtime_error("Driver run error");
 
-        return driver.GetIR();
-    }
-
-    void Exec(const IR& ir, std::ostringstream& oss) {
-        Interpreter interpreter(oss);
-        interpreter.Exec(ir);
+        Interpreter interpreter(driver.GetIR(), oss);
+        interpreter.Exec();
     }
 };
 
-TEST_F(InterpreterTests, SimpleMainOK) {
-    std::istringstream iss(R"(int main() {})");
-
-    auto ir = Init(iss);
+TEST_F(InterpreterTests, SimpleVoidMainOK) {
+    std::istringstream iss(R"(void main() {})");
 
     std::ostringstream oss;
-    EXPECT_NO_THROW(Exec(ir, oss));
+    EXPECT_NO_THROW(Exec(iss, oss));
 
     const std::string expected(R"()");
     EXPECT_EQ(oss.str(), expected);
 }
 
-TEST_F(InterpreterTests, PrintIntLiteral) {
-    std::istringstream iss(R"(int main() {
+TEST_F(InterpreterTests, SimpleIntMainOK) {
+    std::istringstream iss(R"(int main() {return 0;})");
+
+    std::ostringstream oss;
+    EXPECT_NO_THROW(Exec(iss, oss));
+
+    const std::string expected(R"()");
+    EXPECT_EQ(oss.str(), expected);
+}
+
+TEST_F(InterpreterTests, PrintIntLiteralOK) {
+    std::istringstream iss(R"(void main() {
 print (1);
 })");
 
-    auto ir = Init(iss);
-
     std::ostringstream oss;
-    EXPECT_NO_THROW(Exec(ir, oss));
+    EXPECT_NO_THROW(Exec(iss, oss));
 
     const std::string expected(R"(1
 )");
     EXPECT_EQ(oss.str(), expected);
 }
 
-TEST_F(InterpreterTests, PrintStringLiteral) {
-    std::istringstream iss(R"(int main() {
+TEST_F(InterpreterTests, PrintStringLiteralOK) {
+    std::istringstream iss(R"(void main() {
 print ("1");
 })");
 
-    auto ir = Init(iss);
-
     std::ostringstream oss;
-    EXPECT_NO_THROW(Exec(ir, oss));
+    EXPECT_NO_THROW(Exec(iss, oss));
 
     const std::string expected(R"(1
 )");
     EXPECT_EQ(oss.str(), expected);
 }
 
-TEST_F(InterpreterTests, PrintIntVar) {
-    std::istringstream iss(R"(int main() {
+TEST_F(InterpreterTests, PrintIntVarOK) {
+    std::istringstream iss(R"(void main() {
 int i;
 i = 1;
 print (i);
 })");
 
-    auto ir = Init(iss);
-
     std::ostringstream oss;
-    EXPECT_NO_THROW(Exec(ir, oss));
+    EXPECT_NO_THROW(Exec(iss, oss));
 
     const std::string expected(R"(1
 )");
     EXPECT_EQ(oss.str(), expected);
 }
 
-TEST_F(InterpreterTests, PrintIntVarWithoutInitialization) {
-    std::istringstream iss(R"(int main() {
+TEST_F(InterpreterTests, PrintIntVarWithoutInitializationFail) {
+    std::istringstream iss(R"(void main() {
 int i;
 print (i);
 })");
 
-    auto ir = Init(iss);
-
     std::ostringstream oss;
-    ExpectThrow(Exec(ir, oss), "3:8: Variable i uninitialized");
+    ExpectThrow(Exec(iss, oss), "3:8: Variable i uninitialized");
 }
 
-TEST_F(InterpreterTests, PrintIntArray) {
-    std::istringstream iss(R"(int main() {
+TEST_F(InterpreterTests, PrintIntArrayOK) {
+    std::istringstream iss(R"(void main() {
 int i[10];
 i[0] = 1;
 print (i[0]);
 })");
 
-    auto ir = Init(iss);
-
     std::ostringstream oss;
-    EXPECT_NO_THROW(Exec(ir, oss));
+    EXPECT_NO_THROW(Exec(iss, oss));
 
     const std::string expected(R"(1
 )");
     EXPECT_EQ(oss.str(), expected);
 }
 
-TEST_F(InterpreterTests, PrintIntArrayWithoutInitialization) {
-    std::istringstream iss(R"(int main() {
+TEST_F(InterpreterTests, PrintIntArrayWithoutInitializationFail) {
+    std::istringstream iss(R"(void main() {
 int i[10];
 print (i[0]);
 })");
 
-    auto ir = Init(iss);
-
     std::ostringstream oss;
-    ExpectThrow(Exec(ir, oss), "array access out of bounds");
+    ExpectThrow(Exec(iss, oss), "array access out of bounds");
 }
 
 TEST_F(InterpreterTests, AccessIntArrayOutOfAssignedBoundsFail) {
-    std::istringstream iss(R"(int main() {
+    std::istringstream iss(R"(void main() {
 int i[10];
 i[0] = 0;
 print (i[1]);
 })");
 
-    auto ir = Init(iss);
-
     std::ostringstream oss;
-    ExpectThrow(Exec(ir, oss), "array access out of bounds");
+    ExpectThrow(Exec(iss, oss), "array access out of bounds");
 }
 
-TEST_F(InterpreterTests, AccessIntArrayOutOfBoundsFail) {
-    std::istringstream iss(R"(int main() {
-int i[10];
-i[0] = 0;
-print (i[10]);
+TEST_F(InterpreterTests, FuncCallWithOneArgumentOK) {
+    std::istringstream iss(R"(void foo(int i) {
+print (i);
+}
+void main() {
+foo(1);
 })");
 
-    auto ir = Init(iss);
-
     std::ostringstream oss;
-    ExpectThrow(Exec(ir, oss), "array access out of bounds");
+    EXPECT_NO_THROW(Exec(iss, oss));
+
+    const std::string expected(R"(1
+)");
+    EXPECT_EQ(oss.str(), expected);
 }
-
-// TEST_F(InterpreterTests, FuncCallWithOneArgument) {
-//     std::istringstream iss(R"(void foo(int i) {
-// print (i);
-// }
-// int main() {
-// foo(1);
-// })");
-
-//     auto ir = Init(iss);
-
-//     std::ostringstream oss;
-//     EXPECT_NO_THROW(Exec(ir, oss));
-
-//     const std::string expected(R"(1
-// )");
-//     EXPECT_EQ(oss.str(), expected);
-// }

@@ -97,9 +97,9 @@ class ArrayObject : public Object {
 
 class Interpreter {
    public:
-    Interpreter(std::ostream& os) : os_(os) {}
+    Interpreter(const IR& ir, std::ostream& os) : ir_(ir), os_(os) {}
 
-    int Exec(IR ir);
+    int Exec();
 
    private:
     ObjectHolder Eval(std::shared_ptr<AST::ASTNode> node);
@@ -112,6 +112,7 @@ class Interpreter {
     ObjectHolder Eval(std::shared_ptr<AST::Function> node,
                       std::vector<ObjectHolder> args);
     ObjectHolder Eval(std::shared_ptr<AST::FunCall> node);
+    ObjectHolder Eval(std::shared_ptr<AST::Return> node);
     ObjectHolder Eval(std::shared_ptr<AST::Print> node);
     ObjectHolder Eval(std::shared_ptr<AST::Assign> node);
 
@@ -124,6 +125,7 @@ class Interpreter {
         throw std::runtime_error(oss.str());
     }
 
+    IR ir_;
     std::ostream& os_;
 
     std::unordered_map<std::string, ObjectHolder> variables;

@@ -21,8 +21,12 @@ class IR {
         functions_[name] = func;
     }
 
+    std::shared_ptr<AST::Function> GetFunction(const std::string& name) const {
+        return functions_.at(name);
+    }
+
     void SetAST(std::shared_ptr<AST::ASTNode> ast) { ast_ = ast; }
-    std::shared_ptr<AST::ASTNode> GetAST() { return ast_; }
+    std::shared_ptr<AST::ASTNode> GetAST() const { return ast_; }
 
    private:
     std::unordered_map<std::string, SymbolInfo> symbols_;

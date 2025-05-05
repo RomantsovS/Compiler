@@ -50,10 +50,10 @@ int main() {
 
     std::cout << "\n\n";
 
-    Interpreter interpreter(std::cout);
+    Interpreter interpreter(ir, std::cout);
 
     try {
-        interpreter.Exec(ir);
+        interpreter.Exec();
     } catch (const std::exception& ex) {
         std::cout << "\033[31mError: " << ex.what() << "\033[0m\n";
     }

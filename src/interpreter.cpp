@@ -20,8 +20,8 @@
 #include "ast/while.h"
 #include "ir.h"
 
-int Interpreter::Exec(IR ir) {
-    auto obj = Eval(ir.GetAST());
+int Interpreter::Exec() {
+    auto obj = Eval(ir_.GetAST());
 
     auto number_ptr = obj.TryAs<Number>();
     if (number_ptr) return number_ptr->GetValue();
@@ -69,16 +69,13 @@ ObjectHolder Interpreter::Eval(std::shared_ptr<AST::FunCall> node) {
     for (size_t i = 0; i < node->args.size(); ++i) {
         args.push_back(Eval(node->args[i]));
     }
-    auto iter = variables.find(node->name);
-    if (iter == variables.end()) {
-        Error(node.get(), "Function ", node->name, " undefined");
-    }
-    // auto func = std::dynamic_pointer_cast<AST::Function>(iter->second);
-    // if (!func) {
-    //     Error(node.get(), "FunCall expr is not Function");
-    // }
-    // return Eval(func, args);
-    return {};
+
+    auto func = ir_.GetFunction(node->name);
+    return Eval(func, args);
+}
+
+ObjectHolder Interpreter::Eval(std::shared_ptr<AST::Return> node) {
+    return Eval(node->expr);
 }
 /*
 void Interpreter::visit(AST::IfThenElse* node) {
@@ -102,12 +99,6 @@ void Interpreter::visit(AST::LogicOp* node) {
     // os_ << "(";
     node->rhs->accept(this);
     // os_ << ")";
-}
-
-void Interpreter::visit(AST::Return* node) {
-    os_ << "return ";
-    node->expr->accept(this);
-    os_ << ";";
 }
 
 void Interpreter::visit(AST::ArithOp* node) {
@@ -213,6 +204,8 @@ ObjectHolder Interpreter::Eval(std::shared_ptr<AST::ASTNode> node) {
         return Eval(func, {});
     } else if (auto fun_call = std::dynamic_pointer_cast<AST::FunCall>(node)) {
         return Eval(fun_call);
+    } else if (auto ret = std::dynamic_pointer_cast<AST::Return>(node)) {
+        return Eval(ret);
     } else if (auto int_lit = std::dynamic_pointer_cast<AST::Integer>(node)) {
         return ObjectHolder::Own(ValueObject(int_lit->value));
     } else if (auto str_lit =

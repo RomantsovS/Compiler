@@ -17,9 +17,10 @@ int Driver::Run(std::istream& input) {
         ir_.GetAST()->accept(&semantic_visitor);
     } catch (const std::exception& ex) {
         std::cout << "\033[31mError: " << ex.what() << "\033[0m\n";
+        return 1;
     }
 
-    return res;
+    return 0;
 };
 
 IR Driver::GetIR() const { return ir_; }

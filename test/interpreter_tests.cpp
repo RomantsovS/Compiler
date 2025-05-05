@@ -68,7 +68,7 @@ print ("1");
     EXPECT_EQ(oss.str(), expected);
 }
 
-TEST_F(InterpreterTests, PrintIntVarOK) {
+TEST_F(InterpreterTests, AccessIntVarOK) {
     std::istringstream iss(R"(void main() {
 int i;
 i = 1;
@@ -83,7 +83,7 @@ print (i);
     EXPECT_EQ(oss.str(), expected);
 }
 
-TEST_F(InterpreterTests, PrintIntVarWithoutInitializationFail) {
+TEST_F(InterpreterTests, AccessIntVarWithoutInitializationFail) {
     std::istringstream iss(R"(void main() {
 int i;
 print (i);
@@ -93,7 +93,7 @@ print (i);
     ExpectThrow(Exec(iss, oss), "3:8: Variable i uninitialized");
 }
 
-TEST_F(InterpreterTests, PrintIntArrayOK) {
+TEST_F(InterpreterTests, AccessIntArrayOK) {
     std::istringstream iss(R"(void main() {
 int i[10];
 i[0] = 1;
@@ -108,7 +108,7 @@ print (i[0]);
     EXPECT_EQ(oss.str(), expected);
 }
 
-TEST_F(InterpreterTests, PrintIntArrayWithoutInitializationFail) {
+TEST_F(InterpreterTests, AccessIntArrayWithoutInitializationFail) {
     std::istringstream iss(R"(void main() {
 int i[10];
 print (i[0]);
@@ -145,7 +145,7 @@ foo(1);
     EXPECT_EQ(oss.str(), expected);
 }
 
-TEST_F(InterpreterTests, PrintIntLiteralPlusIntLiteralOK) {
+TEST_F(InterpreterTests, IntLiteralPlusIntLiteralOK) {
     std::istringstream iss(R"(void main() {
 print(1 + 2);
 })");
@@ -158,7 +158,7 @@ print(1 + 2);
     EXPECT_EQ(oss.str(), expected);
 }
 
-TEST_F(InterpreterTests, PrintIntVarPlusIntLiteralOK) {
+TEST_F(InterpreterTests, IntVarPlusIntLiteralOK) {
     std::istringstream iss(R"(void main() {
 int i;
 i = 1;
@@ -169,6 +169,42 @@ print(i + 2);
     EXPECT_NO_THROW(Exec(iss, oss));
 
     const std::string expected(R"(3
+)");
+    EXPECT_EQ(oss.str(), expected);
+}
+
+TEST_F(InterpreterTests, ReassignIntVarOK) {
+    std::istringstream iss(R"(void main() {
+int i;
+i = 1;
+print(i);
+i = 2;
+print(i);
+})");
+
+    std::ostringstream oss;
+    EXPECT_NO_THROW(Exec(iss, oss));
+
+    const std::string expected(R"(1
+2
+)");
+    EXPECT_EQ(oss.str(), expected);
+}
+
+TEST_F(InterpreterTests, ReassignIntArrayOK) {
+    std::istringstream iss(R"(void main() {
+int i[10];
+i[0] = 1;
+print(i[0]);
+i[0] = 2;
+print(i[0]);
+})");
+
+    std::ostringstream oss;
+    EXPECT_NO_THROW(Exec(iss, oss));
+
+    const std::string expected(R"(1
+2
 )");
     EXPECT_EQ(oss.str(), expected);
 }

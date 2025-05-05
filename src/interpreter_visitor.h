@@ -8,7 +8,6 @@
 #include <vector>
 
 #include "ast/ast.h"
-#include "i_visitor.h"
 
 class Object;
 
@@ -42,6 +41,8 @@ class ObjectHolder {
     const T* TryAs() const {
         return dynamic_cast<const T*>(this->Get());
     }
+
+    explicit operator bool() const { return Get(); }
 
    private:
     ObjectHolder(std::shared_ptr<Object> new_data)
@@ -93,33 +94,25 @@ class ArrayObject : public Object {
     std::vector<ObjectHolder> value;
 };
 
-class InterpreterVisitor : public IASTVisitor {
+class Interpreter {
    public:
-    InterpreterVisitor(std::ostream& os) : os_(os) {}
+    Interpreter(std::ostream& os) : os_(os) {}
 
-    void visit(AST::Program* node) override;
-    void visit(AST::Function* node) override;
-    void visit(AST::Print* node) override;
-    void visit(AST::FunCall* node) override;
-    void visit(AST::IfThenElse* node) override;
-    void visit(AST::LogicOp* node) override;
-    void visit(AST::Return* node) override;
-    void visit(AST::ArithOp* node) override;
-    void visit(AST::VarDef* node) override;
-    void visit(AST::Var* node) override;
-    void visit(AST::Integer* node) override;
-    void visit(AST::Assign* node) override;
-    void visit(AST::While* node) override;
-    void visit(AST::StringLiteral* node) override;
-    void visit(AST::BoolLiteral* node) override;
-    void visit(AST::ArrayDeclaration* node) override;
-    void visit(AST::ArrayAccess* node) override;
-    void visit(AST::ArrayAssignment* node) override;
+    int Exec(std::shared_ptr<AST::ASTNode> node);
 
    private:
     ObjectHolder Eval(std::shared_ptr<AST::ASTNode> node);
+    ObjectHolder Eval(std::shared_ptr<AST::VarDef> node);
     ObjectHolder Eval(std::shared_ptr<AST::Var> node);
+    ObjectHolder Eval(std::shared_ptr<AST::ArrayDeclaration> node);
     ObjectHolder Eval(std::shared_ptr<AST::ArrayAccess> node);
+    ObjectHolder Eval(std::shared_ptr<AST::ArrayAssignment> node);
+    ObjectHolder Eval(std::shared_ptr<AST::Program> node);
+    ObjectHolder Eval(std::shared_ptr<AST::Function> node,
+                      std::vector<ObjectHolder> args);
+    ObjectHolder Eval(std::shared_ptr<AST::FunCall> node);
+    ObjectHolder Eval(std::shared_ptr<AST::Print> node);
+    ObjectHolder Eval(std::shared_ptr<AST::Assign> node);
 
     template <typename... Args>
     void Error(AST::ASTNode* node, Args... args) {
@@ -133,4 +126,5 @@ class InterpreterVisitor : public IASTVisitor {
     std::ostream& os_;
 
     std::unordered_map<std::string, ObjectHolder> variables;
+    std::unordered_map<std::string, std::shared_ptr<AST::Function>> functions;
 };

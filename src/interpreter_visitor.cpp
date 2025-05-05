@@ -1,5 +1,6 @@
 #include "interpreter_visitor.h"
 
+#include <algorithm>
 #include <string>
 
 #include "ast/arithmetic_op.h"
@@ -18,39 +19,68 @@
 #include "ast/var.h"
 #include "ast/while.h"
 
-void InterpreterVisitor::visit(AST::Program* node) {
-    for (auto global : node->globals) {
-        global->accept(this);
-    }
-    for (auto function : node->functions) {
-        function->accept(this);
-    }
+int Interpreter::Exec(std::shared_ptr<AST::ASTNode> node) {
+    auto obj = Eval(node);
+
+    auto number_ptr = obj.TryAs<Number>();
+    if (number_ptr) return number_ptr->GetValue();
+
+    return 1;
 }
 
-void InterpreterVisitor::visit(AST::Function* node) {
+ObjectHolder Interpreter::Eval(std::shared_ptr<AST::Program> node) {
+    for (auto global : node->globals) {
+        Eval(global);
+    }
+    auto iter = std::find_if(
+        node->functions.begin(), node->functions.end(),
+        [](std::shared_ptr<AST::ASTNode> function) {
+            auto func = std::dynamic_pointer_cast<AST::Function>(function);
+            return func && func->name == "main";
+        });
+    if (iter == node->functions.end()) {
+        Error(node.get(), "Main function isn't found");
+    }
+
+    return Eval(*iter);
+}
+
+ObjectHolder Interpreter::Eval(std::shared_ptr<AST::Function> node,
+                               std::vector<ObjectHolder> args) {
     for (size_t i = 0; i < node->args.size(); ++i) {
+        variables[node->args[i].name] = args[i];
     }
     for (auto stmt : node->body) {
-        stmt->accept(this);
+        Eval(stmt);
     }
+    return {};
 }
 
-void InterpreterVisitor::visit(AST::Print* node) {
+ObjectHolder Interpreter::Eval(std::shared_ptr<AST::Print> node) {
     auto obj_holder = Eval(node->expr);
-    obj_holder->Print(os_);
+    if (obj_holder) obj_holder->Print(os_);
     os_ << '\n';
+    return {};
 }
 
-void InterpreterVisitor::visit(AST::FunCall* node) {
-    os_ << node->name << "(";
+ObjectHolder Interpreter::Eval(std::shared_ptr<AST::FunCall> node) {
+    std::vector<ObjectHolder> args;
     for (size_t i = 0; i < node->args.size(); ++i) {
-        if (i > 0) os_ << ", ";
-        node->args[i]->accept(this);
+        args.push_back(Eval(node->args[i]));
     }
-    os_ << ");";
+    auto iter = variables.find(node->name);
+    if (iter == variables.end()) {
+        Error(node.get(), "Function ", node->name, " undefined");
+    }
+    // auto func = std::dynamic_pointer_cast<AST::Function>(iter->second);
+    // if (!func) {
+    //     Error(node.get(), "FunCall expr is not Function");
+    // }
+    // return Eval(func, args);
+    return {};
 }
-
-void InterpreterVisitor::visit(AST::IfThenElse* node) {
+/*
+void Interpreter::visit(AST::IfThenElse* node) {
     os_ << "if (";
     node->condition->accept(this);
     os_ << ") {\n";
@@ -63,7 +93,7 @@ void InterpreterVisitor::visit(AST::IfThenElse* node) {
     }
 }
 
-void InterpreterVisitor::visit(AST::LogicOp* node) {
+void Interpreter::visit(AST::LogicOp* node) {
     // os_ << "(";
     node->lhs->accept(this);
     // os_ << ")";
@@ -73,13 +103,13 @@ void InterpreterVisitor::visit(AST::LogicOp* node) {
     // os_ << ")";
 }
 
-void InterpreterVisitor::visit(AST::Return* node) {
+void Interpreter::visit(AST::Return* node) {
     os_ << "return ";
     node->expr->accept(this);
     os_ << ";";
 }
 
-void InterpreterVisitor::visit(AST::ArithOp* node) {
+void Interpreter::visit(AST::ArithOp* node) {
     os_ << "(";
     node->lhs->accept(this);
     os_ << ")";
@@ -89,17 +119,18 @@ void InterpreterVisitor::visit(AST::ArithOp* node) {
     os_ << ")";
 }
 
-void InterpreterVisitor::visit(AST::VarDef* node) {}
+void Interpreter::visit(AST::VarDef* node) {}
 
-void InterpreterVisitor::visit(AST::Var* node) { os_ << node->name; }
+void Interpreter::visit(AST::Var* node) { os_ << node->name; }
 
-void InterpreterVisitor::visit(AST::Integer* node) { os_ << node->value; }
-
-void InterpreterVisitor::visit(AST::Assign* node) {
+void Interpreter::visit(AST::Integer* node) { os_ << node->value; }
+*/
+ObjectHolder Interpreter::Eval(std::shared_ptr<AST::Assign> node) {
     variables[node->var] = Eval(node->expr);
+    return variables[node->var];
 }
-
-void InterpreterVisitor::visit(AST::While* node) {
+/*
+void Interpreter::visit(AST::While* node) {
     os_ << "while (";
     node->condition->accept(this);
     os_ << ") {\n";
@@ -110,59 +141,36 @@ void InterpreterVisitor::visit(AST::While* node) {
     os_ << "\n}\n";
 }
 
-void InterpreterVisitor::visit(AST::StringLiteral* node) {
+void Interpreter::visit(AST::StringLiteral* node) {
     os_ << "\"" << node->value << "\"";
 }
 
-void InterpreterVisitor::visit(AST::BoolLiteral* node) {
+void Interpreter::visit(AST::BoolLiteral* node) {
     os_ << (node->value ? "true" : "false");
 }
-
-void InterpreterVisitor::visit(AST::ArrayDeclaration* node) {}
-
-void InterpreterVisitor::visit(AST::ArrayAccess* node) {
-    os_ << node->name << "[";
-    node->index->accept(this);
-    os_ << "]";
+*/
+ObjectHolder Interpreter::Eval(std::shared_ptr<AST::VarDef> node) {
+    variables[node->name] = {};
+    return variables[node->name];
 }
 
-void InterpreterVisitor::visit(AST::ArrayAssignment* node) {
-    auto index_obj = Eval(node->index);
-    auto index_ptr = index_obj.TryAs<Number>();
-    if (!index_ptr) {
-        Error(node, "Index expr is not int");
-    }
-    ArrayObject arr;
-    auto val = Eval(node->expr);
-    arr.SetObject(index_ptr->GetValue(), val);
-    variables[node->name] = ObjectHolder::Own(std::move(arr));
-}
-
-ObjectHolder InterpreterVisitor::Eval(std::shared_ptr<AST::ASTNode> node) {
-    if (auto int_lit = std::dynamic_pointer_cast<AST::Integer>(node))
-        return ObjectHolder::Own(ValueObject(int_lit->value));
-    if (auto str_lit = std::dynamic_pointer_cast<AST::StringLiteral>(node))
-        return ObjectHolder::Own(ValueObject(str_lit->value));
-    if (auto var = std::dynamic_pointer_cast<AST::Var>(node)) {
-        return Eval(var);
-    }
-    if (auto arr_ac = std::dynamic_pointer_cast<AST::ArrayAccess>(node)) {
-        return Eval(arr_ac);
-    }
-
-    Error(node.get(), "unknown node");
-    return {};
-}
-
-ObjectHolder InterpreterVisitor::Eval(std::shared_ptr<AST::Var> node) {
+ObjectHolder Interpreter::Eval(std::shared_ptr<AST::Var> node) {
     auto iter = variables.find(node->name);
     if (iter == variables.end()) {
         Error(node.get(), "Variable ", node->name, " undefined");
     }
+    if (!iter->second) {
+        Error(node.get(), "Variable ", node->name, " uninitialized");
+    }
     return iter->second;
 }
 
-ObjectHolder InterpreterVisitor::Eval(std::shared_ptr<AST::ArrayAccess> node) {
+ObjectHolder Interpreter::Eval(std::shared_ptr<AST::ArrayDeclaration> node) {
+    variables[node->name] = ObjectHolder::Own(ArrayObject());
+    return variables[node->name];
+}
+
+ObjectHolder Interpreter::Eval(std::shared_ptr<AST::ArrayAccess> node) {
     auto index_obj = Eval(node->index);
     auto index_ptr = index_obj.TryAs<Number>();
     if (!index_ptr) {
@@ -172,5 +180,62 @@ ObjectHolder InterpreterVisitor::Eval(std::shared_ptr<AST::ArrayAccess> node) {
     if (iter == variables.end()) {
         Error(node.get(), "Variable ", node->name, " undefined");
     }
-    return iter->second.TryAs<ArrayObject>()->GetObject(index_ptr->GetValue());
+    auto arr_obj = iter->second.TryAs<ArrayObject>();
+    if (!arr_obj) {
+        Error(node.get(), "Not array object");
+    }
+    return arr_obj->GetObject(index_ptr->GetValue());
+}
+
+ObjectHolder Interpreter::Eval(std::shared_ptr<AST::ArrayAssignment> node) {
+    auto index_obj = Eval(node->index);
+    auto index_ptr = index_obj.TryAs<Number>();
+    if (!index_ptr) {
+        Error(node.get(), "Index expr is not int");
+    }
+    auto iter = variables.find(node->name);
+    if (iter == variables.end()) {
+        Error(node.get(), "Variable ", node->name, " undefined");
+    }
+    auto arr_obj = iter->second.TryAs<ArrayObject>();
+    if (!arr_obj) {
+        Error(node.get(), "Not array object");
+    }
+    arr_obj->SetObject(index_ptr->GetValue(), Eval(node->expr));
+    return variables[node->name];
+}
+
+ObjectHolder Interpreter::Eval(std::shared_ptr<AST::ASTNode> node) {
+    if (auto prog = std::dynamic_pointer_cast<AST::Program>(node)) {
+        return Eval(prog);
+    } else if (auto func = std::dynamic_pointer_cast<AST::Function>(node)) {
+        return Eval(func, {});
+    } else if (auto fun_call = std::dynamic_pointer_cast<AST::FunCall>(node)) {
+        return Eval(fun_call);
+    } else if (auto int_lit = std::dynamic_pointer_cast<AST::Integer>(node)) {
+        return ObjectHolder::Own(ValueObject(int_lit->value));
+    } else if (auto str_lit =
+                   std::dynamic_pointer_cast<AST::StringLiteral>(node)) {
+        return ObjectHolder::Own(ValueObject(str_lit->value));
+    } else if (auto var_def = std::dynamic_pointer_cast<AST::VarDef>(node)) {
+        return Eval(var_def);
+    } else if (auto var = std::dynamic_pointer_cast<AST::Var>(node)) {
+        return Eval(var);
+    } else if (auto arr_decl =
+                   std::dynamic_pointer_cast<AST::ArrayDeclaration>(node)) {
+        return Eval(arr_decl);
+    } else if (auto arr_ac =
+                   std::dynamic_pointer_cast<AST::ArrayAccess>(node)) {
+        return Eval(arr_ac);
+    } else if (auto arr_assign =
+                   std::dynamic_pointer_cast<AST::ArrayAssignment>(node)) {
+        return Eval(arr_assign);
+    } else if (auto print = std::dynamic_pointer_cast<AST::Print>(node)) {
+        return Eval(print);
+    } else if (auto assign = std::dynamic_pointer_cast<AST::Assign>(node)) {
+        return Eval(assign);
+    }
+
+    Error(node.get(), "unknown node");
+    return {};
 }

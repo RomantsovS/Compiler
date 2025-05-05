@@ -27,8 +27,8 @@ class InterpreterTests : public ::testing::Test {
     }
 
     void Exec(std::shared_ptr<AST::ASTNode> ast, std::ostringstream& oss) {
-        InterpreterVisitor interpreter_visitor(oss);
-        ast->accept(&interpreter_visitor);
+        Interpreter interpreter(oss);
+        interpreter.Exec(ast);
     }
 };
 
@@ -105,7 +105,7 @@ print (i);
     ASSERT_TRUE(ast);
 
     std::ostringstream oss;
-    ExpectThrow(Exec(ast, oss), "3:8: Variable i undefined");
+    ExpectThrow(Exec(ast, oss), "3:8: Variable i uninitialized");
 }
 
 TEST_F(InterpreterTests, PrintIntArray) {
@@ -136,7 +136,21 @@ print (i[0]);
     ASSERT_TRUE(ast);
 
     std::ostringstream oss;
-    ExpectThrow(Exec(ast, oss), "3:9: Variable i undefined");
+    ExpectThrow(Exec(ast, oss), "array access out of bounds");
+}
+
+TEST_F(InterpreterTests, AccessIntArrayOutOfAssignedBoundsFail) {
+    std::istringstream iss(R"(int main() {
+int i[10];
+i[0] = 0;
+print (i[1]);
+})");
+
+    auto ast = Init(iss);
+    ASSERT_TRUE(ast);
+
+    std::ostringstream oss;
+    ExpectThrow(Exec(ast, oss), "array access out of bounds");
 }
 
 TEST_F(InterpreterTests, AccessIntArrayOutOfBoundsFail) {
@@ -151,4 +165,23 @@ print (i[10]);
 
     std::ostringstream oss;
     ExpectThrow(Exec(ast, oss), "array access out of bounds");
+}
+
+TEST_F(InterpreterTests, FuncCallWithOneArgument) {
+    std::istringstream iss(R"(void foo(int i) {
+print (i);
+}
+int main() {
+foo(1);
+})");
+
+    auto ast = Init(iss);
+    ASSERT_TRUE(ast);
+
+    std::ostringstream oss;
+    EXPECT_NO_THROW(Exec(ast, oss));
+
+    const std::string expected(R"(1
+)");
+    EXPECT_EQ(oss.str(), expected);
 }

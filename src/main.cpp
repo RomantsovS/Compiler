@@ -53,8 +53,13 @@ int main() {
 
     std::cout << "\n\n";
 
-    // InterpreterVisitor interpreter_visitor(std::cout);
-    // ast->accept(&interpreter_visitor);
+    Interpreter interpreter(std::cout);
+
+    try {
+        interpreter.Exec(ast);
+    } catch (const std::exception& ex) {
+        std::cout << "\033[31mError: " << ex.what() << "\033[0m\n";
+    }
 
     return 0;
 }

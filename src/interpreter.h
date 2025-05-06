@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "ast/ast.h"
+#include "call_stack.h"
 #include "ir.h"
 
 class Object;
@@ -134,6 +135,6 @@ class Interpreter {
     IR ir_;
     std::ostream& os_;
 
-    std::unordered_map<std::string, ObjectHolder> variables;
+    CallStack<ObjectHolder> call_stack;
     std::unordered_map<std::string, std::shared_ptr<AST::Function>> functions;
 };

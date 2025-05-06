@@ -60,11 +60,11 @@ ObjectHolder Interpreter::Eval(std::shared_ptr<AST::ArrayAccess> node) {
     if (!index_ptr) {
         Error(node.get(), "Index expr is not int");
     }
-    auto iter = variables.find(node->name);
-    if (iter == variables.end()) {
+    auto* var = call_stack.Find(node->name);
+    if (!var) {
         Error(node.get(), "Variable ", node->name, " undefined");
     }
-    auto arr_obj = iter->second.TryAs<ArrayObject>();
+    auto arr_obj = var->TryAs<ArrayObject>();
     if (!arr_obj) {
         Error(node.get(), "Not array object");
     }
@@ -77,8 +77,8 @@ ObjectHolder Interpreter::Eval(std::shared_ptr<AST::ArrayAccess> node) {
 }
 
 ObjectHolder Interpreter::Eval(std::shared_ptr<AST::ArrayDeclaration> node) {
-    variables[node->name] = ObjectHolder::Own(ArrayObject());
-    return variables[node->name];
+    call_stack.Declare(node->name, ObjectHolder::Own(ArrayObject()));
+    return *call_stack.Find(node->name);
 }
 
 ObjectHolder Interpreter::Eval(std::shared_ptr<AST::ArrayAssignment> node) {
@@ -87,21 +87,32 @@ ObjectHolder Interpreter::Eval(std::shared_ptr<AST::ArrayAssignment> node) {
     if (!index_ptr) {
         Error(node.get(), "Index expr is not int");
     }
-    auto iter = variables.find(node->name);
-    if (iter == variables.end()) {
+    auto* var = call_stack.Find(node->name);
+    if (!var) {
         Error(node.get(), "Variable ", node->name, " undefined");
     }
-    auto arr_obj = iter->second.TryAs<ArrayObject>();
+    auto arr_obj = var->TryAs<ArrayObject>();
     if (!arr_obj) {
         Error(node.get(), "Not array object");
     }
     arr_obj->SetObject(index_ptr->GetValue(), Eval(node->expr));
-    return variables[node->name];
+    return *call_stack.Find(node->name);
 }
 
 ObjectHolder Interpreter::Eval(std::shared_ptr<AST::Assign> node) {
-    variables[node->var] = Eval(node->expr);
-    return variables[node->var];
+    auto* obj = call_stack.Find(node->var);
+    if (!obj) {
+        Error(node.get(), "Variable ", node->var, " undefined");
+    }
+
+    auto val = Eval(node->expr);
+    if (!val) {
+        Error(node.get(), "Assign expr returned None");
+    }
+
+    *obj = val;
+
+    return *obj;
 }
 
 ObjectHolder Interpreter::Eval(std::shared_ptr<AST::FunCall> node) {
@@ -117,11 +128,13 @@ ObjectHolder Interpreter::Eval(std::shared_ptr<AST::FunCall> node) {
 ObjectHolder Interpreter::Eval(std::shared_ptr<AST::Function> node,
                                std::vector<ObjectHolder> args) {
     for (size_t i = 0; i < node->args.size(); ++i) {
-        variables[node->args[i].name] = args[i];
+        call_stack.PushScope();
+        call_stack.Declare(node->args[i].name, args[i]);
     }
     for (auto stmt : node->body) {
         Eval(stmt);
     }
+    call_stack.PopScope();
     return ObjectHolder::None();
 }
 
@@ -184,19 +197,19 @@ ObjectHolder Interpreter::Eval(std::shared_ptr<AST::Return> node) {
 }
 
 ObjectHolder Interpreter::Eval(std::shared_ptr<AST::Var> node) {
-    auto iter = variables.find(node->name);
-    if (iter == variables.end()) {
+    auto* var = call_stack.Find(node->name);
+    if (!var) {
         Error(node.get(), "Variable ", node->name, " undefined");
     }
-    if (!iter->second) {
+    if (!(*var)) {
         Error(node.get(), "Variable ", node->name, " uninitialized");
     }
-    return iter->second;
+    return *var;
 }
 
 ObjectHolder Interpreter::Eval(std::shared_ptr<AST::VarDef> node) {
-    variables[node->name] = {};
-    return variables[node->name];
+    call_stack.Declare(node->name, {});
+    return *call_stack.Find(node->name);
 }
 
 ObjectHolder Interpreter::Eval(std::shared_ptr<AST::While> node) {
@@ -209,9 +222,11 @@ ObjectHolder Interpreter::Eval(std::shared_ptr<AST::While> node) {
         if (!cond.TryAs<Bool>()->GetValue()) {
             break;
         }
+        call_stack.PushScope();
         for (auto stmt : node->body) {
             Eval(stmt);
         }
+        call_stack.PopScope();
     }
     return ObjectHolder::None();
 }

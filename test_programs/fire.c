@@ -28,16 +28,25 @@ int main() {
     WIDTH = 80;
 
     int palette[256];
-    palette[0] = 1;
 
-    print(palette[0] + 1);
+    int i;
+    int j;
+
+    j = 1;
+
+    while (j < HEIGHT) {  // scroll up
+        i = 0;
+        while (i < WIDTH) {
+            fire[i + j * WIDTH] = 0;
+            i = i + 1;
+        }
+        j = j + 1;
+    }
 
     // while (true) {
     print("\033[2J");  // clear screen
     print("\033[H");   // home
 
-    int i;
-    int j;
     j = 1;
 
     while (j < HEIGHT) {  // scroll up

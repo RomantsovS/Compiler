@@ -366,6 +366,63 @@ print(i);
     EXPECT_EQ(oss.str(), expected);
 }
 
+TEST_F(InterpreterTests, HideIntVarWithFunctionOK) {
+    std::istringstream iss(R"(void foo(int i) {
+i = 2;
+print (i);
+}
+void main() {
+int i;
+i = 1;
+print(i);
+foo(i);
+print(i);
+})");
+
+    std::ostringstream oss;
+    EXPECT_NO_THROW(Exec(iss, oss));
+
+    const std::string expected(R"(1
+2
+1
+)");
+    EXPECT_EQ(oss.str(), expected);
+}
+
+TEST_F(InterpreterTests, HideIntVarWithWhileOK) {
+    std::istringstream iss(R"(void main() {
+int i;
+i = 1;
+print(i);
+int j;
+j = 2;
+print(j);
+while(i < 3) {
+int j;
+j = 1;
+print(j);
+print(i);
+i = i + 1;
+}
+print(i);
+print(j);
+})");
+
+    std::ostringstream oss;
+    EXPECT_NO_THROW(Exec(iss, oss));
+
+    const std::string expected(R"(1
+2
+1
+1
+1
+2
+3
+2
+)");
+    EXPECT_EQ(oss.str(), expected);
+}
+
 TEST_F(InterpreterTests, ReassignIntArrayOK) {
     std::istringstream iss(R"(void main() {
 int i[10];

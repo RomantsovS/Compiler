@@ -10,6 +10,7 @@
 
 #include "ast/ast.h"
 #include "ast/type.h"
+#include "call_stack.h"
 #include "i_visitor.h"
 #include "ir.h"
 
@@ -17,38 +18,6 @@ struct SymbolEntry {
     AST::Type type;
     AST::Location loc;
     std::vector<AST::Type> params;
-};
-
-class Symtable {
-   public:
-    Symtable() { scopes.push_back({}); }
-
-    using ScopeMap = std::unordered_map<std::string, SymbolEntry>;
-
-    SymbolEntry* Declare(const std::string& name, const SymbolEntry& entry) {
-        if (auto iter = scopes.back().find(name); iter != scopes.back().end()) {
-            return &iter->second;
-        }
-        scopes.back()[name] = entry;
-        return nullptr;
-    }
-
-    void PushScope() { scopes.push_back({}); }
-    void PopScope() {
-        assert(!scopes.empty());
-        scopes.pop_back();
-    }
-
-    SymbolEntry* Find(const std::string& name) {
-        for (auto iter = scopes.rbegin(); iter != scopes.rend(); ++iter) {
-            auto found = iter->find(name);
-            if (found != iter->end()) return &found->second;
-        }
-        return nullptr;
-    }
-
-   private:
-    std::vector<ScopeMap> scopes;
 };
 
 class SemanticVisitor : public IASTVisitor {
@@ -84,6 +53,7 @@ class SemanticVisitor : public IASTVisitor {
         throw std::runtime_error(oss.str());
     }
 
-    Symtable symtable;
     IR* ir_;
+
+    CallStack<SymbolEntry> symtable;
 };

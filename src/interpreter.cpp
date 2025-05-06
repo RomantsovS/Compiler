@@ -120,21 +120,15 @@ ObjectHolder Interpreter::Eval(std::shared_ptr<AST::Function> node,
     return {};
 }
 
-/*
-void Interpreter::visit(AST::IfThenElse* node) {
-    os_ << "if (";
-    node->condition->accept(this);
-    os_ << ") {\n";
-    node->then_branch->accept(this);
-    os_ << "\n}";
-    if (node->else_branch) {
-        os_ << " else {\n";
-        node->else_branch->accept(this);
-        os_ << "\n}";
+ObjectHolder Interpreter::Eval(std::shared_ptr<AST::IfThenElse> node) {
+    auto cond = Eval(node->condition);
+    if (cond.TryAs<Bool>()->GetValue()) {
+        return Eval(node->then_branch);
+    } else if (node->else_branch) {
+        return Eval(node->else_branch);
     }
+    return ObjectHolder::None();
 }
-
-*/
 
 ObjectHolder Interpreter::Eval(std::shared_ptr<AST::LogicOp> node) {
     auto lhs = Eval(node->lhs);
@@ -227,6 +221,8 @@ ObjectHolder Interpreter::Eval(std::shared_ptr<AST::ASTNode> node) {
         return Eval(assign);
     } else if (auto b_lit = std::dynamic_pointer_cast<AST::BoolLiteral>(node)) {
         return ObjectHolder::Own(ValueObject(b_lit->value));
+    } else if (auto ifthen = std::dynamic_pointer_cast<AST::IfThenElse>(node)) {
+        return Eval(ifthen);
     } else if (auto fun_call = std::dynamic_pointer_cast<AST::FunCall>(node)) {
         return Eval(fun_call);
     } else if (auto func = std::dynamic_pointer_cast<AST::Function>(node)) {

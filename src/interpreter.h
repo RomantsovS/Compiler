@@ -20,6 +20,7 @@ class ObjectHolder {
     static ObjectHolder Own(T&& object) {
         return ObjectHolder(std::make_shared<T>(std::forward<T>(object)));
     }
+    static ObjectHolder None() { return {}; }
 
     Object& operator*() { return *Get(); }
 
@@ -72,6 +73,7 @@ class ValueObject : public Object {
 };
 
 using Number = ValueObject<int>;
+using Bool = ValueObject<bool>;
 
 class ArrayObject : public Object {
    public:
@@ -111,6 +113,7 @@ class Interpreter {
     ObjectHolder Eval(std::shared_ptr<AST::FunCall> node);
     ObjectHolder Eval(std::shared_ptr<AST::Function> node,
                       std::vector<ObjectHolder> args);
+    ObjectHolder Eval(std::shared_ptr<AST::IfThenElse> node);
     ObjectHolder Eval(std::shared_ptr<AST::LogicOp> node);
     ObjectHolder Eval(std::shared_ptr<AST::Print> node);
     ObjectHolder Eval(std::shared_ptr<AST::Program> node);

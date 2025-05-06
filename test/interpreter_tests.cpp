@@ -373,3 +373,42 @@ print(i[0]);
 )");
     EXPECT_EQ(oss.str(), expected);
 }
+
+TEST_F(InterpreterTests, IfThenTrueOK) {
+    std::istringstream iss(R"(void main() {
+if(1 < 2) print (1);
+})");
+
+    std::ostringstream oss;
+    EXPECT_NO_THROW(Exec(iss, oss));
+
+    const std::string expected(R"(1
+)");
+    EXPECT_EQ(oss.str(), expected);
+}
+
+TEST_F(InterpreterTests, IfThenFalseOK) {
+    std::istringstream iss(R"(void main() {
+if(1 > 2) print (1);
+})");
+
+    std::ostringstream oss;
+    EXPECT_NO_THROW(Exec(iss, oss));
+
+    const std::string expected(R"()");
+    EXPECT_EQ(oss.str(), expected);
+}
+
+TEST_F(InterpreterTests, IfThenElseOK) {
+    std::istringstream iss(R"(void main() {
+if(1 > 2) print (1);
+else print (2);
+})");
+
+    std::ostringstream oss;
+    EXPECT_NO_THROW(Exec(iss, oss));
+
+    const std::string expected(R"(2
+)");
+    EXPECT_EQ(oss.str(), expected);
+}

@@ -13,6 +13,7 @@
 #include "ast/logic_op.h"
 #include "ast/print.h"
 #include "ast/program.h"
+#include "ast/rand.h"
 #include "ast/return.h"
 #include "ast/string_literal.h"
 #include "ast/type.h"
@@ -214,6 +215,8 @@ void SemanticVisitor::visit(AST::Program* node) {
         Error(node, "Main function isn't found");
     }
 }
+
+void SemanticVisitor::visit(AST::Rand* node) {}
 
 void SemanticVisitor::visit(AST::Return* node) { node->expr->accept(this); }
 

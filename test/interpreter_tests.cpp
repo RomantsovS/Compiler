@@ -484,3 +484,15 @@ i = i + 1;
     const std::string expected(R"(1234)");
     EXPECT_EQ(oss.str(), expected);
 }
+
+TEST_F(InterpreterTests, RandOK) {
+    std::istringstream iss(R"(void main() {
+print ((rand() % 10) < 10);
+})");
+
+    std::ostringstream oss;
+    EXPECT_NO_THROW(Exec(iss, oss));
+
+    const std::string expected(R"(1)");
+    EXPECT_EQ(oss.str(), expected);
+}

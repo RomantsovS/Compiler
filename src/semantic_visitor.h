@@ -37,6 +37,7 @@ class SemanticVisitor : public IASTVisitor {
     void visit(AST::LogicOp* node) override;
     void visit(AST::Print* node) override;
     void visit(AST::Program* node) override;
+    void visit(AST::Rand* node) override;
     void visit(AST::Return* node) override;
     void visit(AST::StringLiteral* node) override;
     void visit(AST::Var* node) override;

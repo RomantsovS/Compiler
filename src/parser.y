@@ -80,11 +80,12 @@
 %token RETURN
 %token <std::string> STRING
 %token <bool> TRUE FALSE
+%token RAND
 
 %type< AST::Type > type;
 %type< std::shared_ptr<AST::Statements> > stmt_list block top_level_list arg_list;
 %type< std::shared_ptr<AST::Params> > param_list;
-%type< std::shared_ptr<AST::ASTNode> > program top_level global function function_call print_stmt;
+%type< std::shared_ptr<AST::ASTNode> > program top_level global function function_call print_stmt rand_stmt;
 %type< std::shared_ptr<AST::ASTNode> > declaration expr assignment literal stmt while if;
 
 %start program
@@ -235,6 +236,12 @@ print_stmt:
     }
     ;
 
+rand_stmt:
+    RAND LEFTPAR RIGHTPAR {
+        $$ = driver.with_location(driver.make_rand(), @1);
+    }
+    ;
+
 literal:
     STRING {
         $$ = driver.with_location(driver.make_string_literal($1), @1);
@@ -263,6 +270,7 @@ expr:
     | ID { $$ = driver.with_location(driver.make_var($1), @1); }
     | ID LEFTBRACKET expr RIGHTBRACKET { $$ = driver.with_location(driver.make_array_access($1, $3), @2); }
     | literal
+    | rand_stmt
     ;
 
 %%

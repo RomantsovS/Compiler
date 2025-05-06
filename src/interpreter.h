@@ -118,6 +118,7 @@ class Interpreter {
     ObjectHolder Eval(std::shared_ptr<AST::LogicOp> node);
     ObjectHolder Eval(std::shared_ptr<AST::Print> node);
     ObjectHolder Eval(std::shared_ptr<AST::Program> node);
+    ObjectHolder Eval(std::shared_ptr<AST::Rand> node);
     ObjectHolder Eval(std::shared_ptr<AST::Return> node);
     ObjectHolder Eval(std::shared_ptr<AST::Var> node);
     ObjectHolder Eval(std::shared_ptr<AST::VarDef> node);

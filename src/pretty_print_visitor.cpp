@@ -13,6 +13,7 @@
 #include "ast/logic_op.h"
 #include "ast/print.h"
 #include "ast/program.h"
+#include "ast/rand.h"
 #include "ast/return.h"
 #include "ast/string_literal.h"
 #include "ast/var.h"
@@ -133,6 +134,8 @@ void PrettyPrintVisitor::visit(AST::Program* node) {
         os_ << "\n\n";
     }
 }
+
+void PrettyPrintVisitor::visit(AST::Rand* node) { os_ << "rand()"; }
 
 void PrettyPrintVisitor::visit(AST::Return* node) {
     os_ << "return ";

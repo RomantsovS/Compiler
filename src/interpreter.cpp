@@ -1,6 +1,7 @@
 #include "interpreter.h"
 
 #include <algorithm>
+#include <random>
 #include <string>
 
 #include "ast/arithmetic_op.h"
@@ -14,6 +15,7 @@
 #include "ast/logic_op.h"
 #include "ast/print.h"
 #include "ast/program.h"
+#include "ast/rand.h"
 #include "ast/return.h"
 #include "ast/string_literal.h"
 #include "ast/var.h"
@@ -191,6 +193,13 @@ ObjectHolder Interpreter::Eval(std::shared_ptr<AST::Program> node) {
     return Eval(*iter);
 }
 
+ObjectHolder Interpreter::Eval(std::shared_ptr<AST::Rand> node) {
+    static std::mt19937 rng(std::random_device{}());
+    static std::uniform_int_distribution<int> dist(0, RAND_MAX);
+
+    return ObjectHolder::Own(ValueObject(dist(rng)));
+}
+
 ObjectHolder Interpreter::Eval(std::shared_ptr<AST::Return> node) {
     return Eval(node->expr);
 }
@@ -261,9 +270,10 @@ ObjectHolder Interpreter::Eval(std::shared_ptr<AST::ASTNode> node) {
         return Eval(print);
     } else if (auto prog = std::dynamic_pointer_cast<AST::Program>(node)) {
         return Eval(prog);
+    } else if (auto rand = std::dynamic_pointer_cast<AST::Rand>(node)) {
+        return Eval(rand);
     } else if (auto ret = std::dynamic_pointer_cast<AST::Return>(node)) {
         return Eval(ret);
-
     } else if (auto s_lit =
                    std::dynamic_pointer_cast<AST::StringLiteral>(node)) {
         return ObjectHolder::Own(ValueObject(s_lit->value));

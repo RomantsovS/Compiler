@@ -45,6 +45,7 @@
 #include "ast/name_type.h"
 #include "ast/print.h"
 #include "ast/program.h"
+#include "ast/rand.h"
 #include "ast/return.h"
 #include "ast/string_literal.h"
 #include "ast/var.h"
@@ -226,6 +227,11 @@ std::shared_ptr<ASTNode> ParserDriver::make_return(
         throw std::runtime_error("expr is not Expr node");
     }
     return node;
+}
+
+std::shared_ptr<AST::ASTNode> ParserDriver::make_rand() {
+    ParserLog("create ast rand ", '\n');
+    return std::make_shared<Rand>();
 }
 
 std::shared_ptr<ASTNode> ParserDriver::make_decl(Type type,

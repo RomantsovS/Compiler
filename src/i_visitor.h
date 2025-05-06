@@ -15,6 +15,7 @@ struct Integer;
 struct LogicOp;
 struct Print;
 struct Program;
+struct Rand;
 struct Return;
 struct StringLiteral;
 struct Var;
@@ -39,6 +40,7 @@ class IASTVisitor {
     virtual void visit(AST::LogicOp* node) = 0;
     virtual void visit(AST::Print* node) = 0;
     virtual void visit(AST::Program* node) = 0;
+    virtual void visit(AST::Rand* node) = 0;
     virtual void visit(AST::Return* node) = 0;
     virtual void visit(AST::StringLiteral* node) = 0;
     virtual void visit(AST::Var* node) = 0;

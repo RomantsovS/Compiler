@@ -101,6 +101,8 @@
                 return EzAquarii::Parser::make_FALSE(false, driver_.get_location());
             }
 
+"rand"      { return Parser::make_RAND(driver_.get_location()); }
+
 "//".*      { /* skip single-line comment */ }
 
 \"([^\\\n"]|\\[abfnrtv\\'\"0-7xX])*?\" {

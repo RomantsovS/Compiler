@@ -14,6 +14,7 @@
 #include "ast/logic_op.h"
 #include "ast/print.h"
 #include "ast/program.h"
+#include "ast/rand.h"
 #include "ast/return.h"
 #include "ast/string_literal.h"
 #include "ast/var.h"
@@ -158,6 +159,12 @@ void PrintVisitor::visit(AST::Program* node) {
         function->accept(this);
         os_ << "\n";
     }
+}
+
+void PrintVisitor::visit(AST::Rand* node) {
+    PrintIndent();
+    PrintLoc(node);
+    os_ << "Rand:\n";
 }
 
 void PrintVisitor::visit(AST::Return* node) {

@@ -138,6 +138,8 @@ class ParserDriver {
     std::shared_ptr<AST::ASTNode> make_return(
         std::shared_ptr<AST::ASTNode> expr);
 
+    std::shared_ptr<AST::ASTNode> make_rand();
+
     std::shared_ptr<AST::ASTNode> make_decl(AST::Type type,
                                             const std::string& name);
 

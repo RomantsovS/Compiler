@@ -68,7 +68,12 @@ ObjectHolder Interpreter::Eval(std::shared_ptr<AST::ArrayAccess> node) {
     if (!arr_obj) {
         Error(node.get(), "Not array object");
     }
-    return arr_obj->GetObject(index_ptr->GetValue());
+    try {
+        return arr_obj->GetObject(index_ptr->GetValue());
+    } catch (std::exception& ex) {
+        Error(node.get(), ex.what());
+    }
+    return ObjectHolder::None();
 }
 
 ObjectHolder Interpreter::Eval(std::shared_ptr<AST::ArrayDeclaration> node) {

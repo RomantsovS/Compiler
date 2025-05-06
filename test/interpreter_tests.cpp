@@ -141,7 +141,7 @@ print (i[0]);
 })");
 
     std::ostringstream oss;
-    ExpectThrow(Exec(iss, oss), "array access out of bounds");
+    ExpectThrow(Exec(iss, oss), "3:9: array access out of bounds");
 }
 
 TEST_F(InterpreterTests, AccessIntArrayOutOfAssignedBoundsFail) {
@@ -152,7 +152,17 @@ print (i[1]);
 })");
 
     std::ostringstream oss;
-    ExpectThrow(Exec(iss, oss), "array access out of bounds");
+    ExpectThrow(Exec(iss, oss), "4:9: array access out of bounds");
+}
+
+TEST_F(InterpreterTests, PrintArrayFail) {
+    std::istringstream iss(R"(void main() {
+int i[10];
+print (i);
+})");
+
+    std::ostringstream oss;
+    ExpectThrow(Exec(iss, oss), "call ArrayObject Print");
 }
 
 TEST_F(InterpreterTests, FuncCallWithOneArgumentOK) {

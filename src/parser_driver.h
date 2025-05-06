@@ -193,8 +193,7 @@ class ParserDriver {
     template <typename... Args>
     void ParserLog(Args... args) {
         if (parser_debug_level_ == 0) return;
-        std::ostringstream oss;
-        (oss << ... << args);
+        (std::cout << ... << args);
     }
 
     Scanner scanner_;

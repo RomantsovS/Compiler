@@ -50,8 +50,7 @@ print (1);
     std::ostringstream oss;
     EXPECT_NO_THROW(Exec(iss, oss));
 
-    const std::string expected(R"(1
-)");
+    const std::string expected(R"(1)");
     EXPECT_EQ(oss.str(), expected);
 }
 
@@ -63,8 +62,7 @@ print ("1");
     std::ostringstream oss;
     EXPECT_NO_THROW(Exec(iss, oss));
 
-    const std::string expected(R"(1
-)");
+    const std::string expected(R"(1)");
     EXPECT_EQ(oss.str(), expected);
 }
 
@@ -76,8 +74,7 @@ print (true);
     std::ostringstream oss;
     EXPECT_NO_THROW(Exec(iss, oss));
 
-    const std::string expected(R"(1
-)");
+    const std::string expected(R"(1)");
     EXPECT_EQ(oss.str(), expected);
 }
 
@@ -89,8 +86,19 @@ print (false);
     std::ostringstream oss;
     EXPECT_NO_THROW(Exec(iss, oss));
 
-    const std::string expected(R"(0
-)");
+    const std::string expected(R"(0)");
+    EXPECT_EQ(oss.str(), expected);
+}
+
+TEST_F(InterpreterTests, PrintEscapeSymbolsOK) {
+    std::istringstream iss(R"(void main() {
+print ("\n\033\n\t\034\n\x13\7");
+})");
+
+    std::ostringstream oss;
+    EXPECT_NO_THROW(Exec(iss, oss));
+
+    const std::string expected("\n\033\n\t\034\n\x13\7");
     EXPECT_EQ(oss.str(), expected);
 }
 
@@ -104,8 +112,7 @@ print (i);
     std::ostringstream oss;
     EXPECT_NO_THROW(Exec(iss, oss));
 
-    const std::string expected(R"(1
-)");
+    const std::string expected(R"(1)");
     EXPECT_EQ(oss.str(), expected);
 }
 
@@ -129,8 +136,7 @@ print (i[0]);
     std::ostringstream oss;
     EXPECT_NO_THROW(Exec(iss, oss));
 
-    const std::string expected(R"(1
-)");
+    const std::string expected(R"(1)");
     EXPECT_EQ(oss.str(), expected);
 }
 
@@ -176,8 +182,7 @@ foo(1);
     std::ostringstream oss;
     EXPECT_NO_THROW(Exec(iss, oss));
 
-    const std::string expected(R"(1
-)");
+    const std::string expected(R"(1)");
     EXPECT_EQ(oss.str(), expected);
 }
 
@@ -194,10 +199,7 @@ foo(3, 2, true);
     std::ostringstream oss;
     EXPECT_NO_THROW(Exec(iss, oss));
 
-    const std::string expected(R"(3
-2
-1
-)");
+    const std::string expected(R"(321)");
     EXPECT_EQ(oss.str(), expected);
 }
 
@@ -209,8 +211,7 @@ print(1 + 2);
     std::ostringstream oss;
     EXPECT_NO_THROW(Exec(iss, oss));
 
-    const std::string expected(R"(3
-)");
+    const std::string expected(R"(3)");
     EXPECT_EQ(oss.str(), expected);
 }
 
@@ -222,8 +223,7 @@ print(10 - 2);
     std::ostringstream oss;
     EXPECT_NO_THROW(Exec(iss, oss));
 
-    const std::string expected(R"(8
-)");
+    const std::string expected(R"(8)");
     EXPECT_EQ(oss.str(), expected);
 }
 
@@ -235,8 +235,7 @@ print(3 * 2);
     std::ostringstream oss;
     EXPECT_NO_THROW(Exec(iss, oss));
 
-    const std::string expected(R"(6
-)");
+    const std::string expected(R"(6)");
     EXPECT_EQ(oss.str(), expected);
 }
 
@@ -248,8 +247,7 @@ print(10 / 2);
     std::ostringstream oss;
     EXPECT_NO_THROW(Exec(iss, oss));
 
-    const std::string expected(R"(5
-)");
+    const std::string expected(R"(5)");
     EXPECT_EQ(oss.str(), expected);
 }
 
@@ -261,8 +259,7 @@ print(13 % 2);
     std::ostringstream oss;
     EXPECT_NO_THROW(Exec(iss, oss));
 
-    const std::string expected(R"(1
-)");
+    const std::string expected(R"(1)");
     EXPECT_EQ(oss.str(), expected);
 }
 
@@ -276,8 +273,7 @@ print(i + 2);
     std::ostringstream oss;
     EXPECT_NO_THROW(Exec(iss, oss));
 
-    const std::string expected(R"(3
-)");
+    const std::string expected(R"(3)");
     EXPECT_EQ(oss.str(), expected);
 }
 
@@ -289,8 +285,7 @@ print(1 < 2);
     std::ostringstream oss;
     EXPECT_NO_THROW(Exec(iss, oss));
 
-    const std::string expected(R"(1
-)");
+    const std::string expected(R"(1)");
     EXPECT_EQ(oss.str(), expected);
 }
 
@@ -302,8 +297,7 @@ print(1 > 2);
     std::ostringstream oss;
     EXPECT_NO_THROW(Exec(iss, oss));
 
-    const std::string expected(R"(0
-)");
+    const std::string expected(R"(0)");
     EXPECT_EQ(oss.str(), expected);
 }
 
@@ -315,8 +309,7 @@ print(10 > 2);
     std::ostringstream oss;
     EXPECT_NO_THROW(Exec(iss, oss));
 
-    const std::string expected(R"(1
-)");
+    const std::string expected(R"(1)");
     EXPECT_EQ(oss.str(), expected);
 }
 
@@ -328,8 +321,7 @@ print(10 < 2);
     std::ostringstream oss;
     EXPECT_NO_THROW(Exec(iss, oss));
 
-    const std::string expected(R"(0
-)");
+    const std::string expected(R"(0)");
     EXPECT_EQ(oss.str(), expected);
 }
 
@@ -343,8 +335,7 @@ print(i < 2);
     std::ostringstream oss;
     EXPECT_NO_THROW(Exec(iss, oss));
 
-    const std::string expected(R"(1
-)");
+    const std::string expected(R"(1)");
     EXPECT_EQ(oss.str(), expected);
 }
 
@@ -360,9 +351,7 @@ print(i);
     std::ostringstream oss;
     EXPECT_NO_THROW(Exec(iss, oss));
 
-    const std::string expected(R"(1
-2
-)");
+    const std::string expected(R"(12)");
     EXPECT_EQ(oss.str(), expected);
 }
 
@@ -382,10 +371,7 @@ print(i);
     std::ostringstream oss;
     EXPECT_NO_THROW(Exec(iss, oss));
 
-    const std::string expected(R"(1
-2
-1
-)");
+    const std::string expected(R"(121)");
     EXPECT_EQ(oss.str(), expected);
 }
 
@@ -411,15 +397,7 @@ print(j);
     std::ostringstream oss;
     EXPECT_NO_THROW(Exec(iss, oss));
 
-    const std::string expected(R"(1
-2
-1
-1
-1
-2
-3
-2
-)");
+    const std::string expected(R"(12111232)");
     EXPECT_EQ(oss.str(), expected);
 }
 
@@ -435,9 +413,7 @@ print(i[0]);
     std::ostringstream oss;
     EXPECT_NO_THROW(Exec(iss, oss));
 
-    const std::string expected(R"(1
-2
-)");
+    const std::string expected(R"(12)");
     EXPECT_EQ(oss.str(), expected);
 }
 
@@ -449,8 +425,7 @@ if(1 < 2) print (1);
     std::ostringstream oss;
     EXPECT_NO_THROW(Exec(iss, oss));
 
-    const std::string expected(R"(1
-)");
+    const std::string expected(R"(1)");
     EXPECT_EQ(oss.str(), expected);
 }
 
@@ -475,8 +450,7 @@ else print (2);
     std::ostringstream oss;
     EXPECT_NO_THROW(Exec(iss, oss));
 
-    const std::string expected(R"(2
-)");
+    const std::string expected(R"(2)");
     EXPECT_EQ(oss.str(), expected);
 }
 
@@ -507,22 +481,6 @@ i = i + 1;
     std::ostringstream oss;
     EXPECT_NO_THROW(Exec(iss, oss));
 
-    const std::string expected(R"(1
-2
-3
-4
-)");
-    EXPECT_EQ(oss.str(), expected);
-}
-
-TEST_F(InterpreterTests, PrintEscapeSymbolsOK) {
-    std::istringstream iss(R"(void main() {
-print ("\n\033\n\t\034\n\x13\7");
-})");
-
-    std::ostringstream oss;
-    EXPECT_NO_THROW(Exec(iss, oss));
-
-    const std::string expected("\n\033\n\t\034\n\x13\7\n");
+    const std::string expected(R"(1234)");
     EXPECT_EQ(oss.str(), expected);
 }

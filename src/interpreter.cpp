@@ -171,7 +171,6 @@ ObjectHolder Interpreter::Eval(std::shared_ptr<AST::LogicOp> node) {
 ObjectHolder Interpreter::Eval(std::shared_ptr<AST::Print> node) {
     auto obj_holder = Eval(node->expr);
     if (obj_holder) obj_holder->Print(os_);
-    os_ << '\n';
     return ObjectHolder::None();
 }
 

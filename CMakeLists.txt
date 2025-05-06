@@ -43,3 +43,5 @@ target_link_libraries(compiler compiler_frontend compiler_lib)
 
 enable_testing()
 add_subdirectory(test)
+
+add_subdirectory(test_programs)

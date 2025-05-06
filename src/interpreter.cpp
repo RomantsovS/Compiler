@@ -51,7 +51,7 @@ ObjectHolder Interpreter::Eval(std::shared_ptr<AST::ArithOp> node) {
     } else {
         Error(node.get(), "Unknown arith op: ", node->op);
     }
-    return {};
+    return ObjectHolder::None();
 }
 
 ObjectHolder Interpreter::Eval(std::shared_ptr<AST::ArrayAccess> node) {
@@ -117,11 +117,15 @@ ObjectHolder Interpreter::Eval(std::shared_ptr<AST::Function> node,
     for (auto stmt : node->body) {
         Eval(stmt);
     }
-    return {};
+    return ObjectHolder::None();
 }
 
 ObjectHolder Interpreter::Eval(std::shared_ptr<AST::IfThenElse> node) {
     auto cond = Eval(node->condition);
+    auto cond_bool = cond.TryAs<Bool>();
+    if (!cond_bool) {
+        Error(node.get(), "If condition is not bool");
+    }
     if (cond.TryAs<Bool>()->GetValue()) {
         return Eval(node->then_branch);
     } else if (node->else_branch) {
@@ -143,14 +147,14 @@ ObjectHolder Interpreter::Eval(std::shared_ptr<AST::LogicOp> node) {
     } else {
         Error(node.get(), "Unknown arith op: ", node->op);
     }
-    return {};
+    return ObjectHolder::None();
 }
 
 ObjectHolder Interpreter::Eval(std::shared_ptr<AST::Print> node) {
     auto obj_holder = Eval(node->expr);
     if (obj_holder) obj_holder->Print(os_);
     os_ << '\n';
-    return {};
+    return ObjectHolder::None();
 }
 
 ObjectHolder Interpreter::Eval(std::shared_ptr<AST::Program> node) {
@@ -190,19 +194,22 @@ ObjectHolder Interpreter::Eval(std::shared_ptr<AST::VarDef> node) {
     return variables[node->name];
 }
 
-/*
-void Interpreter::visit(AST::While* node) {
-    os_ << "while (";
-    node->condition->accept(this);
-    os_ << ") {\n";
-    for (size_t i = 0; i < node->body.size(); ++i) {
-        if (i > 0) os_ << "\n";
-        node->body[i]->accept(this);
+ObjectHolder Interpreter::Eval(std::shared_ptr<AST::While> node) {
+    while (true) {
+        auto cond = Eval(node->condition);
+        auto cond_bool = cond.TryAs<Bool>();
+        if (!cond_bool) {
+            Error(node.get(), "If condition is not bool");
+        }
+        if (!cond.TryAs<Bool>()->GetValue()) {
+            break;
+        }
+        for (auto stmt : node->body) {
+            Eval(stmt);
+        }
     }
-    os_ << "\n}\n";
+    return ObjectHolder::None();
 }
-
-*/
 
 ObjectHolder Interpreter::Eval(std::shared_ptr<AST::ASTNode> node) {
     if (auto ar_op = std::dynamic_pointer_cast<AST::ArithOp>(node)) {
@@ -245,8 +252,10 @@ ObjectHolder Interpreter::Eval(std::shared_ptr<AST::ASTNode> node) {
         return Eval(var_def);
     } else if (auto var = std::dynamic_pointer_cast<AST::Var>(node)) {
         return Eval(var);
+    } else if (auto whil = std::dynamic_pointer_cast<AST::While>(node)) {
+        return Eval(whil);
     }
 
     Error(node.get(), "unknown node");
-    return {};
+    return ObjectHolder::None();
 }

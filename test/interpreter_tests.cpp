@@ -412,3 +412,38 @@ else print (2);
 )");
     EXPECT_EQ(oss.str(), expected);
 }
+
+TEST_F(InterpreterTests, WhileFalseConditionOK) {
+    std::istringstream iss(R"(void main() {
+while(false) {
+print (1);
+}
+})");
+
+    std::ostringstream oss;
+    EXPECT_NO_THROW(Exec(iss, oss));
+
+    const std::string expected(R"()");
+    EXPECT_EQ(oss.str(), expected);
+}
+
+TEST_F(InterpreterTests, WhileLoopOK) {
+    std::istringstream iss(R"(void main() {
+int i;
+i = 1;
+while(i < 5) {
+print (i);
+i = i + 1;
+}
+})");
+
+    std::ostringstream oss;
+    EXPECT_NO_THROW(Exec(iss, oss));
+
+    const std::string expected(R"(1
+2
+3
+4
+)");
+    EXPECT_EQ(oss.str(), expected);
+}

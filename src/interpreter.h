@@ -120,6 +120,7 @@ class Interpreter {
     ObjectHolder Eval(std::shared_ptr<AST::Return> node);
     ObjectHolder Eval(std::shared_ptr<AST::Var> node);
     ObjectHolder Eval(std::shared_ptr<AST::VarDef> node);
+    ObjectHolder Eval(std::shared_ptr<AST::While> node);
 
     template <typename... Args>
     void Error(AST::ASTNode* node, Args... args) {

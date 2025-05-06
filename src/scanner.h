@@ -52,6 +52,8 @@
 #define YY_DECL \
     EzAquarii::Parser::symbol_type EzAquarii::Scanner::get_next_token()
 
+#include <string>
+
 #include "parser.hpp"  // this is needed for symbol_type
 
 namespace EzAquarii {
@@ -71,5 +73,77 @@ class Scanner : public yyFlexLexer {
 };
 
 }  // namespace EzAquarii
+
+inline std::string unescape(const std::string& input) {
+    std::string result;
+    for (size_t i = 1; i < input.length() - 1;
+         ++i) {  // skip surrounding quotes
+        if (input[i] == '\\') {
+            ++i;
+            if (i >= input.length() - 1) break;
+            switch (input[i]) {
+                case 'n':
+                    result += '\n';
+                    break;
+                case 't':
+                    result += '\t';
+                    break;
+                case 'r':
+                    result += '\r';
+                    break;
+                case 'b':
+                    result += '\b';
+                    break;
+                case 'f':
+                    result += '\f';
+                    break;
+                case 'v':
+                    result += '\v';
+                    break;
+                case '\\':
+                    result += '\\';
+                    break;
+                case '\'':
+                    result += '\'';
+                    break;
+                case '\"':
+                    result += '\"';
+                    break;
+                case 'x': {
+                    std::string hex;
+                    while (i + 1 < input.length() - 1 &&
+                           isxdigit(input[i + 1])) {
+                        hex += input[++i];
+                    }
+                    if (!hex.empty())
+                        result +=
+                            static_cast<char>(std::stoi(hex, nullptr, 16));
+                    break;
+                }
+                case '0':
+                case '1':
+                case '2':
+                case '3':
+                case '4':
+                case '5':
+                case '6':
+                case '7': {  // octal
+                    std::string oct(1, input[i]);
+                    if (i + 1 < input.length() - 1 && isdigit(input[i + 1]))
+                        oct += input[++i];
+                    if (i + 1 < input.length() - 1 && isdigit(input[i + 1]))
+                        oct += input[++i];
+                    result += static_cast<char>(std::stoi(oct, nullptr, 8));
+                    break;
+                }
+                default:
+                    result += input[i];  // unknown escape, just add it
+            }
+        } else {
+            result += input[i];
+        }
+    }
+    return result;
+}
 
 #endif

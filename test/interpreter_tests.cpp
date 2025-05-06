@@ -514,3 +514,15 @@ i = i + 1;
 )");
     EXPECT_EQ(oss.str(), expected);
 }
+
+TEST_F(InterpreterTests, PrintEscapeSymbolsOK) {
+    std::istringstream iss(R"(void main() {
+print ("\n\033\n\t\034\n\x13\7");
+})");
+
+    std::ostringstream oss;
+    EXPECT_NO_THROW(Exec(iss, oss));
+
+    const std::string expected("\n\033\n\t\034\n\x13\7\n");
+    EXPECT_EQ(oss.str(), expected);
+}

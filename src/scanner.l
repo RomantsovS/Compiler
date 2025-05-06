@@ -103,10 +103,9 @@
 
 "//".*      { /* skip single-line comment */ }
 
-\"([^\\"]|\\.)*\" {
+\"([^\\\n"]|\\[abfnrtv\\'\"0-7xX])*?\" {
                 std::string raw_str(yytext);
-                raw_str = raw_str.substr(1, raw_str.length() - 2); // Strip quotes
-                return EzAquarii::Parser::make_STRING(raw_str, driver_.get_location());
+                return EzAquarii::Parser::make_STRING(unescape(raw_str), driver_.get_location());
                 }
 
 [a-zA-Z_][a-zA-Z0-9_]*  {

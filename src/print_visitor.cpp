@@ -155,10 +155,6 @@ void PrintVisitor::visit(AST::Program* node) {
         global->accept(this);
         os_ << "\n";
     }
-    for (auto function : node->functions) {
-        function->accept(this);
-        os_ << "\n";
-    }
 }
 
 void PrintVisitor::visit(AST::Rand* node) {

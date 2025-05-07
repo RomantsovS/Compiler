@@ -177,20 +177,22 @@ ObjectHolder Interpreter::Eval(std::shared_ptr<AST::Print> node) {
 }
 
 ObjectHolder Interpreter::Eval(std::shared_ptr<AST::Program> node) {
+    std::shared_ptr<AST::Function> main_func;
+
     for (auto global : node->globals) {
-        Eval(global);
-    }
-    auto iter = std::find_if(
-        node->functions.begin(), node->functions.end(),
-        [](std::shared_ptr<AST::ASTNode> function) {
-            auto func = std::dynamic_pointer_cast<AST::Function>(function);
-            return func && func->name == "main";
-        });
-    if (iter == node->functions.end()) {
-        Error(node.get(), "Main function isn't found");
+        auto func = std::dynamic_pointer_cast<AST::Function>(global);
+        if (func) {
+            if (func->name == "main") main_func = func;
+        } else {
+            Eval(global);
+        }
     }
 
-    return Eval(*iter);
+    if (!main_func) {
+        Error(node.get(), "main function undefined");
+    }
+
+    return Eval(main_func);
 }
 
 ObjectHolder Interpreter::Eval(std::shared_ptr<AST::Rand> node) {

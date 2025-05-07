@@ -21,13 +21,18 @@ void line_blur(int offset, int step, int nsteps) {
     }
 }
 
+void palette(int i) {
+    if (i < 10)
+        print("\033[48;2;120;20;0m ");
+    else
+        print("\033[48;2;250;250;0m ");
+}
+
 int main() {
     int HEIGHT;
     HEIGHT = 10;
     int WIDTH;
     WIDTH = 80;
-
-    int palette[256];
 
     int i;
     int j;
@@ -47,34 +52,34 @@ int main() {
         print("\033[2J");  // clear screen
         print("\033[H");   // home
 
-        j = 1;
+        // j = 1;
 
-        while (j < HEIGHT) {  // scroll up
-            i = 0;
-            while (i < WIDTH) {
-                fire[i + (j - 1) * WIDTH] = fire[i + j * WIDTH];
-                i = i + 1;
-            }
-            j = j + 1;
-        }
+        // while (j < HEIGHT) {  // scroll up
+        //     i = 0;
+        //     while (i < WIDTH) {
+        //         fire[i + (j - 1) * WIDTH] = fire[i + j * WIDTH];
+        //         i = i + 1;
+        //     }
+        //     j = j + 1;
+        // }
 
-        j = 0;
-        while (j < HEIGHT) {
-            line_blur(j * WIDTH, 1, WIDTH);
-            j = j + 1;
-        }
+        // j = 0;
+        // while (j < HEIGHT) {
+        //     line_blur(j * WIDTH, 1, WIDTH);
+        //     j = j + 1;
+        // }
 
-        i = 0;
-        while (i < WIDTH) {
-            line_blur(i, WIDTH, HEIGHT);
-            i = i + 1;
-        }
+        // i = 0;
+        // while (i < WIDTH) {
+        //     line_blur(i, WIDTH, HEIGHT);
+        //     i = i + 1;
+        // }
 
         i = 0;
         while (i < HEIGHT) {  // show the buffer
             j = 0;
             while (j < WIDTH) {
-                print("\033[48;2;250;250;0m ");
+                palette(j);
                 j = j + 1;
             }
             print("\033[49m\n");

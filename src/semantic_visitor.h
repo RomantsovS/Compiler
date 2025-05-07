@@ -17,7 +17,6 @@
 struct SymbolEntry {
     AST::Type type;
     AST::Location loc;
-    std::vector<AST::Type> params;
 };
 
 class SemanticVisitor : public IASTVisitor {
@@ -45,6 +44,8 @@ class SemanticVisitor : public IASTVisitor {
     void visit(AST::While* node) override;
 
    private:
+    void VarDef(AST::ASTNode* node, const std::string& name, AST::Type type);
+
     template <typename... Args>
     void Error(AST::ASTNode* node, Args... args) {
         std::ostringstream oss;
@@ -57,4 +58,5 @@ class SemanticVisitor : public IASTVisitor {
     IR* ir_;
 
     CallStack<SymbolEntry> symtable;
+    std::unordered_map<std::string, AST::Function*> functions;
 };

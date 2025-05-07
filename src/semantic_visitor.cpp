@@ -73,13 +73,21 @@ void SemanticVisitor::visit(AST::ArrayAssignment* node) {
     }
 }
 
-void SemanticVisitor::visit(AST::ArrayDeclaration* node) {
-    if (auto* entry = symtable.Declare(node->name, {node->type, node->loc});
-        entry) {
-        Error(node, "Redeclaration of ", node->name,
-              ". Previously declared at ", entry->loc);
+void SemanticVisitor::VarDef(AST::ASTNode* node, const std::string& name,
+                             AST::Type type) {
+    if (auto iter = functions.find(name); iter != functions.end()) {
+        Error(node, "'", type, " ", name,
+              "' redeclared as different kind of entity");
     }
-    ir_->AddSymbol(node->name, {node->type});
+    if (auto* entry = symtable.Declare(name, {type, node->loc}); entry) {
+        Error(node, "Redeclaration of ", name, ". Previously declared at ",
+              entry->loc);
+    }
+    ir_->AddSymbol(name, {type});
+}
+
+void SemanticVisitor::visit(AST::ArrayDeclaration* node) {
+    VarDef(node, node->name, node->type);
 }
 
 void SemanticVisitor::visit(AST::Assign* node) {
@@ -97,39 +105,44 @@ void SemanticVisitor::visit(AST::Assign* node) {
 void SemanticVisitor::visit(AST::BoolLiteral* node) {}
 
 void SemanticVisitor::visit(AST::FunCall* node) {
-    auto* entry = symtable.Find(node->name);
-    if (!entry) {
-        Error(node, "Undeclared func ", node->name);
+    if (symtable.Find(node->name)) {
+        Error(node, "'", node->name, "' cannot be used as a function");
     }
-    node->type = entry->type;
+    auto iter = functions.find(node->name);
+    if (iter == functions.end()) {
+        Error(node, "'", node->name, "' was not declared in this scope");
+    }
+    node->type = iter->second->return_type;
 
-    if (node->args.size() != entry->params.size()) {
+    if (node->args.size() != iter->second->args.size()) {
         Error(node, "Incorrect arguments number to call ", node->name,
-              ". Expected ", entry->params.size(), " but got ",
+              ". Expected ", iter->second->args.size(), " but got ",
               node->args.size());
     }
 
     for (size_t i = 0; i < node->args.size(); ++i) {
         node->args[i]->accept(this);
-        if (node->args[i]->type != entry->params[i]) {
+        if (node->args[i]->type != iter->second->args[i].type) {
             Error(node, "Incorrect argument ", i, " type to call ", node->name,
-                  ". Expected ", entry->params[i], " but got ",
+                  ". Expected ", iter->second->args[i].type, " but got ",
                   node->args[i]->type);
         }
     }
 }
 
 void SemanticVisitor::visit(AST::Function* node) {
-    std::vector<AST::Type> params(node->args.size());
-    std::transform(
-        node->args.begin(), node->args.end(), params.begin(),
-        [](const AST::NameType name_type) { return name_type.type; });
-    if (auto* entry = symtable.Declare(node->name,
-                                       {node->return_type, node->loc, params});
-        entry) {
-        Error(node, "Redeclaration of ", node->name,
-              ". Previously declared at ", entry->loc);
+    if (auto entry = symtable.Find(node->name); entry) {
+        Error(node, "'", node->return_type, " ", node->name,
+              "' redeclared as different kind of entity");
     }
+
+    if (auto iter = functions.find(node->name); iter != functions.end()) {
+        Error(node, "redefinition of '", node->return_type, " ", node->name,
+              "()'"
+              ". Previously defined here ",
+              iter->second->loc);
+    }
+    functions[node->name] = node;
     ir_->AddFunction(node->name, std::dynamic_pointer_cast<AST::Function>(
                                      node->shared_from_this()));
 
@@ -139,8 +152,9 @@ void SemanticVisitor::visit(AST::Function* node) {
         if (auto* entry = symtable.Declare(node->args[i].name,
                                            {node->args[i].type, node->loc});
             entry) {
-            Error(node, "Redeclaration of ", node->args[i].name,
-                  ". Previously declared at ", entry->loc);
+            Error(node, "redefinition of '", node->args[i].type, " ",
+                  node->args[i].name, "'. Previously defined here ",
+                  entry->loc);
         }
     }
 
@@ -149,7 +163,7 @@ void SemanticVisitor::visit(AST::Function* node) {
         stmt->accept(this);
 
         if (std::dynamic_pointer_cast<AST::Function>(stmt)) {
-            Error(node, "Nested function definition is prohibited");
+            Error(node, "a function-definition is not allowed here");
         }
         if (auto return_node = std::dynamic_pointer_cast<AST::Return>(stmt);
             return_node) {
@@ -163,8 +177,8 @@ void SemanticVisitor::visit(AST::Function* node) {
     }
 
     if (node->return_type.base != AST::BaseType::Void && !has_return) {
-        Error(node, "non-void function ", node->name,
-              " does not return a value");
+        Error(node, "in function '", node->return_type, " ", node->name, "()'",
+              " no return statement in function returning non-void");
     }
 
     symtable.PopScope();
@@ -200,13 +214,10 @@ void SemanticVisitor::visit(AST::LogicOp* node) {
 void SemanticVisitor::visit(AST::Print* node) { node->expr->accept(this); }
 
 void SemanticVisitor::visit(AST::Program* node) {
-    for (auto global : node->globals) {
-        global->accept(this);
-    }
     bool has_main = false;
-    for (auto function : node->functions) {
+    for (auto function : node->globals) {
         if (auto func = std::dynamic_pointer_cast<AST::Function>(function);
-            func->name == "main") {
+            func && func->name == "main") {
             has_main = true;
         }
         function->accept(this);
@@ -231,12 +242,7 @@ void SemanticVisitor::visit(AST::Var* node) {
 }
 
 void SemanticVisitor::visit(AST::VarDef* node) {
-    if (auto* entry = symtable.Declare(node->name, {node->type, node->loc});
-        entry) {
-        Error(node, "Redeclaration of ", node->name,
-              ". Previously declared at ", entry->loc);
-    }
-    ir_->AddSymbol(node->name, {node->type});
+    VarDef(node, node->name, node->type);
 }
 
 void SemanticVisitor::visit(AST::While* node) {

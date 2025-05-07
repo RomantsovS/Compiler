@@ -124,12 +124,7 @@ void PrettyPrintVisitor::visit(AST::Print* node) {
 void PrettyPrintVisitor::visit(AST::Program* node) {
     os_ << "#include <iostream>\n\n";
 
-    for (auto global : node->globals) {
-        global->accept(this);
-        os_ << "\n";
-    }
-    os_ << "\n";
-    for (auto function : node->functions) {
+    for (auto function : node->globals) {
         function->accept(this);
         os_ << "\n\n";
     }

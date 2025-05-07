@@ -12,37 +12,22 @@
 
 class SemanticAnalysisTests : public ::testing::Test {
    protected:
-    std::shared_ptr<AST::ASTNode> Init(std::istringstream& iss) {
+    void Exec(std::istringstream& iss) {
         EzAquarii::ParserDriver parser_driver;
 
         parser_driver.switchInputStream(&iss);
 
         auto res = parser_driver.parse();
-        if (res) return nullptr;
+        if (res) throw std::runtime_error("Parser run error");
 
-        return parser_driver.GetAST();
-    }
-
-    void CallNoThrow(std::istringstream& iss) {
-        auto ast = Init(iss);
+        auto ast = parser_driver.GetAST();
         ASSERT_TRUE(ast);
 
         IR ir;
         ir.SetAST(ast);
 
         SemanticVisitor semantic_visitor(&ir);
-        EXPECT_NO_THROW(ast->accept(&semantic_visitor));
-    }
-
-    void CallThrow(std::istringstream& iss, const std::string& msg) {
-        auto ast = Init(iss);
-        ASSERT_TRUE(ast);
-
-        IR ir;
-        ir.SetAST(ast);
-
-        SemanticVisitor semantic_visitor(&ir);
-        ExpectThrow(ast->accept(&semantic_visitor), msg.c_str());
+        ast->accept(&semantic_visitor);
     }
 };
 
@@ -52,7 +37,7 @@ TEST_F(SemanticAnalysisTests, ProgramMainFunctionOK) {
     }
     )");
 
-    CallNoThrow(iss);
+    EXPECT_NO_THROW(Exec(iss));
 }
 
 TEST_F(SemanticAnalysisTests, ProgramMainFunctionFail) {
@@ -61,7 +46,7 @@ TEST_F(SemanticAnalysisTests, ProgramMainFunctionFail) {
         }
         )");
 
-    CallThrow(iss, "1:1: Main function isn't found");
+    ExpectThrow(Exec(iss), "1:1: Main function isn't found");
 }
 
 TEST_F(SemanticAnalysisTests, VarUndeclaredVariableCheckOK) {
@@ -73,7 +58,7 @@ TEST_F(SemanticAnalysisTests, VarUndeclaredVariableCheckOK) {
         }
         )");
 
-    CallNoThrow(iss);
+    EXPECT_NO_THROW(Exec(iss));
 }
 
 TEST_F(SemanticAnalysisTests, VarUndeclaredVariableCheckFail) {
@@ -84,7 +69,7 @@ TEST_F(SemanticAnalysisTests, VarUndeclaredVariableCheckFail) {
         }
         )");
 
-    CallThrow(iss, "3:17: Undeclared variable j");
+    ExpectThrow(Exec(iss), "3:17: Undeclared variable j");
 }
 
 TEST_F(SemanticAnalysisTests, AssignUndeclaredVariableCheckOK) {
@@ -95,7 +80,7 @@ TEST_F(SemanticAnalysisTests, AssignUndeclaredVariableCheckOK) {
     }
     )");
 
-    CallNoThrow(iss);
+    EXPECT_NO_THROW(Exec(iss));
 }
 
 TEST_F(SemanticAnalysisTests, AssignUndeclaredVariableCheckFail) {
@@ -105,7 +90,7 @@ TEST_F(SemanticAnalysisTests, AssignUndeclaredVariableCheckFail) {
 }
 )");
 
-    CallThrow(iss, "2:11: Undeclared variable i");
+    ExpectThrow(Exec(iss), "2:11: Undeclared variable i");
 }
 
 TEST_F(SemanticAnalysisTests, FunCallUndeclaredFuncCheckOK) {
@@ -117,7 +102,7 @@ TEST_F(SemanticAnalysisTests, FunCallUndeclaredFuncCheckOK) {
 }
 )");
 
-    CallNoThrow(iss);
+    EXPECT_NO_THROW(Exec(iss));
 }
 
 TEST_F(SemanticAnalysisTests, FunCallUndeclaredFuncCheckFail) {
@@ -127,7 +112,7 @@ TEST_F(SemanticAnalysisTests, FunCallUndeclaredFuncCheckFail) {
 }
 )");
 
-    CallThrow(iss, "2:9: Undeclared func foo");
+    ExpectThrow(Exec(iss), "2:9: 'foo' was not declared in this scope");
 }
 
 TEST_F(SemanticAnalysisTests, FunCallWrongNumberOfArgumentsCheckOK) {
@@ -139,7 +124,7 @@ TEST_F(SemanticAnalysisTests, FunCallWrongNumberOfArgumentsCheckOK) {
 }
 )");
 
-    CallNoThrow(iss);
+    EXPECT_NO_THROW(Exec(iss));
 }
 
 TEST_F(SemanticAnalysisTests, FunCallWrongNumberOfArgumentsCheckFail) {
@@ -151,8 +136,8 @@ TEST_F(SemanticAnalysisTests, FunCallWrongNumberOfArgumentsCheckFail) {
 }
 )");
 
-    CallThrow(
-        iss,
+    ExpectThrow(
+        Exec(iss),
         "4:9: Incorrect arguments number to call abs. Expected 1 but got 2");
 }
 
@@ -165,7 +150,7 @@ TEST_F(SemanticAnalysisTests, FunCallWrongArgumentTypeCheckOK) {
 }
 )");
 
-    CallNoThrow(iss);
+    EXPECT_NO_THROW(Exec(iss));
 }
 
 TEST_F(SemanticAnalysisTests, FunCallWrongArgumentTypeCheckFail) {
@@ -177,9 +162,21 @@ TEST_F(SemanticAnalysisTests, FunCallWrongArgumentTypeCheckFail) {
 }
 )");
 
-    CallThrow(iss,
-              "4:9: Incorrect argument 0 type to call abs. Expected int but "
-              "got bool");
+    ExpectThrow(Exec(iss),
+                "4:9: Incorrect argument 0 type to call abs. Expected int but "
+                "got bool");
+}
+
+TEST_F(SemanticAnalysisTests, FunCallNotAFunctionCallFail) {
+    std::istringstream iss(R"(
+        int foo;
+        int main() {
+        foo();
+        return 0;
+}
+)");
+
+    ExpectThrow(Exec(iss), "4:9: 'foo' cannot be used as a function");
 }
 
 TEST_F(SemanticAnalysisTests, AssignFromValueCheckTypeOK) {
@@ -190,7 +187,7 @@ TEST_F(SemanticAnalysisTests, AssignFromValueCheckTypeOK) {
 }
 )");
 
-    CallNoThrow(iss);
+    EXPECT_NO_THROW(Exec(iss));
 }
 
 TEST_F(SemanticAnalysisTests, AssignFromValueCheckTypeFail) {
@@ -201,7 +198,7 @@ TEST_F(SemanticAnalysisTests, AssignFromValueCheckTypeFail) {
 }
 )");
 
-    CallThrow(iss, "3:11: Type mismatch: cannot assign bool to i");
+    ExpectThrow(Exec(iss), "3:11: Type mismatch: cannot assign bool to i");
 }
 
 TEST_F(SemanticAnalysisTests, AssignFromArrayCheckTypeFail) {
@@ -213,7 +210,7 @@ TEST_F(SemanticAnalysisTests, AssignFromArrayCheckTypeFail) {
 }
 )");
 
-    CallThrow(iss, "4:11: Type mismatch: cannot assign int[2] to i");
+    ExpectThrow(Exec(iss), "4:11: Type mismatch: cannot assign int[2] to i");
 }
 
 TEST_F(SemanticAnalysisTests, AssignFromFunCallReturnCheckTypeOK) {
@@ -226,7 +223,7 @@ TEST_F(SemanticAnalysisTests, AssignFromFunCallReturnCheckTypeOK) {
 }
 )");
 
-    CallNoThrow(iss);
+    EXPECT_NO_THROW(Exec(iss));
 }
 
 TEST_F(SemanticAnalysisTests, AssignFromFunCallReturnCheckTypeFail) {
@@ -239,7 +236,7 @@ TEST_F(SemanticAnalysisTests, AssignFromFunCallReturnCheckTypeFail) {
 }
 )");
 
-    CallThrow(iss, "5:11: Type mismatch: cannot assign bool to i");
+    ExpectThrow(Exec(iss), "5:11: Type mismatch: cannot assign bool to i");
 }
 
 TEST_F(SemanticAnalysisTests, ArrayAssignmentFromValueCheckTypeOK) {
@@ -250,7 +247,7 @@ TEST_F(SemanticAnalysisTests, ArrayAssignmentFromValueCheckTypeOK) {
 }
 )");
 
-    CallNoThrow(iss);
+    EXPECT_NO_THROW(Exec(iss));
 }
 
 TEST_F(SemanticAnalysisTests, ArrayAssignmentFromValueCheckTypeFail) {
@@ -261,7 +258,7 @@ TEST_F(SemanticAnalysisTests, ArrayAssignmentFromValueCheckTypeFail) {
 }
 )");
 
-    CallThrow(iss, "3:14: Type mismatch: cannot assign bool to i");
+    ExpectThrow(Exec(iss), "3:14: Type mismatch: cannot assign bool to i");
 }
 
 TEST_F(SemanticAnalysisTests, ArrayAssignmentFromArrayCheckTypeFail) {
@@ -272,7 +269,7 @@ TEST_F(SemanticAnalysisTests, ArrayAssignmentFromArrayCheckTypeFail) {
 }
 )");
 
-    CallThrow(iss, "3:14: Type mismatch: cannot assign int[2] to i");
+    ExpectThrow(Exec(iss), "3:14: Type mismatch: cannot assign int[2] to i");
 }
 
 TEST_F(SemanticAnalysisTests, ArrayAssignmentFromFunCallReturnCheckTypeOK) {
@@ -285,7 +282,7 @@ TEST_F(SemanticAnalysisTests, ArrayAssignmentFromFunCallReturnCheckTypeOK) {
 }
 )");
 
-    CallNoThrow(iss);
+    EXPECT_NO_THROW(Exec(iss));
 }
 
 TEST_F(SemanticAnalysisTests, ArrayAssignmentFromFunCallReturnCheckTypeFail) {
@@ -298,7 +295,7 @@ TEST_F(SemanticAnalysisTests, ArrayAssignmentFromFunCallReturnCheckTypeFail) {
 }
 )");
 
-    CallThrow(iss, "5:11: Type mismatch: cannot assign bool to i");
+    ExpectThrow(Exec(iss), "5:11: Type mismatch: cannot assign bool to i");
 }
 
 TEST_F(SemanticAnalysisTests, ArrayAssignmentUndeclaredFail) {
@@ -309,7 +306,7 @@ TEST_F(SemanticAnalysisTests, ArrayAssignmentUndeclaredFail) {
 }
 )");
 
-    CallThrow(iss, "3:15: Undeclared array variable i");
+    ExpectThrow(Exec(iss), "3:15: Undeclared array variable i");
 }
 
 TEST_F(SemanticAnalysisTests, ArrayAssignmenInBoundsOK) {
@@ -323,7 +320,7 @@ TEST_F(SemanticAnalysisTests, ArrayAssignmenInBoundsOK) {
 }
 )");
 
-    CallNoThrow(iss);
+    EXPECT_NO_THROW(Exec(iss));
 }
 
 TEST_F(SemanticAnalysisTests, ArrayAssignmenOutOfBoundsPositiveFail) {
@@ -335,7 +332,7 @@ TEST_F(SemanticAnalysisTests, ArrayAssignmenOutOfBoundsPositiveFail) {
 }
 )");
 
-    CallThrow(iss, "4:14: Array assign out of bounds");
+    ExpectThrow(Exec(iss), "4:14: Array assign out of bounds");
 }
 
 TEST_F(SemanticAnalysisTests, FunctionRedeclarationFail) {
@@ -347,7 +344,21 @@ TEST_F(SemanticAnalysisTests, FunctionRedeclarationFail) {
 }
 )");
 
-    CallThrow(iss, "3:9: Redeclaration of abs. Previously declared at 2:9");
+    ExpectThrow(
+        Exec(iss),
+        "3:9: redefinition of 'int abs()'. Previously defined here 2:9");
+}
+
+TEST_F(SemanticAnalysisTests, FunctionRedeclarationWithVarFail) {
+    std::istringstream iss(R"(void foo() {}
+        int foo;
+        int main() {
+        return 0;
+}
+)");
+
+    ExpectThrow(Exec(iss),
+                "2:9: 'int foo' redeclared as different kind of entity");
 }
 
 TEST_F(SemanticAnalysisTests, FunctionParamRedeclarationFail) {
@@ -358,7 +369,8 @@ TEST_F(SemanticAnalysisTests, FunctionParamRedeclarationFail) {
 }
 )");
 
-    CallThrow(iss, "2:9: Redeclaration of i. Previously declared at 2:9");
+    ExpectThrow(Exec(iss),
+                "2:9: redefinition of 'bool i'. Previously defined here 2:9");
 }
 
 TEST_F(SemanticAnalysisTests, FunctionParamUseSameScopeOK) {
@@ -369,7 +381,7 @@ TEST_F(SemanticAnalysisTests, FunctionParamUseSameScopeOK) {
 }
 )");
 
-    CallNoThrow(iss);
+    EXPECT_NO_THROW(Exec(iss));
 }
 
 TEST_F(SemanticAnalysisTests, FunctionParamUseOtherScopeFail) {
@@ -381,7 +393,7 @@ TEST_F(SemanticAnalysisTests, FunctionParamUseOtherScopeFail) {
 }
 )");
 
-    CallThrow(iss, "4:11: Undeclared variable i");
+    ExpectThrow(Exec(iss), "4:11: Undeclared variable i");
 }
 
 TEST_F(SemanticAnalysisTests, FunctionParamRedeclarationWithVarSameScopeFail) {
@@ -392,7 +404,8 @@ TEST_F(SemanticAnalysisTests, FunctionParamRedeclarationWithVarSameScopeFail) {
 }
 )");
 
-    CallThrow(iss, "2:27: Redeclaration of i. Previously declared at 2:9");
+    ExpectThrow(Exec(iss),
+                "2:27: Redeclaration of i. Previously declared at 2:9");
 }
 
 TEST_F(SemanticAnalysisTests, FunctionVoidWithoutReturnOK) {
@@ -403,7 +416,7 @@ TEST_F(SemanticAnalysisTests, FunctionVoidWithoutReturnOK) {
 }
 )");
 
-    CallNoThrow(iss);
+    EXPECT_NO_THROW(Exec(iss));
 }
 
 TEST_F(SemanticAnalysisTests, FunctionNonVoidWithReturnOK) {
@@ -413,7 +426,7 @@ TEST_F(SemanticAnalysisTests, FunctionNonVoidWithReturnOK) {
 }
 )");
 
-    CallNoThrow(iss);
+    EXPECT_NO_THROW(Exec(iss));
 }
 
 TEST_F(SemanticAnalysisTests, FunctionNonVoidWithoutReturnFail) {
@@ -422,7 +435,9 @@ TEST_F(SemanticAnalysisTests, FunctionNonVoidWithoutReturnFail) {
 }
 )");
 
-    CallThrow(iss, "2:9: non-void function main does not return a value");
+    ExpectThrow(Exec(iss),
+                "2:9: in function 'int main()' no return statement in function "
+                "returning non-void");
 }
 
 TEST_F(SemanticAnalysisTests, FunctionCheckReturnTypeOK) {
@@ -432,7 +447,7 @@ TEST_F(SemanticAnalysisTests, FunctionCheckReturnTypeOK) {
 }
 )");
 
-    CallNoThrow(iss);
+    EXPECT_NO_THROW(Exec(iss));
 }
 
 TEST_F(SemanticAnalysisTests, FunctionCheckReturnTypeFail) {
@@ -442,7 +457,8 @@ TEST_F(SemanticAnalysisTests, FunctionCheckReturnTypeFail) {
 }
 )");
 
-    CallThrow(iss, "3:9: Type mismatch: main return type is int but got bool");
+    ExpectThrow(Exec(iss),
+                "3:9: Type mismatch: main return type is int but got bool");
 }
 
 TEST_F(SemanticAnalysisTests, IfThenElseConditionTrueLiteralCheckTypeOK) {
@@ -452,7 +468,7 @@ TEST_F(SemanticAnalysisTests, IfThenElseConditionTrueLiteralCheckTypeOK) {
 }
 )");
 
-    CallNoThrow(iss);
+    EXPECT_NO_THROW(Exec(iss));
 }
 
 TEST_F(SemanticAnalysisTests, IfThenElseConditionFalseLiteralCheckTypeOK) {
@@ -462,7 +478,7 @@ TEST_F(SemanticAnalysisTests, IfThenElseConditionFalseLiteralCheckTypeOK) {
 }
 )");
 
-    CallNoThrow(iss);
+    EXPECT_NO_THROW(Exec(iss));
 }
 
 TEST_F(SemanticAnalysisTests, IfThenElseConditionVarCheckTypeOK) {
@@ -473,7 +489,7 @@ TEST_F(SemanticAnalysisTests, IfThenElseConditionVarCheckTypeOK) {
 }
 )");
 
-    CallNoThrow(iss);
+    EXPECT_NO_THROW(Exec(iss));
 }
 
 TEST_F(SemanticAnalysisTests, IfThenElseConditionVarCheckTypeFail) {
@@ -484,7 +500,7 @@ TEST_F(SemanticAnalysisTests, IfThenElseConditionVarCheckTypeFail) {
 }
 )");
 
-    CallThrow(iss, "3:9: Type mismatch: condition is not bool");
+    ExpectThrow(Exec(iss), "3:9: Type mismatch: condition is not bool");
 }
 
 TEST_F(SemanticAnalysisTests, IfThenElseConditionNumberCheckTypeFail) {
@@ -494,7 +510,7 @@ TEST_F(SemanticAnalysisTests, IfThenElseConditionNumberCheckTypeFail) {
 }
 )");
 
-    CallThrow(iss, "2:9: Type mismatch: condition is not bool");
+    ExpectThrow(Exec(iss), "2:9: Type mismatch: condition is not bool");
 }
 
 TEST_F(SemanticAnalysisTests, LogicOpTwoNumbersCheckTypeOK) {
@@ -504,7 +520,7 @@ TEST_F(SemanticAnalysisTests, LogicOpTwoNumbersCheckTypeOK) {
 }
 )");
 
-    CallNoThrow(iss);
+    EXPECT_NO_THROW(Exec(iss));
 }
 
 TEST_F(SemanticAnalysisTests, LogicOpVarAndNumberCheckTypeOK) {
@@ -515,7 +531,7 @@ TEST_F(SemanticAnalysisTests, LogicOpVarAndNumberCheckTypeOK) {
 }
 )");
 
-    CallNoThrow(iss);
+    EXPECT_NO_THROW(Exec(iss));
 }
 
 TEST_F(SemanticAnalysisTests, LogicOpNumberAndVarCheckTypeOK) {
@@ -526,7 +542,7 @@ TEST_F(SemanticAnalysisTests, LogicOpNumberAndVarCheckTypeOK) {
 }
 )");
 
-    CallNoThrow(iss);
+    EXPECT_NO_THROW(Exec(iss));
 }
 
 TEST_F(SemanticAnalysisTests, LogicOpNumberAndBoolCheckTypeFail) {
@@ -536,7 +552,8 @@ TEST_F(SemanticAnalysisTests, LogicOpNumberAndBoolCheckTypeFail) {
 }
 )");
 
-    CallThrow(iss, "2:11: Type mismatch: cannot perform < for int and bool");
+    ExpectThrow(Exec(iss),
+                "2:11: Type mismatch: cannot perform < for int and bool");
 }
 
 TEST_F(SemanticAnalysisTests, ArithOpTwoNumbersCheckTypeOK) {
@@ -546,7 +563,7 @@ TEST_F(SemanticAnalysisTests, ArithOpTwoNumbersCheckTypeOK) {
 }
 )");
 
-    CallNoThrow(iss);
+    EXPECT_NO_THROW(Exec(iss));
 }
 
 TEST_F(SemanticAnalysisTests, ArithOpVarAndNumberCheckTypeOK) {
@@ -557,7 +574,7 @@ TEST_F(SemanticAnalysisTests, ArithOpVarAndNumberCheckTypeOK) {
 }
 )");
 
-    CallNoThrow(iss);
+    EXPECT_NO_THROW(Exec(iss));
 }
 
 TEST_F(SemanticAnalysisTests, ArithOpNumberAndVarCheckTypeOK) {
@@ -568,7 +585,7 @@ TEST_F(SemanticAnalysisTests, ArithOpNumberAndVarCheckTypeOK) {
 }
 )");
 
-    CallNoThrow(iss);
+    EXPECT_NO_THROW(Exec(iss));
 }
 
 TEST_F(SemanticAnalysisTests, ArithOpNumberAndBoolCheckTypeFail) {
@@ -578,7 +595,8 @@ TEST_F(SemanticAnalysisTests, ArithOpNumberAndBoolCheckTypeFail) {
 }
 )");
 
-    CallThrow(iss, "2:11: Type mismatch: cannot perform + for int and bool");
+    ExpectThrow(Exec(iss),
+                "2:11: Type mismatch: cannot perform + for int and bool");
 }
 
 TEST_F(SemanticAnalysisTests, VarDefRedeclarationSameScopeFail) {
@@ -590,10 +608,35 @@ TEST_F(SemanticAnalysisTests, VarDefRedeclarationSameScopeFail) {
 }
 )");
 
-    CallThrow(iss, "4:9: Redeclaration of i. Previously declared at 3:9");
+    ExpectThrow(Exec(iss),
+                "4:9: Redeclaration of i. Previously declared at 3:9");
 }
 
-TEST_F(SemanticAnalysisTests, VarDefHideParentScopeOK) {
+TEST_F(SemanticAnalysisTests, VarDefRedeclarationWithFuncSameScopeFail) {
+    std::istringstream iss(R"(int foo;
+        void foo() {}
+        int main() {
+        return 0;
+}
+)");
+
+    ExpectThrow(Exec(iss),
+                "2:9: 'void foo' redeclared as different kind of entity");
+}
+
+TEST_F(SemanticAnalysisTests, VarDefRedeclarationOfFuncSameScopeFail) {
+    std::istringstream iss(R"(void foo() {}
+        int foo;
+        int main() {
+        return 0;
+}
+)");
+
+    ExpectThrow(Exec(iss),
+                "2:9: 'int foo' redeclared as different kind of entity");
+}
+
+TEST_F(SemanticAnalysisTests, VarDefHideParentScopeVarOK) {
     std::istringstream iss(R"(
         int i;
         int main() {
@@ -602,7 +645,32 @@ TEST_F(SemanticAnalysisTests, VarDefHideParentScopeOK) {
 }
 )");
 
-    CallNoThrow(iss);
+    EXPECT_NO_THROW(Exec(iss));
+}
+
+TEST_F(SemanticAnalysisTests, VarDefHideParentScopeArrayOK) {
+    std::istringstream iss(R"(
+        int i[10];
+        int main() {
+        int i;
+        print (i);
+        return 0;
+}
+)");
+
+    EXPECT_NO_THROW(Exec(iss));
+}
+
+TEST_F(SemanticAnalysisTests, VarDefHideParentScopeFuncFail) {
+    std::istringstream iss(R"(void foo() {}
+        int main() {
+        int foo;
+        return 0;
+}
+)");
+
+    ExpectThrow(Exec(iss),
+                "3:9: 'int foo' redeclared as different kind of entity");
 }
 
 TEST_F(SemanticAnalysisTests, VarDefDeclaredInOtherFunctionFail) {
@@ -616,7 +684,7 @@ TEST_F(SemanticAnalysisTests, VarDefDeclaredInOtherFunctionFail) {
 }
 )");
 
-    CallThrow(iss, "6:11: Undeclared variable i");
+    ExpectThrow(Exec(iss), "6:11: Undeclared variable i");
 }
 
 TEST_F(SemanticAnalysisTests, VarDefDeclaredInWhileBlockSameScopeOk) {
@@ -630,7 +698,7 @@ TEST_F(SemanticAnalysisTests, VarDefDeclaredInWhileBlockSameScopeOk) {
 }
 )");
 
-    CallNoThrow(iss);
+    EXPECT_NO_THROW(Exec(iss));
 }
 
 TEST_F(SemanticAnalysisTests, VarDefDeclaredInWhileBlockOtherScopeFail) {
@@ -644,7 +712,7 @@ TEST_F(SemanticAnalysisTests, VarDefDeclaredInWhileBlockOtherScopeFail) {
 }
 )");
 
-    CallThrow(iss, "6:11: Undeclared variable i");
+    ExpectThrow(Exec(iss), "6:11: Undeclared variable i");
 }
 
 TEST_F(SemanticAnalysisTests, ArrayDeclarationRedeclarationSameScopeFail) {
@@ -656,19 +724,60 @@ TEST_F(SemanticAnalysisTests, ArrayDeclarationRedeclarationSameScopeFail) {
 }
 )");
 
-    CallThrow(iss, "4:9: Redeclaration of i. Previously declared at 3:9");
+    ExpectThrow(Exec(iss),
+                "4:9: Redeclaration of i. Previously declared at 3:9");
 }
 
-TEST_F(SemanticAnalysisTests, ArrayDeclarationHideParentScopeOK) {
-    std::istringstream iss(R"(
-        int i[10];
+TEST_F(SemanticAnalysisTests,
+       ArrayDeclarationRedeclarationWithFuncSameScopeFail) {
+    std::istringstream iss(R"(int i[10];
+        void i() {}
         int main() {
-        int i[1];
         return 0;
 }
 )");
 
-    CallNoThrow(iss);
+    ExpectThrow(Exec(iss),
+                "2:9: 'void i' redeclared as different kind of entity");
+}
+
+TEST_F(SemanticAnalysisTests, ArrayDeclarationHideParentScopeArrayOK) {
+    std::istringstream iss(R"(
+        int i[10];
+        int main() {
+        int i[1];
+        print (i[0]);
+        return 0;
+}
+)");
+
+    EXPECT_NO_THROW(Exec(iss));
+}
+
+TEST_F(SemanticAnalysisTests, ArrayDeclarationHideParentScopeVarOK) {
+    std::istringstream iss(R"(
+        int i;
+        int main() {
+        int i[1];
+        print (i[0]);
+        return 0;
+}
+)");
+
+    EXPECT_NO_THROW(Exec(iss));
+}
+
+TEST_F(SemanticAnalysisTests, ArrayDeclarationHideParentScopeFuncOK) {
+    std::istringstream iss(R"(void foo() {}
+        int main() {
+        int foo[1];
+        print (foo[0]);
+        return 0;
+}
+)");
+
+    ExpectThrow(Exec(iss),
+                "3:9: 'int[1] foo' redeclared as different kind of entity");
 }
 
 TEST_F(SemanticAnalysisTests, ArrayAccessUndeclaredVariableCheckOK) {
@@ -679,7 +788,7 @@ TEST_F(SemanticAnalysisTests, ArrayAccessUndeclaredVariableCheckOK) {
 }
 )");
 
-    CallNoThrow(iss);
+    EXPECT_NO_THROW(Exec(iss));
 }
 
 TEST_F(SemanticAnalysisTests, ArrayAccessUndeclaredVariableCheckFail) {
@@ -689,7 +798,7 @@ TEST_F(SemanticAnalysisTests, ArrayAccessUndeclaredVariableCheckFail) {
 }
 )");
 
-    CallThrow(iss, "2:14: Undeclared array variable i");
+    ExpectThrow(Exec(iss), "2:14: Undeclared array variable i");
 }
 
 TEST_F(SemanticAnalysisTests, ArrayAccessInBoundsOK) {
@@ -704,7 +813,7 @@ TEST_F(SemanticAnalysisTests, ArrayAccessInBoundsOK) {
 }
 )");
 
-    CallNoThrow(iss);
+    EXPECT_NO_THROW(Exec(iss));
 }
 
 TEST_F(SemanticAnalysisTests, ArrayAccessOutOfBoundsFail) {
@@ -717,5 +826,5 @@ TEST_F(SemanticAnalysisTests, ArrayAccessOutOfBoundsFail) {
 }
 )");
 
-    CallThrow(iss, "5:14: Array assign out of bounds");
+    ExpectThrow(Exec(iss), "5:14: Array assign out of bounds");
 }

@@ -96,11 +96,7 @@ std::shared_ptr<ASTNode> ParserDriver::make_program(
     ParserLog("create ast program ", '\n');
     auto node = std::make_shared<Program>();
     for (auto top_level : *top_level_list) {
-        if (auto* func = dynamic_cast<Function*>(top_level.get()); func) {
-            node->functions.push_back(top_level);
-        } else {
-            node->globals.push_back(top_level);
-        }
+        node->globals.push_back(top_level);
     }
     return node;
 }

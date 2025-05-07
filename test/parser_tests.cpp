@@ -35,11 +35,9 @@ TEST_F(ParserTests, SimpleMainOK) {
 
     auto prog = std::dynamic_pointer_cast<AST::Program>(ast);
     ASSERT_TRUE(prog);
-    ASSERT_EQ(prog->globals.size(), 0);
-    ASSERT_EQ(prog->functions.size(), 1);
+    ASSERT_EQ(prog->globals.size(), 1);
 
-    auto main_func =
-        std::dynamic_pointer_cast<AST::Function>(prog->functions[0]);
+    auto main_func = std::dynamic_pointer_cast<AST::Function>(prog->globals[0]);
     EXPECT_EQ(main_func->name, "main");
     EXPECT_EQ(main_func->return_type, AST::Type::Int());
     EXPECT_EQ(main_func->args.size(), 0);
@@ -108,11 +106,9 @@ print ("\n\033\n\t\034\n\x13\7");
 
     auto prog = std::dynamic_pointer_cast<AST::Program>(ast);
     ASSERT_TRUE(prog);
-    ASSERT_EQ(prog->globals.size(), 0);
-    ASSERT_EQ(prog->functions.size(), 1);
+    ASSERT_EQ(prog->globals.size(), 1);
 
-    auto main_func =
-        std::dynamic_pointer_cast<AST::Function>(prog->functions[0]);
+    auto main_func = std::dynamic_pointer_cast<AST::Function>(prog->globals[0]);
     ASSERT_EQ(main_func->name, "main");
     EXPECT_EQ(main_func->return_type, AST::Type::Int());
     EXPECT_EQ(main_func->args.size(), 0);

@@ -349,6 +349,51 @@ print(2 * 10 / 4);
     EXPECT_EQ(oss.str(), expected);
 }
 
+TEST_F(InterpreterTests, ArithOpIntDivideWithoutRoundOK) {
+    std::istringstream iss(R"(void main() {
+print(10 / 5);
+})");
+
+    std::ostringstream oss;
+    EXPECT_NO_THROW(Exec(iss, oss));
+
+    const std::string expected(R"(2)");
+    EXPECT_EQ(oss.str(), expected);
+}
+
+TEST_F(InterpreterTests, ArithOpIntDivideWithRoundCeilOK) {
+    std::istringstream iss(R"(void main() {
+print(18 / 10);
+})");
+
+    std::ostringstream oss;
+    EXPECT_NO_THROW(Exec(iss, oss));
+
+    const std::string expected(R"(1)");
+    EXPECT_EQ(oss.str(), expected);
+}
+
+TEST_F(InterpreterTests, ArithOpIntDivideWithRoundFloorOK) {
+    std::istringstream iss(R"(void main() {
+print(11 / 10);
+})");
+
+    std::ostringstream oss;
+    EXPECT_NO_THROW(Exec(iss, oss));
+
+    const std::string expected(R"(1)");
+    EXPECT_EQ(oss.str(), expected);
+}
+
+TEST_F(InterpreterTests, ArithOpIntDivideZeroFail) {
+    std::istringstream iss(R"(void main() {
+print(11 / 0);
+})");
+
+    std::ostringstream oss;
+    ExpectThrow(Exec(iss, oss), "2:10: division by zero");
+}
+
 TEST_F(InterpreterTests, LogicOpLessIntLiteralIntLiteralTrueOK) {
     std::istringstream iss(R"(void main() {
 print(1 < 2);

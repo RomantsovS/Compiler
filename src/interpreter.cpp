@@ -45,8 +45,12 @@ ObjectHolder Interpreter::Eval(std::shared_ptr<AST::ArithOp> node) {
         return ObjectHolder::Own(ValueObject(lhs.TryAs<Number>()->GetValue() *
                                              rhs.TryAs<Number>()->GetValue()));
     } else if (node->op == "/") {
-        return ObjectHolder::Own(ValueObject(lhs.TryAs<Number>()->GetValue() /
-                                             rhs.TryAs<Number>()->GetValue()));
+        auto r_val = rhs.TryAs<Number>()->GetValue();
+        if (r_val == 0) {
+            Error(node.get(), "division by zero");
+        }
+        return ObjectHolder::Own(
+            ValueObject(lhs.TryAs<Number>()->GetValue() / r_val));
     } else if (node->op == "%") {
         return ObjectHolder::Own(ValueObject(lhs.TryAs<Number>()->GetValue() %
                                              rhs.TryAs<Number>()->GetValue()));

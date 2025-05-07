@@ -82,6 +82,10 @@
 %token <bool> TRUE FALSE
 %token RAND
 
+%left EQUAL
+%left PLUS MINUS
+%left MULTIPLY DIVIDE MOD
+
 %type< AST::Type > type;
 %type< std::shared_ptr<AST::Statements> > stmt_list block top_level_list arg_list;
 %type< std::shared_ptr<AST::Params> > param_list;

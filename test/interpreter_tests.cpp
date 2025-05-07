@@ -277,6 +277,54 @@ print(i + 2);
     EXPECT_EQ(oss.str(), expected);
 }
 
+TEST_F(InterpreterTests, ArithOpPrecedencePlusMultiplyRightOK) {
+    std::istringstream iss(R"(void main() {
+print(1 + 2 * 10);
+})");
+
+    std::ostringstream oss;
+    EXPECT_NO_THROW(Exec(iss, oss));
+
+    const std::string expected(R"(21)");
+    EXPECT_EQ(oss.str(), expected);
+}
+
+TEST_F(InterpreterTests, ArithOpPrecedencePlusMultiplyLeftOK) {
+    std::istringstream iss(R"(void main() {
+print(2 * 10 + 1);
+})");
+
+    std::ostringstream oss;
+    EXPECT_NO_THROW(Exec(iss, oss));
+
+    const std::string expected(R"(21)");
+    EXPECT_EQ(oss.str(), expected);
+}
+
+TEST_F(InterpreterTests, ArithOpPrecedencePlusDivideOK) {
+    std::istringstream iss(R"(void main() {
+print(2 + 10 / 2);
+})");
+
+    std::ostringstream oss;
+    EXPECT_NO_THROW(Exec(iss, oss));
+
+    const std::string expected(R"(7)");
+    EXPECT_EQ(oss.str(), expected);
+}
+
+TEST_F(InterpreterTests, ArithOpPrecedencePlusModOK) {
+    std::istringstream iss(R"(void main() {
+print(2 + 10 % 4);
+})");
+
+    std::ostringstream oss;
+    EXPECT_NO_THROW(Exec(iss, oss));
+
+    const std::string expected(R"(4)");
+    EXPECT_EQ(oss.str(), expected);
+}
+
 TEST_F(InterpreterTests, LogicOpLessIntLiteralIntLiteralTrueOK) {
     std::istringstream iss(R"(void main() {
 print(1 < 2);

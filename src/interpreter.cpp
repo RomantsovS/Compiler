@@ -164,8 +164,11 @@ ObjectHolder Interpreter::Eval(std::shared_ptr<AST::LogicOp> node) {
     } else if (node->op == ">") {
         return ObjectHolder::Own(ValueObject(lhs.TryAs<Number>()->GetValue() >
                                              rhs.TryAs<Number>()->GetValue()));
+    } else if (node->op == "==") {
+        return ObjectHolder::Own(ValueObject(lhs.TryAs<Number>()->GetValue() ==
+                                             rhs.TryAs<Number>()->GetValue()));
     } else {
-        Error(node.get(), "Unknown arith op: ", node->op);
+        Error(node.get(), "Unknown logic op: ", node->op);
     }
     return ObjectHolder::None();
 }

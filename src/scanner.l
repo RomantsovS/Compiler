@@ -146,8 +146,12 @@
                 return EzAquarii::Parser::make_COMMA(driver_.get_location());
             }
 
-=           {
+==          {
                 return EzAquarii::Parser::make_EQUAL(driver_.get_location());
+            }
+
+=           {
+                return EzAquarii::Parser::make_ASSIGN(driver_.get_location());
             }
 
 "+"         {

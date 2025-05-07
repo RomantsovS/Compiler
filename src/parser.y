@@ -69,7 +69,7 @@
 %token LEFTBRACKET RIGHTBRACKET;
 %token SEMICOLON;
 %token COMMA;
-%token EQUAL;
+%token EQUAL ASSIGN;
 %token PLUS MINUS MULTIPLY DIVIDE MOD;
 %token LESS GREATER;
 %token IF ELSE;
@@ -210,9 +210,6 @@ stmt:
     | RETURN expr SEMICOLON {
         $$ = driver.with_location(driver.make_return($2), @1);
     }
-    | ID LEFTBRACKET expr RIGHTBRACKET EQUAL expr SEMICOLON {
-        $$ = driver.with_location(driver.make_array_assignment($1, $3, $6), @5);
-    }
     ;
 
 declaration:
@@ -225,8 +222,11 @@ declaration:
     ;
 
 assignment:
-    ID EQUAL expr SEMICOLON {
+    ID ASSIGN expr SEMICOLON {
         $$ = driver.with_location(driver.make_assignment($1, $3), @2);
+    }
+    | ID LEFTBRACKET expr RIGHTBRACKET ASSIGN expr SEMICOLON {
+        $$ = driver.with_location(driver.make_array_assignment($1, $3, $6), @5);
     }
     ;
 
@@ -267,6 +267,7 @@ expr:
     | expr MOD expr { $$ = driver.with_location(driver.make_arith_op("%", $1, $3), @2); }
     | expr LESS expr { $$ = driver.with_location(driver.make_logic_op("<", $1, $3), @2); }
     | expr GREATER expr { $$ = driver.with_location(driver.make_logic_op(">", $1, $3), @2); }
+    | expr EQUAL expr { $$ = driver.with_location(driver.make_logic_op("==", $1, $3), @2); }
     | ID { $$ = driver.with_location(driver.make_var($1), @1); }
     | ID LEFTBRACKET expr RIGHTBRACKET { $$ = driver.with_location(driver.make_array_access($1, $3), @2); }
     | literal

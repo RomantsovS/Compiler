@@ -84,7 +84,9 @@ class ArrayObject : public Object {
 
     const ObjectHolder GetObject(size_t i) const {
         if (i >= value.size()) {
-            throw std::runtime_error("array access out of bounds");
+            throw std::runtime_error("array access " + std::to_string(i) +
+                                     " out of bounds " +
+                                     std::to_string(value.size()));
         }
         return value[i];
     }

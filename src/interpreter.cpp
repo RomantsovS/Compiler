@@ -133,8 +133,8 @@ ObjectHolder Interpreter::Eval(std::shared_ptr<AST::FunCall> node) {
 
 ObjectHolder Interpreter::Eval(std::shared_ptr<AST::Function> node,
                                std::vector<ObjectHolder> args) {
+    call_stack.PushScope();
     for (size_t i = 0; i < node->args.size(); ++i) {
-        call_stack.PushScope();
         call_stack.Declare(node->args[i].name, args[i]);
     }
     for (auto stmt : node->body) {

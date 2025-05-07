@@ -83,6 +83,7 @@
 %token RAND
 
 %left EQUAL
+%left LESS GREATER
 %left PLUS MINUS
 %left MULTIPLY DIVIDE MOD
 

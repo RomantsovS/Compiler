@@ -325,6 +325,30 @@ print(2 + 10 % 4);
     EXPECT_EQ(oss.str(), expected);
 }
 
+TEST_F(InterpreterTests, ArithOpTriplePlusOK) {
+    std::istringstream iss(R"(void main() {
+print(1 + 2 + 3);
+})");
+
+    std::ostringstream oss;
+    EXPECT_NO_THROW(Exec(iss, oss));
+
+    const std::string expected(R"(6)");
+    EXPECT_EQ(oss.str(), expected);
+}
+
+TEST_F(InterpreterTests, ArithOpTripleMultiplyDivideOK) {
+    std::istringstream iss(R"(void main() {
+print(2 * 10 / 4);
+})");
+
+    std::ostringstream oss;
+    EXPECT_NO_THROW(Exec(iss, oss));
+
+    const std::string expected(R"(5)");
+    EXPECT_EQ(oss.str(), expected);
+}
+
 TEST_F(InterpreterTests, LogicOpLessIntLiteralIntLiteralTrueOK) {
     std::istringstream iss(R"(void main() {
 print(1 < 2);
@@ -412,6 +436,42 @@ print(i == 2);
     EXPECT_NO_THROW(Exec(iss, oss));
 
     const std::string expected(R"(0)");
+    EXPECT_EQ(oss.str(), expected);
+}
+
+TEST_F(InterpreterTests, ArithOpLogicOpPrecedenceOK) {
+    std::istringstream iss(R"(void main() {
+print(1 + 1 < 2 + 3);
+})");
+
+    std::ostringstream oss;
+    EXPECT_NO_THROW(Exec(iss, oss));
+
+    const std::string expected(R"(1)");
+    EXPECT_EQ(oss.str(), expected);
+}
+
+TEST_F(InterpreterTests, ArithOpLogicOpPrecedenceFail) {
+    std::istringstream iss(R"(void main() {
+print(1 + 1 > 2 + 3);
+})");
+
+    std::ostringstream oss;
+    EXPECT_NO_THROW(Exec(iss, oss));
+
+    const std::string expected(R"(0)");
+    EXPECT_EQ(oss.str(), expected);
+}
+
+TEST_F(InterpreterTests, ArithOpParenthesesPrecedenceOK) {
+    std::istringstream iss(R"(void main() {
+print((2 + 3) * 2);
+})");
+
+    std::ostringstream oss;
+    EXPECT_NO_THROW(Exec(iss, oss));
+
+    const std::string expected(R"(10)");
     EXPECT_EQ(oss.str(), expected);
 }
 

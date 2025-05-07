@@ -599,6 +599,15 @@ TEST_F(SemanticAnalysisTests, ArithOpNumberAndBoolCheckTypeFail) {
                 "2:11: Type mismatch: cannot perform + for int and bool");
 }
 
+TEST_F(SemanticAnalysisTests, ArithOpLogicOpParenthesesPrecedenceFail) {
+    std::istringstream iss(R"(void main() {
+1 + (1 > 2);
+})");
+
+    ExpectThrow(Exec(iss),
+                "2:3: Type mismatch: cannot perform + for int and bool");
+}
+
 TEST_F(SemanticAnalysisTests, VarDefRedeclarationSameScopeFail) {
     std::istringstream iss(R"(
         int main() {

@@ -1,4 +1,4 @@
-int fire[800];
+int fire[2000];
 
 void line_blur(int offset, int step, int nsteps) {
     int circ[3];
@@ -289,9 +289,8 @@ int main() {
     int i;
     int j;
 
-    j = 1;
-
-    while (j < HEIGHT) {  // scroll up
+    j = 0;
+    while (j < HEIGHT) {
         i = 0;
         while (i < WIDTH) {
             fire[i + j * WIDTH] = 0;
@@ -304,38 +303,60 @@ int main() {
         print("\033[2J");  // clear screen
         print("\033[H");   // home
 
-        // j = 1;
+        j = 1;
+        while (j < HEIGHT) {  // scroll up
+            i = 0;
+            while (i < WIDTH) {
+                fire[i + (j - 1) * WIDTH] = fire[i + j * WIDTH];
+                i = i + 1;
+            }
+            j = j + 1;
+        }
 
-        // while (j < HEIGHT) {  // scroll up
-        //     i = 0;
-        //     while (i < WIDTH) {
-        //         fire[i + (j - 1) * WIDTH] = fire[i + j * WIDTH];
-        //         i = i + 1;
-        //     }
-        //     j = j + 1;
-        // }
-
-        // j = 0;
-        // while (j < HEIGHT) {
-        //     line_blur(j * WIDTH, 1, WIDTH);
-        //     j = j + 1;
-        // }
-
-        // i = 0;
-        // while (i < WIDTH) {
-        //     line_blur(i, WIDTH, HEIGHT);
-        //     i = i + 1;
-        // }
+        j = 0;
+        while (j < HEIGHT) {
+            line_blur(j * WIDTH, 1, WIDTH);
+            j = j + 1;
+        }
 
         i = 0;
-        while (i < HEIGHT) {  // show the buffer
-            j = 0;
-            while (j < WIDTH) {
-                palette(rand() % 255);
-                j = j + 1;
+        while (i < WIDTH) {
+            line_blur(i, WIDTH, HEIGHT);
+            i = i + 1;
+        }
+
+        i = 0;
+        while (i < WIDTH * HEIGHT) {  // cool
+            if (rand() % 10 < 10)
+                if (fire[i] > 2)
+                    fire[i] = fire[i] - 2;
+                else
+                    fire[i] = 0;
+            i = i + 1;
+        }
+
+        i = 0;
+        while (i < WIDTH) {  // add heat to the bed
+            int idx;
+            idx = i + (HEIGHT - 1) * WIDTH;
+            if (rand() % 8 == 0)
+                fire[idx] = 128 + rand() % 128;  // sparks
+            else if (fire[idx] < 16)
+                fire[idx] = 16;
+            else
+                fire[idx] = fire[idx];  // ember bed
+            i = i + 1;
+        }
+
+        j = 0;
+        while (j < HEIGHT) {  // show the buffer
+            i = 0;
+            while (i < WIDTH) {
+                palette(fire[i + j * WIDTH]);
+                i = i + 1;
             }
             print("\033[49m\n");
-            i = i + 1;
+            j = j + 1;
         }
     }
     return 0;

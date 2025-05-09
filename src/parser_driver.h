@@ -171,6 +171,11 @@ class ParserDriver {
         std::shared_ptr<AST::ASTNode> then_branch,
         std::shared_ptr<AST::ASTNode> else_branch);
 
+    std::shared_ptr<AST::ASTNode> make_if(
+        std::shared_ptr<AST::ASTNode> condition,
+        std::shared_ptr<AST::Statements> then_branch,
+        std::shared_ptr<AST::Statements> else_branch);
+
     std::shared_ptr<AST::ASTNode> make_while(
         std::shared_ptr<AST::ASTNode> condition,
         std::shared_ptr<AST::ASTNode> stmt);

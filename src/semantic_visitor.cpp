@@ -192,9 +192,22 @@ void SemanticVisitor::visit(AST::IfThenElse* node) {
         Error(node, "Type mismatch: condition is not bool");
     }
 
-    node->then_branch->accept(this);
-    if (node->else_branch) {
-        node->else_branch->accept(this);
+    symtable.PushScope();
+
+    for (size_t i = 0; i < node->then_branch.size(); ++i) {
+        node->then_branch[i]->accept(this);
+    }
+
+    symtable.PopScope();
+
+    if (!node->else_branch.empty()) {
+        symtable.PushScope();
+
+        for (size_t i = 0; i < node->else_branch.size(); ++i) {
+            node->else_branch[i]->accept(this);
+        }
+
+        symtable.PopScope();
     }
 }
 

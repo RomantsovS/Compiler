@@ -582,6 +582,70 @@ print(j);
     EXPECT_EQ(oss.str(), expected);
 }
 
+TEST_F(InterpreterTests, HideIntVarWithIfThenOK) {
+    std::istringstream iss(R"(void main() {
+int i;
+i = 1;
+print(i);
+int j;
+j = 2;
+print(j);
+if(true) {
+int j;
+j = 3;
+print(j);
+i = 4;
+print(i);
+} else {
+int j;
+j = 5;
+print(j);
+i = 8;
+print(i);
+}
+print(i);
+print(j);
+})");
+
+    std::ostringstream oss;
+    EXPECT_NO_THROW(Exec(iss, oss));
+
+    const std::string expected(R"(123442)");
+    EXPECT_EQ(oss.str(), expected);
+}
+
+TEST_F(InterpreterTests, HideIntVarWithIfThenElseOK) {
+    std::istringstream iss(R"(void main() {
+int i;
+i = 1;
+print(i);
+int j;
+j = 2;
+print(j);
+if(false) {
+int j;
+j = 3;
+print(j);
+i = 6;
+print(i);
+} else {
+int j;
+j = 5;
+print(j);
+i = 7;
+print(i);
+}
+print(i);
+print(j);
+})");
+
+    std::ostringstream oss;
+    EXPECT_NO_THROW(Exec(iss, oss));
+
+    const std::string expected(R"(125772)");
+    EXPECT_EQ(oss.str(), expected);
+}
+
 TEST_F(InterpreterTests, ReassignIntArrayOK) {
     std::istringstream iss(R"(void main() {
 int i[10];
@@ -632,6 +696,42 @@ else print (2);
     EXPECT_NO_THROW(Exec(iss, oss));
 
     const std::string expected(R"(2)");
+    EXPECT_EQ(oss.str(), expected);
+}
+
+TEST_F(InterpreterTests, IfThenElseManyStatementsOK) {
+    std::istringstream iss(R"(void main() {
+if(1 < 2) {
+print (1);
+print (2);
+} else {
+print (3);
+print (4);
+}
+})");
+
+    std::ostringstream oss;
+    EXPECT_NO_THROW(Exec(iss, oss));
+
+    const std::string expected(R"(12)");
+    EXPECT_EQ(oss.str(), expected);
+}
+
+TEST_F(InterpreterTests, IfThenElseManyStatementsElseOK) {
+    std::istringstream iss(R"(void main() {
+if(1 > 2) {
+print (1);
+print (2);
+} else {
+print (3);
+print (4);
+}
+})");
+
+    std::ostringstream oss;
+    EXPECT_NO_THROW(Exec(iss, oss));
+
+    const std::string expected(R"(34)");
     EXPECT_EQ(oss.str(), expected);
 }
 

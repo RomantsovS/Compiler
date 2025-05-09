@@ -98,11 +98,17 @@ void PrettyPrintVisitor::visit(AST::IfThenElse* node) {
     os_ << "if (";
     node->condition->accept(this);
     os_ << ") {\n";
-    node->then_branch->accept(this);
+    for (size_t i = 0; i < node->then_branch.size(); ++i) {
+        if (i > 0) os_ << "\n";
+        node->then_branch[i]->accept(this);
+    }
     os_ << "\n}";
-    if (node->else_branch) {
+    if (!node->else_branch.empty()) {
         os_ << " else {\n";
-        node->else_branch->accept(this);
+        for (size_t i = 0; i < node->else_branch.size(); ++i) {
+            if (i > 0) os_ << "\n";
+            node->else_branch[i]->accept(this);
+        }
         os_ << "\n}";
     }
 }

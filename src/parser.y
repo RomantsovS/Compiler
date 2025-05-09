@@ -203,6 +203,12 @@ if:
     | IF LEFTPAR expr RIGHTPAR stmt ELSE stmt {
         $$ = driver.with_location(driver.make_if($3, $5, $7), @1);
     }
+    | IF LEFTPAR expr RIGHTPAR block {
+        $$ = driver.with_location(driver.make_if($3, $5, nullptr), @1);
+    }
+    | IF LEFTPAR expr RIGHTPAR block ELSE block {
+        $$ = driver.with_location(driver.make_if($3, $5, $7), @1);
+    }
     ;
 
 stmt:

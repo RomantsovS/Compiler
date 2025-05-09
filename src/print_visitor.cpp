@@ -110,10 +110,16 @@ void PrintVisitor::visit(AST::IfThenElse* node) {
 
     node->condition->accept(this);
     os_ << "\n";
-    node->then_branch->accept(this);
+    for (size_t i = 0; i < node->then_branch.size(); ++i) {
+        node->then_branch[i]->accept(this);
+        os_ << "\n";
+    }
     os_ << "\n";
-    if (node->else_branch) {
-        node->else_branch->accept(this);
+    if (!node->else_branch.empty()) {
+        for (size_t i = 0; i < node->else_branch.size(); ++i) {
+            node->else_branch[i]->accept(this);
+            os_ << "\n";
+        }
     } else {
         os_ << "<No else>";
     }

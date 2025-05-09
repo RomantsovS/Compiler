@@ -331,8 +331,24 @@ std::shared_ptr<ASTNode> ParserDriver::make_if(
     if (!node->condition) {
         throw std::runtime_error("lhs is not Expr node");
     }
-    node->then_branch = then_branch;
-    node->else_branch = else_branch;
+    node->then_branch.push_back(then_branch);
+    if (else_branch) {
+        node->else_branch.push_back(else_branch);
+    }
+    return node;
+}
+
+std::shared_ptr<ASTNode> ParserDriver::make_if(
+    std::shared_ptr<ASTNode> condition, std::shared_ptr<Statements> then_branch,
+    std::shared_ptr<Statements> else_branch) {
+    ParserLog("create ast if_then_else ", '\n');
+    auto node = std::make_shared<IfThenElse>();
+    node->condition = std::dynamic_pointer_cast<Expr>(condition);
+    if (!node->condition) {
+        throw std::runtime_error("lhs is not Expr node");
+    }
+    node->then_branch = *then_branch;
+    node->else_branch = *else_branch;
     return node;
 }
 

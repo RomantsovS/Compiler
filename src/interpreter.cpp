@@ -151,9 +151,19 @@ ObjectHolder Interpreter::Eval(std::shared_ptr<AST::IfThenElse> node) {
         Error(node.get(), "If condition is not bool");
     }
     if (cond.TryAs<Bool>()->GetValue()) {
-        return Eval(node->then_branch);
-    } else if (node->else_branch) {
-        return Eval(node->else_branch);
+        call_stack.PushScope();
+        for (auto stmt : node->then_branch) {
+            Eval(stmt);
+        }
+        call_stack.PopScope();
+        return ObjectHolder::None();
+    } else if (!node->else_branch.empty()) {
+        call_stack.PushScope();
+        for (auto stmt : node->else_branch) {
+            Eval(stmt);
+        }
+        call_stack.PopScope();
+        return ObjectHolder::None();
     }
     return ObjectHolder::None();
 }

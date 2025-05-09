@@ -15,8 +15,8 @@ class ParserTests : public ::testing::Test {
     std::shared_ptr<AST::ASTNode> Init(std::istringstream& iss) {
         EzAquarii::ParserDriver parser_driver;
 
-        // driver.SetScannerDebugLevel(1);
-        // driver.SetParserDebugLevel(1);
+        // parser_driver.SetScannerDebugLevel(1);
+        // parser_driver.SetParserDebugLevel(1);
 
         parser_driver.switchInputStream(&iss);
 
@@ -79,6 +79,22 @@ TEST_F(ParserTests, IfThenElseConditionVarOK) {
     std::istringstream iss(R"(int main() {
         bool b;
         if(b) print(1);
+}
+)");
+
+    auto ast = Init(iss);
+    ASSERT_TRUE(ast);
+}
+
+TEST_F(ParserTests, IfThenElseManyStatementsOK) {
+    std::istringstream iss(R"(int main() {
+if(true) {
+int i;
+i = 1;
+} else {
+int j;
+j = 1;
+}
 }
 )");
 

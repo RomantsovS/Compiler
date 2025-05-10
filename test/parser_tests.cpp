@@ -46,8 +46,8 @@ TEST_F(ParserTests, SimpleMainOK) {
 
 TEST_F(ParserTests, FunctionNestedFunctionDefinitionFail) {
     std::istringstream iss(R"(
-        int main() {
-        int foo() {}
+int main() {
+int foo() {}
 }
 )");
 
@@ -57,7 +57,7 @@ TEST_F(ParserTests, FunctionNestedFunctionDefinitionFail) {
 
 TEST_F(ParserTests, IfThenElseConditionTrueLiteralOK) {
     std::istringstream iss(R"(int main() {
-        if(true) print(1);
+if(true) print(1);
 }
 )");
 
@@ -67,7 +67,7 @@ TEST_F(ParserTests, IfThenElseConditionTrueLiteralOK) {
 
 TEST_F(ParserTests, IfThenElseConditionFalseLiteralOK) {
     std::istringstream iss(R"(int main() {
-        if(false) print(1);
+if(false) print(1);
 }
 )");
 
@@ -77,8 +77,8 @@ TEST_F(ParserTests, IfThenElseConditionFalseLiteralOK) {
 
 TEST_F(ParserTests, IfThenElseConditionVarOK) {
     std::istringstream iss(R"(int main() {
-        bool b;
-        if(b) print(1);
+bool b;
+if(b) print(1);
 }
 )");
 
@@ -104,7 +104,7 @@ j = 1;
 
 TEST_F(ParserTests, IfThenElseConditionNumberOK) {
     std::istringstream iss(R"(int main() {
-        if(1) print(1);
+if(1) print(1);
 }
 )");
 

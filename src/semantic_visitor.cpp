@@ -168,7 +168,7 @@ void SemanticVisitor::visit(AST::Function* node) {
         if (auto return_node = std::dynamic_pointer_cast<AST::Return>(stmt);
             return_node) {
             has_return = true;
-            if (return_node->expr->type != node->return_type) {
+            if (return_node->type != node->return_type) {
                 Error(return_node.get(), "Type mismatch: ", node->name,
                       " return type is ", node->return_type, " but got ",
                       return_node->expr->type);
@@ -242,7 +242,12 @@ void SemanticVisitor::visit(AST::Program* node) {
 
 void SemanticVisitor::visit(AST::Rand* node) {}
 
-void SemanticVisitor::visit(AST::Return* node) { node->expr->accept(this); }
+void SemanticVisitor::visit(AST::Return* node) {
+    if (node->expr) {
+        node->expr->accept(this);
+        node->type = node->expr->type;
+    }
+}
 
 void SemanticVisitor::visit(AST::StringLiteral* node) {}
 

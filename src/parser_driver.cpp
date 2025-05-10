@@ -218,9 +218,11 @@ std::shared_ptr<ASTNode> ParserDriver::make_return(
     std::shared_ptr<ASTNode> expr) {
     ParserLog("create ast return ", '\n');
     auto node = std::make_shared<Return>();
-    node->expr = std::dynamic_pointer_cast<Expr>(expr);
-    if (!node->expr) {
-        throw std::runtime_error("expr is not Expr node");
+    if (expr) {
+        node->expr = std::dynamic_pointer_cast<Expr>(expr);
+        if (!node->expr) {
+            throw std::runtime_error("expr is not Expr node");
+        }
     }
     return node;
 }

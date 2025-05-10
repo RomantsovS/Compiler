@@ -166,6 +166,16 @@ foo();
     ExpectThrow(Exec(iss), "4:1: 'foo' cannot be used as a function");
 }
 
+TEST_F(SemanticAnalysisTests, FunCallReturnVoidOK) {
+    std::istringstream iss(R"(
+void main() {
+return;
+}
+)");
+
+    EXPECT_NO_THROW(Exec(iss));
+}
+
 TEST_F(SemanticAnalysisTests, AssignFromValueCheckTypeOK) {
     std::istringstream iss(R"(void main() {
 int i;

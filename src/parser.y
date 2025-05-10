@@ -91,7 +91,7 @@
 %type< std::shared_ptr<AST::Statements> > stmt_list block top_level_list arg_list;
 %type< std::shared_ptr<AST::Params> > param_list;
 %type< std::shared_ptr<AST::ASTNode> > program top_level global function function_call print_stmt rand_stmt;
-%type< std::shared_ptr<AST::ASTNode> > declaration expr assignment literal stmt while if;
+%type< std::shared_ptr<AST::ASTNode> > declaration expr assignment literal stmt while if return;
 
 %start program
 
@@ -211,6 +211,15 @@ if:
     }
     ;
 
+return:
+    RETURN expr SEMICOLON {
+        $$ = driver.with_location(driver.make_return($2), @1);
+    }
+    | RETURN SEMICOLON {
+        $$ = driver.with_location(driver.make_return(nullptr), @1);
+    }
+    ;
+
 stmt:
     declaration
     | assignment
@@ -218,9 +227,7 @@ stmt:
     | while
     | if
     | print_stmt
-    | RETURN expr SEMICOLON {
-        $$ = driver.with_location(driver.make_return($2), @1);
-    }
+    | return
     ;
 
 declaration:

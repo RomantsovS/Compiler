@@ -44,6 +44,17 @@ TEST_F(ParserTests, SimpleMainOK) {
     EXPECT_EQ(main_func->body.size(), 0);
 }
 
+TEST_F(ParserTests, FunCallReturnVoidOK) {
+    std::istringstream iss(R"(
+void main() {
+return;
+}
+)");
+
+    auto ast = Init(iss);
+    ASSERT_TRUE(ast);
+}
+
 TEST_F(ParserTests, FunctionNestedFunctionDefinitionFail) {
     std::istringstream iss(R"(
 int main() {

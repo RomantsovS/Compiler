@@ -287,7 +287,7 @@ void palette(int i) {
 
 int main() {
     int HEIGHT;
-    HEIGHT = 10;
+    HEIGHT = 25;
     int WIDTH;
     WIDTH = 80;
 

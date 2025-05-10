@@ -219,6 +219,77 @@ print(2);
     EXPECT_EQ(oss.str(), expected);
 }
 
+TEST_F(InterpreterTests, FuncCallReturnResultOK) {
+    std::istringstream iss(R"(
+int foo() { return 1; }
+void main() {
+print(foo());
+}
+)");
+
+    std::ostringstream oss;
+    EXPECT_NO_THROW(Exec(iss, oss));
+
+    const std::string expected(R"(1)");
+    EXPECT_EQ(oss.str(), expected);
+}
+
+TEST_F(InterpreterTests, FuncCallReturnResultFromIfThenElseTrueOK) {
+    std::istringstream iss(R"(
+int foo() {
+if(true) return 1; else return 2;
+return 0;
+}
+void main() {
+print(foo());
+}
+)");
+
+    std::ostringstream oss;
+    EXPECT_NO_THROW(Exec(iss, oss));
+
+    const std::string expected(R"(1)");
+    EXPECT_EQ(oss.str(), expected);
+}
+
+TEST_F(InterpreterTests, FuncCallReturnResultFromIfThenElseFalseOK) {
+    std::istringstream iss(R"(
+int foo() {
+if(false) return 1; else return 2;
+return 0;
+}
+void main() {
+print(foo());
+}
+)");
+
+    std::ostringstream oss;
+    EXPECT_NO_THROW(Exec(iss, oss));
+
+    const std::string expected(R"(2)");
+    EXPECT_EQ(oss.str(), expected);
+}
+
+TEST_F(InterpreterTests, FuncCallReturnResultFromWhileOK) {
+    std::istringstream iss(R"(
+int foo() {
+while(true) {
+return 1;
+}
+return 0;
+}
+void main() {
+print(foo());
+}
+)");
+
+    std::ostringstream oss;
+    EXPECT_NO_THROW(Exec(iss, oss));
+
+    const std::string expected(R"(1)");
+    EXPECT_EQ(oss.str(), expected);
+}
+
 TEST_F(InterpreterTests, ArithOpPlusIntLiteralIntLiteralOK) {
     std::istringstream iss(R"(void main() {
 print(1 + 2);

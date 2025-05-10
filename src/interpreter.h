@@ -107,24 +107,26 @@ class Interpreter {
     int Exec();
 
    private:
-    ObjectHolder Eval(std::shared_ptr<AST::ArithOp> node);
-    ObjectHolder Eval(std::shared_ptr<AST::ArrayAccess> node);
-    ObjectHolder Eval(std::shared_ptr<AST::ArrayAssignment> node);
-    ObjectHolder Eval(std::shared_ptr<AST::ArrayDeclaration> node);
-    ObjectHolder Eval(std::shared_ptr<AST::Assign> node);
-    ObjectHolder Eval(std::shared_ptr<AST::ASTNode> node);
-    ObjectHolder Eval(std::shared_ptr<AST::FunCall> node);
-    ObjectHolder Eval(std::shared_ptr<AST::Function> node,
-                      std::vector<ObjectHolder> args);
-    ObjectHolder Eval(std::shared_ptr<AST::IfThenElse> node);
-    ObjectHolder Eval(std::shared_ptr<AST::LogicOp> node);
-    ObjectHolder Eval(std::shared_ptr<AST::Print> node);
-    ObjectHolder Eval(std::shared_ptr<AST::Program> node);
-    ObjectHolder Eval(std::shared_ptr<AST::Rand> node);
-    ObjectHolder Eval(std::shared_ptr<AST::Return> node);
-    ObjectHolder Eval(std::shared_ptr<AST::Var> node);
-    ObjectHolder Eval(std::shared_ptr<AST::VarDef> node);
-    ObjectHolder Eval(std::shared_ptr<AST::While> node);
+    ObjectHolder Eval(AST::ArithOp* node);
+    ObjectHolder Eval(AST::ArrayAccess* node);
+    ObjectHolder Eval(AST::ArrayAssignment* node);
+    ObjectHolder Eval(AST::ArrayDeclaration* node);
+    ObjectHolder Eval(AST::Assign* node);
+    ObjectHolder Eval(AST::ASTNode* node);
+    ObjectHolder Eval(AST::BoolLiteral* node);
+    ObjectHolder Eval(AST::FunCall* node);
+    ObjectHolder Eval(AST::Function* node, std::vector<ObjectHolder> args);
+    ObjectHolder Eval(AST::IfThenElse* node);
+    ObjectHolder Eval(AST::Integer* node);
+    ObjectHolder Eval(AST::LogicOp* node);
+    ObjectHolder Eval(AST::Print* node);
+    ObjectHolder Eval(AST::Program* node);
+    ObjectHolder Eval(AST::Rand* node);
+    ObjectHolder Eval(AST::Return* node);
+    ObjectHolder Eval(AST::StringLiteral* node);
+    ObjectHolder Eval(AST::Var* node);
+    ObjectHolder Eval(AST::VarDef* node);
+    ObjectHolder Eval(AST::While* node);
 
     template <typename... Args>
     void Error(AST::ASTNode* node, Args... args) {

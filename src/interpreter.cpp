@@ -23,7 +23,7 @@
 #include "ir.h"
 
 int Interpreter::Exec() {
-    auto obj = Eval(ir_.GetAST());
+    auto obj = Eval(static_cast<AST::Program*>(ir_.GetAST().get()));
 
     auto number_ptr = obj.TryAs<Number>();
     if (number_ptr) return number_ptr->GetValue();
@@ -31,9 +31,9 @@ int Interpreter::Exec() {
     return 1;
 }
 
-ObjectHolder Interpreter::Eval(std::shared_ptr<AST::ArithOp> node) {
-    auto lhs = Eval(node->lhs);
-    auto rhs = Eval(node->rhs);
+ObjectHolder Interpreter::Eval(AST::ArithOp* node) {
+    auto lhs = Eval(node->lhs.get());
+    auto rhs = Eval(node->rhs.get());
 
     if (node->op == "+") {
         return ObjectHolder::Own(ValueObject(lhs.TryAs<Number>()->GetValue() +
@@ -47,7 +47,7 @@ ObjectHolder Interpreter::Eval(std::shared_ptr<AST::ArithOp> node) {
     } else if (node->op == "/") {
         auto r_val = rhs.TryAs<Number>()->GetValue();
         if (r_val == 0) {
-            Error(node.get(), "division by zero");
+            Error(node, "division by zero");
         }
         return ObjectHolder::Own(
             ValueObject(lhs.TryAs<Number>()->GetValue() / r_val));
@@ -55,65 +55,65 @@ ObjectHolder Interpreter::Eval(std::shared_ptr<AST::ArithOp> node) {
         return ObjectHolder::Own(ValueObject(lhs.TryAs<Number>()->GetValue() %
                                              rhs.TryAs<Number>()->GetValue()));
     } else {
-        Error(node.get(), "Unknown arith op: ", node->op);
+        Error(node, "Unknown arith op: ", node->op);
     }
     return ObjectHolder::None();
 }
 
-ObjectHolder Interpreter::Eval(std::shared_ptr<AST::ArrayAccess> node) {
-    auto index_obj = Eval(node->index);
+ObjectHolder Interpreter::Eval(AST::ArrayAccess* node) {
+    auto index_obj = Eval(node->index.get());
     auto index_ptr = index_obj.TryAs<Number>();
     if (!index_ptr) {
-        Error(node.get(), "Index expr is not int");
+        Error(node, "Index expr is not int");
     }
     auto* var = call_stack.Find(node->name);
     if (!var) {
-        Error(node.get(), "Variable ", node->name, " undefined");
+        Error(node, "Variable ", node->name, " undefined");
     }
     auto arr_obj = var->TryAs<ArrayObject>();
     if (!arr_obj) {
-        Error(node.get(), "Not array object");
+        Error(node, "Not array object");
     }
     try {
         return arr_obj->GetObject(index_ptr->GetValue());
     } catch (std::exception& ex) {
-        Error(node.get(), ex.what());
+        Error(node, ex.what());
     }
     return ObjectHolder::None();
 }
 
-ObjectHolder Interpreter::Eval(std::shared_ptr<AST::ArrayDeclaration> node) {
+ObjectHolder Interpreter::Eval(AST::ArrayDeclaration* node) {
     call_stack.Declare(node->name, ObjectHolder::Own(ArrayObject()));
     return *call_stack.Find(node->name);
 }
 
-ObjectHolder Interpreter::Eval(std::shared_ptr<AST::ArrayAssignment> node) {
-    auto index_obj = Eval(node->index);
+ObjectHolder Interpreter::Eval(AST::ArrayAssignment* node) {
+    auto index_obj = Eval(node->index.get());
     auto index_ptr = index_obj.TryAs<Number>();
     if (!index_ptr) {
-        Error(node.get(), "Index expr is not int");
+        Error(node, "Index expr is not int");
     }
     auto* var = call_stack.Find(node->name);
     if (!var) {
-        Error(node.get(), "Variable ", node->name, " undefined");
+        Error(node, "Variable ", node->name, " undefined");
     }
     auto arr_obj = var->TryAs<ArrayObject>();
     if (!arr_obj) {
-        Error(node.get(), "Not array object");
+        Error(node, "Not array object");
     }
-    arr_obj->SetObject(index_ptr->GetValue(), Eval(node->expr));
+    arr_obj->SetObject(index_ptr->GetValue(), Eval(node->expr.get()));
     return *call_stack.Find(node->name);
 }
 
-ObjectHolder Interpreter::Eval(std::shared_ptr<AST::Assign> node) {
+ObjectHolder Interpreter::Eval(AST::Assign* node) {
     auto* obj = call_stack.Find(node->var);
     if (!obj) {
-        Error(node.get(), "Variable ", node->var, " undefined");
+        Error(node, "Variable ", node->var, " undefined");
     }
 
-    auto val = Eval(node->expr);
+    auto val = Eval(node->expr.get());
     if (!val) {
-        Error(node.get(), "Assign expr returned None");
+        Error(node, "Assign expr returned None");
     }
 
     *obj = val;
@@ -121,17 +121,20 @@ ObjectHolder Interpreter::Eval(std::shared_ptr<AST::Assign> node) {
     return *obj;
 }
 
-ObjectHolder Interpreter::Eval(std::shared_ptr<AST::FunCall> node) {
-    std::vector<ObjectHolder> args;
-    for (size_t i = 0; i < node->args.size(); ++i) {
-        args.push_back(Eval(node->args[i]));
-    }
-
-    auto func = ir_.GetFunction(node->name);
-    return Eval(func, args);
+ObjectHolder Interpreter::Eval(AST::BoolLiteral* node) {
+    return ObjectHolder::Own(ValueObject(node->value));
 }
 
-ObjectHolder Interpreter::Eval(std::shared_ptr<AST::Function> node,
+ObjectHolder Interpreter::Eval(AST::FunCall* node) {
+    std::vector<ObjectHolder> args;
+    for (size_t i = 0; i < node->args.size(); ++i) {
+        args.push_back(Eval(node->args[i].get()));
+    }
+
+    return Eval(ir_.GetFunction(node->name).get(), args);
+}
+
+ObjectHolder Interpreter::Eval(AST::Function* node,
                                std::vector<ObjectHolder> args) {
     call_stack.PushScope();
     for (size_t i = 0; i < node->args.size(); ++i) {
@@ -139,7 +142,7 @@ ObjectHolder Interpreter::Eval(std::shared_ptr<AST::Function> node,
     }
     ObjectHolder return_copy;
     for (auto stmt : node->body) {
-        Eval(stmt);
+        Eval(stmt.get());
         if (return_result) {
             return_copy = *return_result;
             return_result.release();
@@ -150,16 +153,16 @@ ObjectHolder Interpreter::Eval(std::shared_ptr<AST::Function> node,
     return return_copy;
 }
 
-ObjectHolder Interpreter::Eval(std::shared_ptr<AST::IfThenElse> node) {
-    auto cond = Eval(node->condition);
+ObjectHolder Interpreter::Eval(AST::IfThenElse* node) {
+    auto cond = Eval(node->condition.get());
     auto cond_bool = cond.TryAs<Bool>();
     if (!cond_bool) {
-        Error(node.get(), "If condition is not bool");
+        Error(node, "If condition is not bool");
     }
     if (cond.TryAs<Bool>()->GetValue()) {
         call_stack.PushScope();
         for (auto stmt : node->then_branch) {
-            Eval(stmt);
+            Eval(stmt.get());
             if (return_result) {
                 break;
             }
@@ -169,7 +172,7 @@ ObjectHolder Interpreter::Eval(std::shared_ptr<AST::IfThenElse> node) {
     } else if (!node->else_branch.empty()) {
         call_stack.PushScope();
         for (auto stmt : node->else_branch) {
-            Eval(stmt);
+            Eval(stmt.get());
             if (return_result) {
                 break;
             }
@@ -180,9 +183,13 @@ ObjectHolder Interpreter::Eval(std::shared_ptr<AST::IfThenElse> node) {
     return ObjectHolder::None();
 }
 
-ObjectHolder Interpreter::Eval(std::shared_ptr<AST::LogicOp> node) {
-    auto lhs = Eval(node->lhs);
-    auto rhs = Eval(node->rhs);
+ObjectHolder Interpreter::Eval(AST::Integer* node) {
+    return ObjectHolder::Own(ValueObject(node->value));
+}
+
+ObjectHolder Interpreter::Eval(AST::LogicOp* node) {
+    auto lhs = Eval(node->lhs.get());
+    auto rhs = Eval(node->rhs.get());
 
     if (node->op == "<") {
         return ObjectHolder::Own(ValueObject(lhs.TryAs<Number>()->GetValue() <
@@ -194,79 +201,83 @@ ObjectHolder Interpreter::Eval(std::shared_ptr<AST::LogicOp> node) {
         return ObjectHolder::Own(ValueObject(lhs.TryAs<Number>()->GetValue() ==
                                              rhs.TryAs<Number>()->GetValue()));
     } else {
-        Error(node.get(), "Unknown logic op: ", node->op);
+        Error(node, "Unknown logic op: ", node->op);
     }
     return ObjectHolder::None();
 }
 
-ObjectHolder Interpreter::Eval(std::shared_ptr<AST::Print> node) {
-    auto obj_holder = Eval(node->expr);
+ObjectHolder Interpreter::Eval(AST::Print* node) {
+    auto obj_holder = Eval(node->expr.get());
     if (obj_holder) obj_holder->Print(os_);
     return ObjectHolder::None();
 }
 
-ObjectHolder Interpreter::Eval(std::shared_ptr<AST::Program> node) {
-    std::shared_ptr<AST::Function> main_func;
+ObjectHolder Interpreter::Eval(AST::Program* node) {
+    AST::Function* main_func = nullptr;
 
     for (auto global : node->globals) {
         auto func = std::dynamic_pointer_cast<AST::Function>(global);
         if (func) {
-            if (func->name == "main") main_func = func;
+            if (func->name == "main") main_func = func.get();
         } else {
-            Eval(global);
+            Eval(global.get());
         }
     }
 
     if (!main_func) {
-        Error(node.get(), "main function undefined");
+        Error(node, "main function undefined");
     }
 
     return Eval(main_func);
 }
 
-ObjectHolder Interpreter::Eval(std::shared_ptr<AST::Rand> node) {
+ObjectHolder Interpreter::Eval(AST::Rand* node) {
     static std::mt19937 rng(std::random_device{}());
     static std::uniform_int_distribution<int> dist(0, RAND_MAX);
 
     return ObjectHolder::Own(ValueObject(dist(rng)));
 }
 
-ObjectHolder Interpreter::Eval(std::shared_ptr<AST::Return> node) {
+ObjectHolder Interpreter::Eval(AST::Return* node) {
     return_result = std::make_unique<ObjectHolder>(
-        node->expr ? Eval(node->expr) : ObjectHolder::None());
+        node->expr ? Eval(node->expr.get()) : ObjectHolder::None());
     return *return_result;
 }
 
-ObjectHolder Interpreter::Eval(std::shared_ptr<AST::Var> node) {
+ObjectHolder Interpreter::Eval(AST::StringLiteral* node) {
+    return ObjectHolder::Own(ValueObject(node->value));
+}
+
+ObjectHolder Interpreter::Eval(AST::Var* node) {
     auto* var = call_stack.Find(node->name);
     if (!var) {
-        Error(node.get(), "Variable ", node->name, " undefined");
+        Error(node, "Variable ", node->name, " undefined");
     }
     if (!(*var)) {
-        Error(node.get(), "Variable ", node->name, " uninitialized");
+        Error(node, "Variable ", node->name, " uninitialized");
     }
     return *var;
 }
 
-ObjectHolder Interpreter::Eval(std::shared_ptr<AST::VarDef> node) {
+ObjectHolder Interpreter::Eval(AST::VarDef* node) {
     call_stack.Declare(node->name, {});
     return *call_stack.Find(node->name);
 }
 
-ObjectHolder Interpreter::Eval(std::shared_ptr<AST::While> node) {
+ObjectHolder Interpreter::Eval(AST::While* node) {
     bool stop = false;
     while (!stop) {
-        auto cond = Eval(node->condition);
+        auto cond = Eval(node->condition.get());
         auto cond_bool = cond.TryAs<Bool>();
         if (!cond_bool) {
-            Error(node.get(), "If condition is not bool");
+            Error(node, "If condition is not bool");
         }
         if (!cond.TryAs<Bool>()->GetValue()) {
             break;
         }
         call_stack.PushScope();
         for (auto stmt : node->body) {
-            Eval(stmt);
+            Eval(stmt.get());
             if (return_result) {
                 stop = true;
             }
@@ -276,52 +287,68 @@ ObjectHolder Interpreter::Eval(std::shared_ptr<AST::While> node) {
     return ObjectHolder::None();
 }
 
-ObjectHolder Interpreter::Eval(std::shared_ptr<AST::ASTNode> node) {
-    if (auto ar_op = std::dynamic_pointer_cast<AST::ArithOp>(node)) {
-        return Eval(ar_op);
-
-    } else if (auto arr_ac =
-                   std::dynamic_pointer_cast<AST::ArrayAccess>(node)) {
-        return Eval(arr_ac);
-    } else if (auto arr_assign =
-                   std::dynamic_pointer_cast<AST::ArrayAssignment>(node)) {
-        return Eval(arr_assign);
-    } else if (auto arr_decl =
-                   std::dynamic_pointer_cast<AST::ArrayDeclaration>(node)) {
-        return Eval(arr_decl);
-    } else if (auto assign = std::dynamic_pointer_cast<AST::Assign>(node)) {
-        return Eval(assign);
-    } else if (auto b_lit = std::dynamic_pointer_cast<AST::BoolLiteral>(node)) {
-        return ObjectHolder::Own(ValueObject(b_lit->value));
-    } else if (auto ifthen = std::dynamic_pointer_cast<AST::IfThenElse>(node)) {
-        return Eval(ifthen);
-    } else if (auto fun_call = std::dynamic_pointer_cast<AST::FunCall>(node)) {
-        return Eval(fun_call);
-    } else if (auto func = std::dynamic_pointer_cast<AST::Function>(node)) {
-        return Eval(func, {});
-    } else if (auto int_lit = std::dynamic_pointer_cast<AST::Integer>(node)) {
-        return ObjectHolder::Own(ValueObject(int_lit->value));
-    } else if (auto l_op = std::dynamic_pointer_cast<AST::LogicOp>(node)) {
-        return Eval(l_op);
-    } else if (auto print = std::dynamic_pointer_cast<AST::Print>(node)) {
-        return Eval(print);
-    } else if (auto prog = std::dynamic_pointer_cast<AST::Program>(node)) {
-        return Eval(prog);
-    } else if (auto rand = std::dynamic_pointer_cast<AST::Rand>(node)) {
-        return Eval(rand);
-    } else if (auto ret = std::dynamic_pointer_cast<AST::Return>(node)) {
-        return Eval(ret);
-    } else if (auto s_lit =
-                   std::dynamic_pointer_cast<AST::StringLiteral>(node)) {
-        return ObjectHolder::Own(ValueObject(s_lit->value));
-    } else if (auto var_def = std::dynamic_pointer_cast<AST::VarDef>(node)) {
-        return Eval(var_def);
-    } else if (auto var = std::dynamic_pointer_cast<AST::Var>(node)) {
-        return Eval(var);
-    } else if (auto whil = std::dynamic_pointer_cast<AST::While>(node)) {
-        return Eval(whil);
+ObjectHolder Interpreter::Eval(AST::ASTNode* node) {
+    switch (node->node_type) {
+        case AST::NodeType::ArithOp: {
+            return Eval(static_cast<AST::ArithOp*>(node));
+        }
+        case AST::NodeType::ArrayAccess: {
+            return Eval(static_cast<AST::ArrayAccess*>(node));
+        }
+        case AST::NodeType::ArrayAssignment: {
+            return Eval(static_cast<AST::ArrayAssignment*>(node));
+        }
+        case AST::NodeType::ArrayDeclaration: {
+            return Eval(static_cast<AST::ArrayDeclaration*>(node));
+        }
+        case AST::NodeType::Assign: {
+            return Eval(static_cast<AST::Assign*>(node));
+        }
+        case AST::NodeType::BoolLiteral: {
+            return Eval(static_cast<AST::BoolLiteral*>(node));
+        }
+        case AST::NodeType::FunCall: {
+            return Eval(static_cast<AST::FunCall*>(node));
+        }
+        case AST::NodeType::Function: {
+            return Eval(static_cast<AST::Function*>(node), {});
+        }
+        case AST::NodeType::IfThenElse: {
+            return Eval(static_cast<AST::IfThenElse*>(node));
+        }
+        case AST::NodeType::Integer: {
+            return Eval(static_cast<AST::Integer*>(node));
+        }
+        case AST::NodeType::LogicOp: {
+            return Eval(static_cast<AST::LogicOp*>(node));
+        }
+        case AST::NodeType::Print: {
+            return Eval(static_cast<AST::Print*>(node));
+        }
+        case AST::NodeType::Program: {
+            return Eval(static_cast<AST::Program*>(node));
+        }
+        case AST::NodeType::Rand: {
+            return Eval(static_cast<AST::Rand*>(node));
+        }
+        case AST::NodeType::Return: {
+            return Eval(static_cast<AST::Return*>(node));
+        }
+        case AST::NodeType::StringLiteral: {
+            return Eval(static_cast<AST::StringLiteral*>(node));
+        }
+        case AST::NodeType::Var: {
+            return Eval(static_cast<AST::Var*>(node));
+        }
+        case AST::NodeType::VarDef: {
+            return Eval(static_cast<AST::VarDef*>(node));
+        }
+        case AST::NodeType::While: {
+            return Eval(static_cast<AST::While*>(node));
+        }
+        default:
+            Error(node, "unknown node");
     }
 
-    Error(node.get(), "unknown node");
     return ObjectHolder::None();
 }

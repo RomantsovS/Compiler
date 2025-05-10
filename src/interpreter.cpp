@@ -137,16 +137,17 @@ ObjectHolder Interpreter::Eval(std::shared_ptr<AST::Function> node,
     for (size_t i = 0; i < node->args.size(); ++i) {
         call_stack.Declare(node->args[i].name, args[i]);
     }
+    ObjectHolder return_copy;
     for (auto stmt : node->body) {
         Eval(stmt);
         if (return_result) {
-            auto return_copy = *return_result;
+            return_copy = *return_result;
             return_result.release();
             break;
         }
     }
     call_stack.PopScope();
-    return ObjectHolder::None();
+    return return_copy;
 }
 
 ObjectHolder Interpreter::Eval(std::shared_ptr<AST::IfThenElse> node) {

@@ -142,7 +142,7 @@ ObjectHolder Interpreter::Eval(std::shared_ptr<AST::Function> node,
         if (return_result) {
             auto return_copy = *return_result;
             return_result.release();
-            return return_copy;
+            break;
         }
     }
     call_stack.PopScope();

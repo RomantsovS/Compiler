@@ -139,6 +139,11 @@ ObjectHolder Interpreter::Eval(std::shared_ptr<AST::Function> node,
     }
     for (auto stmt : node->body) {
         Eval(stmt);
+        if (return_result) {
+            auto return_copy = *return_result;
+            return_result.release();
+            return return_copy;
+        }
     }
     call_stack.PopScope();
     return ObjectHolder::None();
@@ -154,6 +159,9 @@ ObjectHolder Interpreter::Eval(std::shared_ptr<AST::IfThenElse> node) {
         call_stack.PushScope();
         for (auto stmt : node->then_branch) {
             Eval(stmt);
+            if (return_result) {
+                break;
+            }
         }
         call_stack.PopScope();
         return ObjectHolder::None();
@@ -161,6 +169,9 @@ ObjectHolder Interpreter::Eval(std::shared_ptr<AST::IfThenElse> node) {
         call_stack.PushScope();
         for (auto stmt : node->else_branch) {
             Eval(stmt);
+            if (return_result) {
+                break;
+            }
         }
         call_stack.PopScope();
         return ObjectHolder::None();
@@ -220,7 +231,9 @@ ObjectHolder Interpreter::Eval(std::shared_ptr<AST::Rand> node) {
 }
 
 ObjectHolder Interpreter::Eval(std::shared_ptr<AST::Return> node) {
-    return Eval(node->expr);
+    return_result = std::make_unique<ObjectHolder>(
+        node->expr ? Eval(node->expr) : ObjectHolder::None());
+    return *return_result;
 }
 
 ObjectHolder Interpreter::Eval(std::shared_ptr<AST::Var> node) {
@@ -240,7 +253,8 @@ ObjectHolder Interpreter::Eval(std::shared_ptr<AST::VarDef> node) {
 }
 
 ObjectHolder Interpreter::Eval(std::shared_ptr<AST::While> node) {
-    while (true) {
+    bool stop = false;
+    while (!stop) {
         auto cond = Eval(node->condition);
         auto cond_bool = cond.TryAs<Bool>();
         if (!cond_bool) {
@@ -252,6 +266,9 @@ ObjectHolder Interpreter::Eval(std::shared_ptr<AST::While> node) {
         call_stack.PushScope();
         for (auto stmt : node->body) {
             Eval(stmt);
+            if (return_result) {
+                stop = true;
+            }
         }
         call_stack.PopScope();
     }

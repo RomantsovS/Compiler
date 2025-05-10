@@ -87,7 +87,7 @@ i = 1;
     ExpectThrow(Exec(iss), "2:3: Undeclared variable i");
 }
 
-TEST_F(SemanticAnalysisTests, FunCallUndeclaredFuncCheckOK) {
+TEST_F(SemanticAnalysisTests, FuncCallUndeclaredFuncCheckOK) {
     std::istringstream iss(R"(
 void foo() {}
 void main() {
@@ -98,7 +98,7 @@ foo();
     EXPECT_NO_THROW(Exec(iss));
 }
 
-TEST_F(SemanticAnalysisTests, FunCallUndeclaredFuncCheckFail) {
+TEST_F(SemanticAnalysisTests, FuncCallUndeclaredFuncCheckFail) {
     std::istringstream iss(R"(void main() {
 foo();
 }
@@ -107,7 +107,7 @@ foo();
     ExpectThrow(Exec(iss), "2:1: 'foo' was not declared in this scope");
 }
 
-TEST_F(SemanticAnalysisTests, FunCallWrongNumberOfArgumentsCheckOK) {
+TEST_F(SemanticAnalysisTests, FuncCallWrongNumberOfArgumentsCheckOK) {
     std::istringstream iss(R"(
 void abs(int i, int j) {}
 void main() {
@@ -118,7 +118,7 @@ abs(1, 2);
     EXPECT_NO_THROW(Exec(iss));
 }
 
-TEST_F(SemanticAnalysisTests, FunCallWrongNumberOfArgumentsCheckFail) {
+TEST_F(SemanticAnalysisTests, FuncCallWrongNumberOfArgumentsCheckFail) {
     std::istringstream iss(R"(
 void abs(int i) {}
 void main() {
@@ -131,7 +131,7 @@ abs(1, 2);
         "4:1: Incorrect arguments number to call abs. Expected 1 but got 2");
 }
 
-TEST_F(SemanticAnalysisTests, FunCallWrongArgumentTypeCheckOK) {
+TEST_F(SemanticAnalysisTests, FuncCallWrongArgumentTypeCheckOK) {
     std::istringstream iss(R"(
 void abs(int i) {}
 void main() {
@@ -142,7 +142,7 @@ abs(1);
     EXPECT_NO_THROW(Exec(iss));
 }
 
-TEST_F(SemanticAnalysisTests, FunCallWrongArgumentTypeCheckFail) {
+TEST_F(SemanticAnalysisTests, FuncCallWrongArgumentTypeCheckFail) {
     std::istringstream iss(R"(
 void abs(int i) {}
 void main() {
@@ -155,7 +155,7 @@ abs(true);
                 "got bool");
 }
 
-TEST_F(SemanticAnalysisTests, FunCallNotAFunctionCallFail) {
+TEST_F(SemanticAnalysisTests, FuncCallNotAFunctionCallFail) {
     std::istringstream iss(R"(
 int foo;
 void main() {
@@ -166,7 +166,7 @@ foo();
     ExpectThrow(Exec(iss), "4:1: 'foo' cannot be used as a function");
 }
 
-TEST_F(SemanticAnalysisTests, FunCallReturnVoidOK) {
+TEST_F(SemanticAnalysisTests, FuncCallReturnVoidOK) {
     std::istringstream iss(R"(
 void main() {
 return;
@@ -207,7 +207,7 @@ i = j;
     ExpectThrow(Exec(iss), "4:3: Type mismatch: cannot assign int[2] to i");
 }
 
-TEST_F(SemanticAnalysisTests, AssignFromFunCallReturnCheckTypeOK) {
+TEST_F(SemanticAnalysisTests, AssignFromFuncCallReturnCheckTypeOK) {
     std::istringstream iss(R"(
 bool abs() { return true; }
 void main() {
@@ -219,7 +219,7 @@ i = abs();
     EXPECT_NO_THROW(Exec(iss));
 }
 
-TEST_F(SemanticAnalysisTests, AssignFromFunCallReturnCheckTypeFail) {
+TEST_F(SemanticAnalysisTests, AssignFromFuncCallReturnCheckTypeFail) {
     std::istringstream iss(R"(
 bool abs() { return true; }
 void main() {
@@ -261,7 +261,7 @@ i[0] = i;
     ExpectThrow(Exec(iss), "3:6: Type mismatch: cannot assign int[2] to i");
 }
 
-TEST_F(SemanticAnalysisTests, ArrayAssignmentFromFunCallReturnCheckTypeOK) {
+TEST_F(SemanticAnalysisTests, ArrayAssignmentFromFuncCallReturnCheckTypeOK) {
     std::istringstream iss(R"(
 int abs() { return 0; }
 void main() {
@@ -273,7 +273,7 @@ i[0] = abs();
     EXPECT_NO_THROW(Exec(iss));
 }
 
-TEST_F(SemanticAnalysisTests, ArrayAssignmentFromFunCallReturnCheckTypeFail) {
+TEST_F(SemanticAnalysisTests, ArrayAssignmentFromFuncCallReturnCheckTypeFail) {
     std::istringstream iss(R"(
 bool abs() { return true; }
 void main() {

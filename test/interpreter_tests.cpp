@@ -203,6 +203,22 @@ foo(3, 2, true);
     EXPECT_EQ(oss.str(), expected);
 }
 
+TEST_F(InterpreterTests, FuncCallPrematureReturnOK) {
+    std::istringstream iss(R"(
+void main() {
+print (1);
+return;
+print(2);
+}
+)");
+
+    std::ostringstream oss;
+    EXPECT_NO_THROW(Exec(iss, oss));
+
+    const std::string expected(R"(1)");
+    EXPECT_EQ(oss.str(), expected);
+}
+
 TEST_F(InterpreterTests, ArithOpPlusIntLiteralIntLiteralOK) {
     std::istringstream iss(R"(void main() {
 print(1 + 2);
@@ -735,6 +751,47 @@ print (4);
     EXPECT_EQ(oss.str(), expected);
 }
 
+TEST_F(InterpreterTests, IfThenElsePrematureReturnOK) {
+    std::istringstream iss(R"(void main() {
+print(1);
+if(true) {
+print(2);
+return;
+print(3);
+} else {
+print (4);
+print (5);
+}
+print(6);
+})");
+
+    std::ostringstream oss;
+    EXPECT_NO_THROW(Exec(iss, oss));
+
+    const std::string expected(R"(12)");
+    EXPECT_EQ(oss.str(), expected);
+}
+
+TEST_F(InterpreterTests, IfThenElsePrematureReturnElseOK) {
+    std::istringstream iss(R"(void main() {
+print(1);
+if(false) {
+print(2);
+} else {
+print (3);
+return;
+print (4);
+}
+print(5);
+})");
+
+    std::ostringstream oss;
+    EXPECT_NO_THROW(Exec(iss, oss));
+
+    const std::string expected(R"(13)");
+    EXPECT_EQ(oss.str(), expected);
+}
+
 TEST_F(InterpreterTests, WhileFalseConditionOK) {
     std::istringstream iss(R"(void main() {
 while(false) {
@@ -763,6 +820,25 @@ i = i + 1;
     EXPECT_NO_THROW(Exec(iss, oss));
 
     const std::string expected(R"(1234)");
+    EXPECT_EQ(oss.str(), expected);
+}
+
+TEST_F(InterpreterTests, WhilePrematureReturnOK) {
+    std::istringstream iss(R"(void main() {
+int i;
+i = 1;
+while(i < 5) {
+print (i);
+i = i + 1;
+return;
+}
+print (9);
+})");
+
+    std::ostringstream oss;
+    EXPECT_NO_THROW(Exec(iss, oss));
+
+    const std::string expected(R"(1)");
     EXPECT_EQ(oss.str(), expected);
 }
 

@@ -140,4 +140,6 @@ class Interpreter {
 
     CallStack<ObjectHolder> call_stack;
     std::unordered_map<std::string, std::shared_ptr<AST::Function>> functions;
+
+    std::unique_ptr<ObjectHolder> return_result;
 };

@@ -175,7 +175,9 @@ void PrintVisitor::visit(AST::Return* node) {
     os_ << "Return:\n";
     IndentRAII indent_raii(indent_);
 
-    node->expr->accept(this);
+    if (node->expr) {
+        node->expr->accept(this);
+    }
 }
 
 void PrintVisitor::visit(AST::StringLiteral* node) {

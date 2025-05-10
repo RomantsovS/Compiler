@@ -350,7 +350,9 @@ std::shared_ptr<ASTNode> ParserDriver::make_if(
         throw std::runtime_error("lhs is not Expr node");
     }
     node->then_branch = *then_branch;
-    node->else_branch = *else_branch;
+    if (else_branch) {
+        node->else_branch = *else_branch;
+    }
     return node;
 }
 

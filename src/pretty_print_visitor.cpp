@@ -140,7 +140,9 @@ void PrettyPrintVisitor::visit(AST::Rand* node) { os_ << "rand()"; }
 
 void PrettyPrintVisitor::visit(AST::Return* node) {
     os_ << "return ";
-    node->expr->accept(this);
+    if (node->expr) {
+        node->expr->accept(this);
+    }
     os_ << ";";
 }
 

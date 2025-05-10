@@ -102,6 +102,19 @@ TEST_F(ParserTests, IfThenElseManyStatementsOK) {
 if(true) {
 int i;
 i = 1;
+}
+}
+)");
+
+    auto ast = Init(iss);
+    ASSERT_TRUE(ast);
+}
+
+TEST_F(ParserTests, IfThenElseManyStatementsElseOK) {
+    std::istringstream iss(R"(int main() {
+if(true) {
+int i;
+i = 1;
 } else {
 int j;
 j = 1;

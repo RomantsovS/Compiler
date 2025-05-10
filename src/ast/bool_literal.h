@@ -9,7 +9,8 @@
 namespace AST {
 
 struct BoolLiteral : public Expr {
-    BoolLiteral(int val) : value(val) { type = Type::Bool(); }
+    explicit BoolLiteral(int val)
+        : Expr(NodeType::BoolLiteral, Type::Bool()), value(val) {}
 
     void accept(IASTVisitor* visitor) override { visitor->visit(this); }
 

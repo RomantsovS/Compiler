@@ -9,6 +9,8 @@
 namespace AST {
 
 struct FunCall : public Expr {
+    FunCall() : Expr(NodeType::FunCall) {}
+
     void accept(IASTVisitor* visitor) override { visitor->visit(this); }
 
     std::string name;

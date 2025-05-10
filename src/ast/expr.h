@@ -9,6 +9,10 @@
 namespace AST {
 
 struct Expr : public ASTNode {
+    explicit Expr(NodeType node_type) : ASTNode(node_type) {}
+    Expr(NodeType node_type, Type expr_type)
+        : ASTNode(node_type), type(expr_type) {}
+
     Type type;
 };
 

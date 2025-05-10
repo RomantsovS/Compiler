@@ -12,6 +12,8 @@
 namespace AST {
 
 struct Function : public ASTNode {
+    Function() : ASTNode(NodeType::Function) {}
+
     void accept(IASTVisitor* visitor) override { visitor->visit(this); }
 
     std::string name;

@@ -10,7 +10,7 @@
 namespace AST {
 
 struct LogicOp : public Expr {
-    LogicOp() { type = Type::Bool(); }
+    LogicOp() : Expr(NodeType::LogicOp, Type::Bool()) {}
 
     void accept(IASTVisitor* visitor) override { visitor->visit(this); }
 

@@ -9,6 +9,8 @@
 namespace AST {
 
 struct While : public ASTNode {
+    While() : ASTNode(NodeType::While) {}
+
     void accept(IASTVisitor* visitor) override { visitor->visit(this); }
 
     std::shared_ptr<ASTNode> condition;

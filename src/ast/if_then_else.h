@@ -10,6 +10,8 @@
 namespace AST {
 
 struct IfThenElse : public ASTNode {
+    IfThenElse() : ASTNode(NodeType::IfThenElse) {}
+
     void accept(IASTVisitor* visitor) override { visitor->visit(this); }
 
     std::shared_ptr<Expr> condition;

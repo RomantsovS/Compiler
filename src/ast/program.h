@@ -9,6 +9,8 @@
 namespace AST {
 
 struct Program : public ASTNode {
+    Program() : ASTNode(NodeType::Program) {}
+
     void accept(IASTVisitor* visitor) override { visitor->visit(this); }
 
     std::vector<std::shared_ptr<ASTNode>> globals;

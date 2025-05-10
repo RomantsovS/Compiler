@@ -9,6 +9,8 @@
 namespace AST {
 
 struct ArrayDeclaration : public ASTNode {
+    ArrayDeclaration() : ASTNode(NodeType::ArrayDeclaration) {}
+
     void accept(IASTVisitor* visitor) override { visitor->visit(this); }
 
     std::string name;
@@ -16,6 +18,8 @@ struct ArrayDeclaration : public ASTNode {
 };
 
 struct ArrayAccess : public Expr {
+    ArrayAccess() : Expr(NodeType::ArrayAccess) {}
+
     void accept(IASTVisitor* visitor) override { visitor->visit(this); }
 
     std::string name;
@@ -23,6 +27,8 @@ struct ArrayAccess : public Expr {
 };
 
 struct ArrayAssignment : public ASTNode {
+    ArrayAssignment() : ASTNode(NodeType::ArrayAssignment) {}
+
     void accept(IASTVisitor* visitor) override { visitor->visit(this); }
 
     std::string name;

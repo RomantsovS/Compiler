@@ -6,7 +6,7 @@
 namespace AST {
 
 struct Rand : public Expr {
-    Rand() { type = Type::Int(); }
+    Rand() : Expr(NodeType::Rand, Type::Int()) {}
 
     void accept(IASTVisitor* visitor) override { visitor->visit(this); }
 };

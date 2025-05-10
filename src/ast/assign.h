@@ -10,6 +10,8 @@
 namespace AST {
 
 struct Assign : public ASTNode {
+    Assign() : ASTNode(NodeType::Assign) {}
+
     void accept(IASTVisitor* visitor) override { visitor->visit(this); }
 
     std::string var;

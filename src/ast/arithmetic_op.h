@@ -8,6 +8,8 @@
 namespace AST {
 
 struct ArithOp : Expr {
+    ArithOp() : Expr(NodeType::ArithOp) {}
+
     void accept(IASTVisitor* visitor) override { visitor->visit(this); }
 
     std::string op;

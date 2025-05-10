@@ -9,8 +9,9 @@
 namespace AST {
 
 struct Return : public ASTNode {
-    Return() : type(Type::Void()) {}
-    Return(std::shared_ptr<Expr> ex) : expr(ex) {}
+    Return() : ASTNode(NodeType::Return), type(Type::Void()) {}
+    explicit Return(std::shared_ptr<Expr> ex)
+        : ASTNode(NodeType::Return), type(Type::Void()), expr(ex) {}
 
     void accept(IASTVisitor* visitor) override { visitor->visit(this); }
 

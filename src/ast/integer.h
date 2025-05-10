@@ -6,7 +6,8 @@
 namespace AST {
 
 struct Integer : public Expr {
-    Integer(int val) : value(val) { type = Type::Int(); }
+    explicit Integer(int val)
+        : Expr(NodeType::Integer, Type::Int()), value(val) {}
 
     void accept(IASTVisitor* visitor) override { visitor->visit(this); }
 

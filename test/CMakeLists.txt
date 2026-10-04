@@ -12,6 +12,7 @@ add_executable(unit_tests
   parser_tests.cpp
   semantic_analysis_tests.cpp
   interpreter_tests.cpp
+  codegen_tests.cpp
 )
 
 target_include_directories(unit_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../src)

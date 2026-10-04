@@ -2,7 +2,7 @@
 cmake_minimum_required(VERSION 3.8)
 
 # Declaration et nommage du projet
-project(parser)
+project(parser C CXX)
 
 set(CXX "clang++")
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
@@ -32,7 +32,17 @@ add_library(compiler_lib
   "src/semantic_visitor.cpp"
   "src/driver.cpp"
   "src/interpreter.cpp"
+  "src/x64_codegen.cpp"
+  "src/toolchain.cpp"
 )
+
+# Runtime support library linked into every compiled program.
+add_library(runtime STATIC "runtime/runtime.c")
+set_target_properties(runtime PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
+add_dependencies(compiler_lib runtime)
+target_compile_definitions(compiler_lib PRIVATE
+  COMPILER_RUNTIME_LIB="$<TARGET_FILE:runtime>")
 
 target_include_directories(compiler_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_include_directories(compiler_lib PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
